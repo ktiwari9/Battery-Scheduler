@@ -1,0 +1,16 @@
+decision: stay_charging
+battery_life: 100
+reward: 0.0
+current_battery: 100
+time: 
+  secs: 1502811067
+  nsecs: 991030931
+---
+decision: gather_reward
+battery_life: 96
+reward: 25178.0
+current_battery: 99
+time: 
+  secs: 1502812876
+  nsecs: 386451005
+---
