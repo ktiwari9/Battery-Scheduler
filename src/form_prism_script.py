@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import rewards_uncertain_hk
+import rewards_dbscan
 import roslib
 
 class make_model:
@@ -93,7 +93,7 @@ class make_model:
             f.write('\nendrewards\n\n')
                
 if __name__ == '__main__':
-    ur = rewards_uncertain_hk.uncertain_rewards(False)
+    ur = rewards_dbscan.uncertain_rewards(False)
     clusters, prob = ur.get_rewards()
     mm = make_model('model_t.prism', 35, 1, 0, clusters, prob)
         
