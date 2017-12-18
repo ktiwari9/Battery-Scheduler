@@ -96,8 +96,10 @@ class uncertain_rewards:
             for x in range(len(cl_centre)):
                 expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
             print expected_reward    
+            
             prob.append(p_cluster)
             clusters.append(cl_centre)
+
 	return clusters , prob
         
         
@@ -115,10 +117,10 @@ class uncertain_rewards:
                 data_list.append(in_km[i][0])
                 clusters.update({ cl_id : data_list})
          
-        cl_centre = [] 
-        for data in clusters.values():
+        cl_centre = len(clusters.keys())*[0] 
+        for cl_id, data in clusters.items():
             centre = np.mean(np.array(data))
-            cl_centre.append(centre)
+            cl_centre[cl_id] = centre
         #cl_centre.append(0)  #change if you want zeros separately
         
         p_cluster = {}
@@ -161,6 +163,7 @@ class uncertain_rewards:
                 e_int = i*1800 +1800 - 1
             if self._belongs_to_interval( s_int, e_int, start_time, end_time):
                 p_list[i] = p_list[i] + priority    
+
                 
         return p_list      
             
