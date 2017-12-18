@@ -80,14 +80,14 @@ class uncertain_rewards:
         for j in range(len(f_t)):
             zero_count = 0
             in_km = []
-            # Converting to suitable input for kmeans                             
+            # Converting to suitable input for kmeans    #change if you want zeros separately                         
             for k in range(len(f_t[j])):
-                if f_t[j][k] < 1000000 and f_t[j][k] != 0:
+                if f_t[j][k] < 1000000: #and f_t[j][k] != 0:
                     in_km.append([f_t[j][k]])
-                elif f_t[j][k] == 0:
-                    zero_count = zero_count + 1
+                #elif f_t[j][k] == 0:
+                #    zero_count = zero_count + 1
                     
-            cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 100, zero_count)
+            cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 100)# zero_count) #change if you want zeros separately
             print len(cl_centre)
             print cl_centre
             print p_cluster
@@ -101,7 +101,7 @@ class uncertain_rewards:
 	return clusters , prob
         
         
-    def _form_clusters(self, in_km, current_dist, zero_count):
+    def _form_clusters(self, in_km, current_dist, zero_count=None): #change if you want zeros separately
         z = linkage(in_km,metric='euclidean', method='centroid')   
         clstred_data = fcluster(z, current_dist, criterion='distance')
         unique_id = np.unique(clstred_data)         
@@ -119,7 +119,7 @@ class uncertain_rewards:
         for data in clusters.values():
             centre = np.mean(np.array(data))
             cl_centre.append(centre)
-        cl_centre.append(0)
+        #cl_centre.append(0)  #change if you want zeros separately
         
         p_cluster = {}
         for z in range(len(in_km)):
@@ -129,7 +129,7 @@ class uncertain_rewards:
             else:
                 val = p_cluster[label] + 1
             p_cluster.update({ label : float(val)})
-        p_cluster.update({ len(cl_centre) - 1 : zero_count}) 
+        #p_cluster.update({ len(cl_centre) - 1 : zero_count})   #change if you want zeros separately
             
         total = np.sum(np.array(p_cluster.values()))
         for p in p_cluster:
