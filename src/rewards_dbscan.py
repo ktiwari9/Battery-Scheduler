@@ -12,11 +12,10 @@ class uncertain_rewards:
     def __init__(self, validation):
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
-        #self.min_clst = 5 # required - 1
-        
+        rewards_by_day = self.get_rewards_by_day()
+        self.rewards_day = dict()
+
         if validation == False:
-            rewards_by_day = self.get_rewards_by_day()
-            self.rewards_day = dict()
             for day in rewards_by_day:
                 if day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({day: rewards_by_day[day]})
@@ -25,16 +24,13 @@ class uncertain_rewards:
             #    print self.rewards_day[day]
             #print 'Days Available: ', len(self.rewards_day)
         elif validation == True: # for separating test rewards and validation rewards.
-            rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
-            self.rewards_day = dict()
             no_test_start = 4
-            no_test_end = 7
+            no_test_end = 5
             num = 0
             for day in rewards_by_day:
-                if day[1] == 12:# and day[0] == 2017:
-                    if num >= no_test_start and num < no_test_end:
-                        self.test_rewards.update({ day : rewards_by_day[day]})
+                if day[1] == 12 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
+                    self.test_rewards.update({ day : rewards_by_day[day]})
                     num = num+1 
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
@@ -74,36 +70,37 @@ class uncertain_rewards:
             f[i] = np.array(self.rewards_day[day])
             i= i+1
         f_t = np.array(f).T 
-        
+        len_clusters=[] 
         clusters = []
         prob = []
         for j in range(len(f_t)):
             zero_count = 0
             in_km = []
-            # Converting to suitable input for kmeans    #change if you want zeros separately                         
+            # Converting to suitable input for clustering                            
             for k in range(len(f_t[j])):
-                if f_t[j][k] < 1000000 :#and f_t[j][k] != 0:
+                if f_t[j][k] < 1000000 :
                     in_km.append([f_t[j][k]])
-                #elif f_t[j][k] == 0:
-                #    zero_count = zero_count + 1
-                    
-            cl_centre, p_cluster = self._form_clusters(in_km)#, zero_count) #change if you want zeros separately
-            print len(cl_centre)
-            print cl_centre
-            print p_cluster
-            
+      
+            cl_centre, p_cluster = self._form_clusters(in_km, 1000, 3)
+
+            #print len(cl_centre)
+            #print cl_centre
+            #print p_cluster
+            len_clusters.append(len(cl_centre))
+
             expected_reward = 0
             for x in range(len(cl_centre)):
                 expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            print expected_reward    
+            #print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)
 
-	return clusters , prob
+        print Counter(len_clusters), 'cluster_info'
+        return clusters , prob
 
-    def _form_clusters(self, in_km):
-        db = DBSCAN(eps=1000, min_samples=7, metric='euclidean').fit(in_km)
+    def _form_clusters(self, in_km, epsilon, samples):
+        db = DBSCAN(eps=epsilon, min_samples=samples, metric='euclidean').fit(in_km)
         core_sample_indices = db.core_sample_indices_
         labels = db.labels_
         cores_dict = dict()

@@ -6,6 +6,7 @@ import numpy as np
 from scipy.cluster.vq import kmeans2 
 from scipy.cluster.hierarchy import fcluster, linkage
 import matplotlib.pyplot as plt
+from collections import Counter
 
 class uncertain_rewards:
     
@@ -77,8 +78,9 @@ class uncertain_rewards:
         
         clusters = []
         prob = []
+        len_clusters = []
         for j in range(len(f_t)):
-            #zero_count = 0
+            zero_count = 0  #change if you want zeros separately
             in_km = []
             # Converting to suitable input for kmeans    #change if you want zeros separately                         
             for k in range(len(f_t[j])):
@@ -91,6 +93,7 @@ class uncertain_rewards:
             print len(cl_centre)
             print cl_centre
             print p_cluster
+            len_clusters.append(len(cl_centre))
             
             expected_reward = 0
             for x in range(len(cl_centre)):
@@ -100,7 +103,9 @@ class uncertain_rewards:
             prob.append(p_cluster)
             clusters.append(cl_centre)
 
-	return clusters , prob
+        print Counter(len_clusters)
+
+        return clusters , prob
         
         
     def _form_clusters(self, in_km, current_dist, zero_count=None): #change if you want zeros separately
