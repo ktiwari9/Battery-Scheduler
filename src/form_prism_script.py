@@ -8,12 +8,10 @@ class make_model:
     def __init__(self,filename, init_b, init_ch, init_cluster, clusters, prob):
         # initial values that make model. from_t set to zero
         self.clusters = clusters
-        self.clusters.append(clusters[0])  #for 49 clusters
         self.total_cl = 0
         for i in range(len(clusters)):
             self.total_cl = self.total_cl + len(self.clusters[i])
         self.prob = prob
-        self.prob.append(prob[0])   #for 49 clusters
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
         self.write_prism_file(filename, init_b, init_ch, init_cluster)    
         
@@ -65,31 +63,39 @@ class make_model:
             f.write('endmodule\n\n\n')
 
             f.write('module cluster_evolution\n\n')
-            f.write('cl:[0..{0}] init {1};\n\n'.format((self.total_cl-1), init_cluster))
+            f.write('cl:[0..{0}] init {1};\n\n'.format((self.total_cl), init_cluster))
             cl_no = 0
             for i in range(49): #change to 48, if 48
-                for action in self.actions:
-                    if cl_no >= len(self.prob[0]):
+                if i == 48:
+                    for action in self.actions:
                         f.write('[{0}] (t={1}) -> '.format(action,i-1))
-                    for j in range(len(self.prob[i])):
-                        if j == len(self.prob[i])-1 and cl_no >= len(self.prob[0]):
-                            f.write("{0}:(cl'={1});\n".format(self.prob[i][j], cl_no))
-                        elif cl_no >= len(self.prob[0]):
-                            f.write("{0}:(cl'={1}) + ".format(self.prob[i][j], cl_no))
-                        cl_no = cl_no + 1
+                        f.write("1:(cl'={0});\n".format(cl_no))
 
-                    if action != self.actions[-1]:
-                        cl_no = cl_no - len(self.prob[i])
+                else:
+                    for action in self.actions:
+                        if cl_no >= len(self.prob[0]):
+                            f.write('[{0}] (t={1}) -> '.format(action,i-1))
+                        for j in range(len(self.prob[i])):
+                            if j == len(self.prob[i])-1 and cl_no >= len(self.prob[0]):
+                                f.write("{0}:(cl'={1});\n".format(self.prob[i][j], cl_no))
+                            elif cl_no >= len(self.prob[0]):
+                                f.write("{0}:(cl'={1}) + ".format(self.prob[i][j], cl_no))
+                            cl_no = cl_no + 1
+
+                        if action != self.actions[-1]:
+                            cl_no = cl_no - len(self.prob[i])
+
             f.write('\n\n')
             f.write('endmodule\n\n\n')
 
             f.write('rewards "rew"\n\n')
             # For n clusters in total in 49 time steps
             cl_no = 0
-            for i in range(49):
+            for i in range(48):
                 for j in range(len(self.clusters[i])):
                     f.write('[gather_reward](cl={0}):{1};\n'.format(cl_no, self.clusters[i][j]))
                     cl_no = cl_no+1
+            f.write('[gather_reward](cl={0}):0;\n'.format(cl_no))
             f.write('\nendrewards\n\n')
                
 if __name__ == '__main__':
