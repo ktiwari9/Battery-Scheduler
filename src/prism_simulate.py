@@ -48,7 +48,7 @@ class parse_model:
         self.sample_reward = sample_reward
         self.actual_reward = actual_reward
         self.day = day
-                 
+        
     def get_initial_state(self):
         for element in self.labels:
             if int(element[1]) == 0:
@@ -59,17 +59,24 @@ class parse_model:
     # when no observed state
     def get_next_state(self, current_state):
         possible_states = self.policy[current_state]
+        t_current = int(self.states[current_state][2])
+        matched_reward = self.sample_reward[self.day*48+t_current]  # the reward determined by the cluster (not much of use)
+        exp_reward = self.exp_reward[self.day*48+t_current]         # expected probability
+        act_reward = self.actual_reward[self.day*49+t_current]      # actual reward on completing task
+        #cluster_group = self.clusters[self.day*49+t_current]
+        #prob_group = self.probs[self.day*49+t_current]
 
         for ns_p_a in possible_states:
-            t = int(self.states[ns_p_a[0]][2])
-            if t < 48:
-                matched_reward = self.sample_reward[self.day*48+t]  # the reward determined by the cluster (not much of use)
-                exp_reward = self.exp_reward[self.day*48+t]         # expected probability
-                act_reward = self.actual_reward[self.day*48+t]      # actual reward on completing task
-                req_id = int(self.cl_id[self.day*48+t])  
-                if int(self.states[ns_p_a[0]][3]) == req_id:
-                    next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward]   # state_id, action to get to this state
-                    return next_state
+            t_next = int(self.states[ns_p_a[0]][2])
+
+            if self.day*48+t_next >= len(self.sample_reward): #return the only possibility for the last case
+                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, ns_p_a[1]]   # state_id, action to get to this state
+                return next_state
+
+            req_id = int(self.cl_id[self.day*48+t_next])  
+            if int(self.states[ns_p_a[0]][3]) == req_id:
+                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, ns_p_a[1]]   # state_id, action to get to this state
+                return next_state
             
     def simulate(self, day, name):
         in_state = self.get_initial_state()
@@ -83,11 +90,13 @@ class parse_model:
             for k in range(48):
                 f.write('{0} {1} {2} '.format(self.states[in_state][2], self.states[in_state][0], self.states[in_state][1]))
                 next_state = self.get_next_state(in_state)
-                if next_state != None:
-                    rewards.append(float(next_state[2]))
-                    action.append(next_state[1])
-                    f.write('{0} {1} {2} {3}\n'.format(next_state[1], next_state[3], next_state[2], next_state[4]))
-                    in_state = next_state[0]
+                rewards.append(float(next_state[2]))
+                action.append(next_state[1])
+                f.write('{0} {1} {2} {3} {4}\n'.format(next_state[1], next_state[3], next_state[2], next_state[4], next_state[5]))
+                #for c, p in zip (cluster_group, prob_group):
+                #    f.write('{0} {1}'.format(c, p))
+                #f.write('\n')
+                in_state = next_state[0]
         final_state = self.states[in_state]
         return rewards, action, final_state
  

@@ -26,7 +26,7 @@ if __name__ == '__main__':
             exp_reward.append(float(line.split(' ')[3]))        
     no_days = 1
     avg_totalreward = no_days*[0]
-    init_battery = 100
+    init_battery = 35
     init_charging = 1
     init_cluster = cl_id[0]
     no_simulations = 1
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'un_dec14')  
+            rewards, action, final_state = pp.simulate(k,'un_dec15')  
             battery[i] = int(final_state[1])
             charging[i] = int(final_state[0])
             init_cluster[i] = int(final_state[3])
