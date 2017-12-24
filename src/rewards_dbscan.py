@@ -25,16 +25,17 @@ class uncertain_rewards:
             #print 'Days Available: ', len(self.rewards_day)
         elif validation == True: # for separating test rewards and validation rewards.
             self.test_rewards = dict()
-            no_test_start = 4
-            no_test_end = 5
+            no_test_start = 3
+            no_test_end = 4
             num = 0
             for day in rewards_by_day:
-                if day[1] == 12 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
-                    self.test_rewards.update({ day : rewards_by_day[day]})
-                    num = num+1 
+                if day[1] == 12 and day[0] == 2016 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
+                    self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
-                   
+                if day[1] == 12 and day[0] == 2016:
+                    num = num+1
+
     def get_rewards_by_day(self):
         dated_tasks = dict()
        
@@ -78,14 +79,16 @@ class uncertain_rewards:
             in_km = []
             # Converting to suitable input for clustering                            
             for k in range(len(f_t[j])):
-                if f_t[j][k] < 1000000 :
+                if f_t[j][k] == 0:
+                    zero_count = zero_count +1 
+                elif f_t[j][k] < 1000000:
                     in_km.append([f_t[j][k]])
       
-            cl_centre, p_cluster = self._form_clusters(in_km, 1000, 3)
+            cl_centre, p_cluster = self._form_clusters(in_km, 1000, 3, zero_count)
 
-            #print len(cl_centre)
-            #print cl_centre
-            #print p_cluster
+            print len(cl_centre)
+            print cl_centre
+            print p_cluster
             len_clusters.append(len(cl_centre))
 
             expected_reward = 0
@@ -99,7 +102,7 @@ class uncertain_rewards:
         print Counter(len_clusters), 'cluster_info'
         return clusters , prob
 
-    def _form_clusters(self, in_km, epsilon, samples):
+    def _form_clusters(self, in_km, epsilon, samples, zero_count):
         db = DBSCAN(eps=epsilon, min_samples=samples, metric='euclidean').fit(in_km)
         core_sample_indices = db.core_sample_indices_
         labels = db.labels_
@@ -117,12 +120,14 @@ class uncertain_rewards:
         cl_centres = len(cores_dict.keys())*[0]
         for label, core_list in cores_dict.items():
             cl_centres[label] = np.average(np.array(core_list))
+        cl_centres.append(0)
             
-        prob = len(cl_centres)*[0]
+        prob = (len(cl_centres)-1)*[0]
         count_id = Counter(labels)
         for item, count in count_id.items():
             if item != -1:
-                prob[item] = count 
+                prob[item] = count
+        prob.append(zero_count)
 
         total_count = float(np.sum(np.array(prob)))
 
