@@ -84,7 +84,7 @@ class uncertain_rewards:
                 elif f_t[j][k] < 1000000:
                     in_km.append([f_t[j][k]])
       
-            cl_centre, p_cluster = self._form_clusters(in_km, 1000, 3, zero_count)
+            cl_centre, p_cluster = self._form_clusters(in_km, 500, 2, zero_count)
 
             print len(cl_centre)
             print cl_centre
@@ -107,16 +107,29 @@ class uncertain_rewards:
         core_sample_indices = db.core_sample_indices_
         labels = db.labels_
         cores_dict = dict()
-        for index in core_sample_indices:
-            label = labels[index]
-            if label not in cores_dict:
-                core_list = [in_km[index][0]]
-            else:
-                core_list = cores_dict[label]
-                core_list.append(in_km[index][0])
 
-            cores_dict.update({label:core_list})
-            
+        ## considering only core samples for cluster centres
+        #for index in core_sample_indices:
+        #    label = labels[index]
+        #    if label not in cores_dict:
+        #        core_list = [in_km[index][0]]
+        #    else:
+        #        core_list = cores_dict[label]
+        #        core_list.append(in_km[index][0])
+
+        #    cores_dict.update({label:core_list})
+
+        ## considering all samples in a cluster for cluster centres
+        for i in range(len(in_km)):
+            label = labels[i]
+            if label != -1:
+                if label not in cores_dict:
+                    sample_list = [in_km[i][0]]
+                else:
+                    sample_list = cores_dict[labels[i]]
+                    sample_list.append(in_km[i][0])
+                cores_dict.update({labels[i]:sample_list})
+
         cl_centres = len(cores_dict.keys())*[0]
         for label, core_list in cores_dict.items():
             cl_centres[label] = np.average(np.array(core_list))
