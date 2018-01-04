@@ -5,7 +5,7 @@ import roslib
 
 class make_model:
     
-    def __init__(self,filename, init_b, init_ch, init_cluster, clusters, prob):
+    def __init__(self,filename, init_t, init_b, init_ch, init_cluster, clusters, prob):
         # initial values that make model. from_t set to zero
         self.clusters = clusters
         self.total_cl = 0
@@ -13,10 +13,10 @@ class make_model:
             self.total_cl = self.total_cl + len(self.clusters[i])
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
-        self.write_prism_file(filename, init_b, init_ch, init_cluster)    
+        self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster)    
         
     # file for one day - 48 time steps
-    def write_prism_file(self, filename, init_b, init_ch, init_cluster):
+    def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
         # path to prism files 
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/' +filname) 
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
@@ -26,7 +26,7 @@ class make_model:
             f.write('charging:[0..1] init {0};\n'.format(init_ch))
             f.write('battery:[0..100] init {0};\n\n'.format(init_b))
             f.write("[gather_reward] (battery>89) & (battery<=100) -> (charging'=0) & (battery'=battery-4);\n")
-            f.write("[gather_reward] (battery>30) & (battery<90) -> (charging'=0) & (battery'=battery-5);\n")
+            f.write("[gather_reward] (battery>24) & (battery<90) -> (charging'=0) & (battery'=battery-5);\n")
             f.write("[gather_reward] (battery>4) & (battery<25) -> (charging'=0) & (battery'=battery-4);\n")
             f.write("[gather_reward] (battery>2) & (battery<5) -> (charging'=0) & (battery'=battery-3);\n")
             f.write("[gather_reward] (battery=2) -> (charging'=0) & (battery'=battery-2) ;\n")
@@ -56,7 +56,7 @@ class make_model:
             f.write('endmodule\n\n\n')
 
             f.write('module time_model\n\n')
-            f.write('t:[0..48] init 0;\n')
+            f.write('t:[0..48] init {0};\n'.format(init_t))
             for action in self.actions:
                 f.write("[{0}] (t<48) -> (t'=t+1);\n".format(action))
             f.write('\n')
@@ -101,7 +101,7 @@ class make_model:
 if __name__ == '__main__':
     ur = rewards_dbscan.uncertain_rewards(False)
     clusters, prob = ur.get_rewards()
-    mm = make_model('model_t.prism', 35, 1, 0, clusters, prob)
+    mm = make_model('model_test.prism', 0, 70, 1, 1, clusters, prob)
         
         
         

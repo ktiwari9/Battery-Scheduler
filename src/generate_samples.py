@@ -6,7 +6,7 @@ import numpy as np
 
 class sample_generator:
     
-    def __init__(self, validation, sampling_type):  ## sampling_type can be 'prob' or 'max' 
+    def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
         ur = rewards_dbscan.uncertain_rewards(validation)
         self.clusters, self.prob = ur.get_rewards()
         len_test_rewards = 1 # no. of days to be tested
@@ -85,7 +85,7 @@ class sample_generator:
         
           
 if __name__ == '__main__':
-    sg = sample_generator(True, None)     
+    sg = sample_generator(True)     
     rewards = sg.rewards
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
@@ -94,5 +94,5 @@ if __name__ == '__main__':
     path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/sample_rewards'
     with open(path,'w') as f:
         for r, c, a_r, e_r in zip(rewards, cl_id, act_rewards, exp_rewards):
-            f.write('{0} {1} {2} {3}\n'.format(c, r, a_r, e_r)) 
-           
+            f.write('{0} {1} {2} {3} '.format(c, r, a_r, e_r))
+            f.write('\n')

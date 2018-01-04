@@ -29,18 +29,19 @@ if __name__ == '__main__':
     init_battery = 35
     init_charging = 1
     init_cluster = cl_id[0]
+    init_time= 0
     no_simulations = 1
     path_mod = main_path+ '/models/'
     for k in range(no_days):
-        pm = form_prism_script.make_model('model_t.prism', init_battery, init_charging, init_cluster, clusters, prob)
+        pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob)
         subprocess.call('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
-        pp = prism_simulate.parse_model(['model_tpre1.adv','model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k)
+        pp = prism_simulate.parse_model(['model_tpre1.adv','model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         battery = no_simulations*[0]
         charging = no_simulations*[0]
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'un_dec15')  
+            rewards, action, final_state = pp.simulate(k,'un_apr13')  
             battery[i] = int(final_state[1])
             charging[i] = int(final_state[0])
             init_cluster[i] = int(final_state[3])

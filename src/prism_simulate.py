@@ -10,7 +10,7 @@ import roslib
 
 class parse_model:
 
-    def __init__(self, filenames, cl_id, actual_reward, sample_reward, exp_reward, day):
+    def __init__(self, filenames, cl_id, actual_reward, sample_reward, exp_reward, day, clusters, probs):
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/'
         for name in filenames:
@@ -48,6 +48,8 @@ class parse_model:
         self.sample_reward = sample_reward
         self.actual_reward = actual_reward
         self.day = day
+        self.clusters = clusters
+        self.probs = probs
         
     def get_initial_state(self):
         for element in self.labels:
@@ -63,19 +65,19 @@ class parse_model:
         matched_reward = self.sample_reward[self.day*48+t_current]  # the reward determined by the cluster (not much of use)
         exp_reward = self.exp_reward[self.day*48+t_current]         # expected probability
         act_reward = self.actual_reward[self.day*49+t_current]      # actual reward on completing task
-        #cluster_group = self.clusters[self.day*49+t_current]
-        #prob_group = self.probs[self.day*49+t_current]
+        cluster_group = self.clusters[self.day*49+t_current]
+        prob_group = self.probs[self.day*49+t_current]
 
         for ns_p_a in possible_states:
             t_next = int(self.states[ns_p_a[0]][2])
 
             if self.day*48+t_next >= len(self.sample_reward): #return the only possibility for the last case
-                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, ns_p_a[1]]   # state_id, action to get to this state
+                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
 
             req_id = int(self.cl_id[self.day*48+t_next])  
             if int(self.states[ns_p_a[0]][3]) == req_id:
-                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, ns_p_a[1]]   # state_id, action to get to this state
+                next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
             
     def simulate(self, day, name):
@@ -86,16 +88,18 @@ class parse_model:
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/'
         with open(path + name + str(day), 'w') as f:
-            f.write('time charging battery  action  match_reward actual_reward exp_reward\n')  
+            f.write('time charging battery  action  match_reward actual_reward exp_reward clusters probs\n')  
             for k in range(48):
                 f.write('{0} {1} {2} '.format(self.states[in_state][2], self.states[in_state][0], self.states[in_state][1]))
                 next_state = self.get_next_state(in_state)
                 rewards.append(float(next_state[2]))
                 action.append(next_state[1])
-                f.write('{0} {1} {2} {3} {4}\n'.format(next_state[1], next_state[3], next_state[2], next_state[4], next_state[5]))
-                #for c, p in zip (cluster_group, prob_group):
-                #    f.write('{0} {1}'.format(c, p))
-                #f.write('\n')
+                f.write('{0} {1} {2} {3} '.format(next_state[1], next_state[3], next_state[2], next_state[4]))
+                for c in next_state[6]:
+                    f.write('{0} '.format(c))
+                for p in next_state[5]:
+                    f.write('{0} '.format(p))
+                f.write('\n')
                 in_state = next_state[0]
         final_state = self.states[in_state]
         return rewards, action, final_state
