@@ -25,15 +25,15 @@ class uncertain_rewards:
             #print 'Days Available: ', len(self.rewards_day)
         elif validation == True: # for separating test rewards and validation rewards.
             self.test_rewards = dict()
-            no_test_start = 3
-            no_test_end = 4
+            no_test_start = 0
+            no_test_end = 1
             num = 0
             for day in rewards_by_day:
-                if day[1] == 12 and day[0] == 2016 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
+                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
                     self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
-                if day[1] == 12 and day[0] == 2016:
+                if day[1] == 8 and day[0] == 2017:
                     num = num+1
 
     def get_rewards_by_day(self):
@@ -84,7 +84,7 @@ class uncertain_rewards:
                 elif f_t[j][k] < 1000000:
                     in_km.append([f_t[j][k]])
       
-            cl_centre, p_cluster = self._form_clusters(in_km, 500, 2, zero_count)
+            cl_centre, p_cluster = self._form_clusters(in_km, 1000, 3, zero_count)
 
             print len(cl_centre)
             print cl_centre
