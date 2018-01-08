@@ -14,9 +14,9 @@ class make_model:
             self.total_cl = self.total_cl + len(self.clusters[i])
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
-        self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
         self.charge_model = charge_model
         self.discharge_model = discharge_model   
+        self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
         
     # file for one day - 48 time steps
     def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
