@@ -15,7 +15,7 @@ class BatteryData:
         arr =  battery_str[:-1].split(',')
         if len(arr) != 6:
             raise ValueError("battery string given was invalid: {0}".format(battery_str))
-        self.epoch = arr[0]
+        self.epoch = int(int(arr[0])/1000000000)
         self.cur_node = arr[5]
         self.life = int(arr[6]) if arr[6] else 0
         self.voltage = float(arr[4]) if arr[4] else 0
@@ -95,7 +95,7 @@ def get_charging_data(dated_data, boolean):
     return cdated_data
         
 # input array of Battery
-def get_battery_model():
+def get_battery_model(path_to_directory):
     path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     #path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/data/alpha_negative_'+self.data_source+'.yaml'):
@@ -111,7 +111,7 @@ def get_battery_model():
             for i in range (101):
                 model.update({ i : dict()})
    
-        dated_data = extract_data(get_files(sys.argv[1:])) ## specify path to battery files
+        dated_data = extract_data(get_files(path_to_directory)) ## specify path to battery files
         for data in dated_data.values():
             for i in range(len(data)):
                 current_bs = data[i]
