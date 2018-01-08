@@ -4,12 +4,17 @@ import subprocess
 import form_prism_script
 import prism_simulate
 import rewards_dbscan
+import battery_data
 import numpy as np
 import roslib
 
 if __name__ == '__main__':
     ur = rewards_dbscan.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
+    path_to_directory = ##TO BE ADDED 
+    #charge_model, discharge_model = battery_data.get_battery_model(path_to_directory)
+    charge_model = 'ab'
+    discharge_model = 'cd'
     cl_id = []
     sample_reward = []
     actual_reward = []
@@ -26,14 +31,14 @@ if __name__ == '__main__':
             exp_reward.append(float(line.split(' ')[3]))        
     no_days = 1
     avg_totalreward = no_days*[0]
-    init_battery = 35
+    init_battery = 100
     init_charging = 1
     init_cluster = cl_id[0]
     init_time= 0
     no_simulations = 1
     path_mod = main_path+ '/models/'
     for k in range(no_days):
-        pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob)
+        pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
         subprocess.call('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
         pp = prism_simulate.parse_model(['model_tpre1.adv','model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         battery = no_simulations*[0]
@@ -41,7 +46,7 @@ if __name__ == '__main__':
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'un_apr13')  
+            rewards, action, final_state = pp.simulate(k,'un_apr11')  
             battery[i] = int(final_state[1])
             charging[i] = int(final_state[0])
             init_cluster[i] = int(final_state[3])
