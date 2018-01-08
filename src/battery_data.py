@@ -10,15 +10,16 @@ import roslib
 
 class BatteryData:
 
+    #parsing for latest data
     def __init__(self, battery_str):
-        arr =  battery_str[:-1].split(', ')
+        arr =  battery_str[:-1].split(',')
         if len(arr) != 6:
             raise ValueError("battery string given was invalid: {0}".format(battery_str))
         self.epoch = arr[0]
-        self.cur_node = arr[1]
-        self.life = int(arr[2]) if arr[2] else 0
-        self.voltage = float(arr[3]) if arr[3] else 0
-        self.is_charging = arr[4] == '1'
+        self.cur_node = arr[5]
+        self.life = int(arr[6]) if arr[6] else 0
+        self.voltage = float(arr[4]) if arr[4] else 0
+        self.is_charging = arr[8] == '1'
         self.current = float(arr[5]) if arr[5] else 0
         self.day = (time.localtime(float(self.epoch))[0], time.localtime(float(self.epoch))[1], time.localtime(float(self.epoch))[2])
         
@@ -45,7 +46,7 @@ def extract_data(files):
     for d_file in sorted(files):
         f = open(d_file, encoding = "ISO-8859-1") 
         for line in f.readlines():
-                if line[0] != '#':
+                if line[0] != '%' or line[0] != '#':
                     try:
                         data_objects.append(BatteryData(line))
                     except ValueError:
@@ -138,5 +139,7 @@ def get_battery_model():
         yaml.dump(discharge_model, f_discharge)
         f_charge =file(path+ '/models/battery_charge_model.yaml', 'w')
         yaml.dump(charge_model, f_charge)
+
+    return charge_model, discharge_model
 
 
