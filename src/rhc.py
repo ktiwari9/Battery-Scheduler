@@ -54,6 +54,22 @@ if __name__ == '__main__':
             subprocess.call('./prism '+model_path+'model_rhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'model_rhc.adv -exportprodstates '+model_path+'model_rhc.sta -exporttarget '+model_path+'model_rhc.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
             rhc_pp = rhc_prism_parse.parse_model(['model_rhcpre1.adv', 'model_rhc.sta', 'model_rhc.lab'],cl_id,sample_reward,t, clusters)
             next_state = rhc_pp.get_next_state(rhc_pp.initial_state)
+
+            ### Only appplicable for real robot.
+            # if next_state[0][0] == 0:
+            #     bn_dict = discharge_model[init_battery]
+            # elif next_state[0][0] == 1:
+            #     bn_dict = charge_model[init_battery]
+            # if next_state[0][1] not in bn_dict:
+            #     count_val = 1
+            # else:
+            #     count_val = bn_dict[next_state[0][1]] + 1
+            # bn_dict.update({next_state[0][1] : count_val})
+            # if next_state[0][0] == 0:
+            #     discharge_model.update({init_battery : bn_dict})
+            # elif next_state[0][0] == 1:
+            #     charge_model.update({init_battery})
+
             action.append(next_state[2])
             battery.append(next_state[0][1])
             charging.append(next_state[0][0])
