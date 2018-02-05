@@ -1,2 +1,1 @@
-# major-project
-Battery Scheduler for Autonomous Mobile Robots
+# Battery Scheduler for Autonomous Mobile Robots
