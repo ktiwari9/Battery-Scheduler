@@ -18,11 +18,12 @@ class StateProcessor:
         self.clusters = clusters
         self.matched_rewards = matched_rewards
 
+
     def current_state(self, current_time, current_battery, current_charging):
         self.t = current_time
         self.b = current_battery
         self.c = current_charging
-        self.cl_no = 0 if self.t == 0 else -1
+        self.cl_no = 0 
 
         for i in range(self.t+1):
             self.cl_no = self.cl_no + len(self.clusters[i])
@@ -31,9 +32,10 @@ class StateProcessor:
     def next_state(self, action):
         #cl_id
         cl_id_next = []
-        for cl in self.clusters[self.t+1]:
-            cl_id_next.append(self.cl_no)
-            self.cl_no = self.cl_no+1
+        if self.t+1 < len(self.clusters):
+            for cl in self.clusters[self.t+1]:
+                cl_id_next.append(self.cl_no)
+                self.cl_no = self.cl_no+1
 
         #time
         t_next = self.t + 1
@@ -109,13 +111,13 @@ if __name__ == '__main__':
     path_result= main_path + '/data/result'
     path_model = main_path + '/models/'
  
-    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_apr130', 'r') as f:
+    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug18_50', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
                 time.append(int(s[0]))
-                charging.append(int(s[1]))
-                battery.append(int(s[2]))
+                charging.append(int(s[2]))
+                battery.append(int(s[1]))
                 matched_reward.append(float(s[4]))
                 exp_reward.append(float(s[6]))
                 actual_reward.append(float(s[5]))
@@ -136,13 +138,13 @@ if __name__ == '__main__':
     cases = ['charge', 'work']
     sp = StateProcessor(clusters, matched_reward)
     for t,c,b, cluster in zip(time, charging, battery, clusters):
-        sp.current_state(t,b,c)
         for case in cases:
+            sp.current_state(t,b,c)
             if t != 47:
                 t_next, b_next, c_next, cl_id_next = sp.next_state(case)
                 return_cluster = []
                 for i in range(len(cl_id_next)):
-                    pm = form_prism_script.make_model('plan_process.prism', t_next, b_next, c_next, cl_id_next[i], clusters, probs)
+                    pm = form_prism_script.make_model('plan_process.prism', t_next, b_next, c_next, cl_id_next[i], clusters, probs, 'ab', 'cd')
                     subprocess.call('./prism '+ path_model + 'plan_process.prism '+ path_model +'model_prop.props -exportresults '+path_result,cwd='/home/milan/prism-svn/prism/bin',shell=True)
                     with open(path_result, 'r') as f:
                         for line in f.readlines():
@@ -221,6 +223,17 @@ if __name__ == '__main__':
         #         else:
         #             rew = rew + 1*return_work[i][j]
         #     exp_return_work.append(rew)
+
+    i = 0
+    for t,b,c in zip(time, battery, charging):
+        sp.current_state(t,b,c)
+        for case in cases:
+            x, b_next, xx, xxx = sp.next_state(case)
+            if b_next < 31:
+                exp_return_list[1][i] = exp_return_list[0][i]
+        i = i+1
+
+
         
     color1 = []
     for a in action:
@@ -245,5 +258,5 @@ if __name__ == '__main__':
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward), go.Scatter(x=time, y=exp_return_list[1]), go.Scatter(x=time, y=exp_return_list[0])]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='un_apr13_exp')
+    py.plot(fig, filename='un_apr11_exp')
  

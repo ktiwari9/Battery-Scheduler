@@ -12,9 +12,10 @@ class uncertain_rewards:
     def __init__(self, validation):
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
+        self.time_int = 5
         rewards_by_day = self.get_rewards_by_day()
         self.rewards_day = dict()
-
+        
         if validation == False:
             for day in rewards_by_day:
                 if day[1] == 11 or day[1] == 12 or day[0] == 2017:
@@ -25,11 +26,11 @@ class uncertain_rewards:
             #print 'Days Available: ', len(self.rewards_day)
         elif validation == True: # for separating test rewards and validation rewards.
             self.test_rewards = dict()
-            no_test_start = 0
-            no_test_end = 1
+            no_test_start = 4
+            no_test_end = 5
             num = 0
             for day in rewards_by_day:
-                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end: # and day[0] == 2017:
+                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end: 
                     self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
@@ -152,17 +153,17 @@ class uncertain_rewards:
 
     def _get_prioritylist(self, dictionary, date):
         if date not in dictionary:
-            p_list = 48*[0]
+            p_list = (self.time_int)*[0]
         else:
             p_list = dictionary[date]
         return p_list
                     
     def _update_prioritylist(self,p_list, start_time, end_time, priority):
-        for i in range(48):
+        for i in range(self.time_int):
             s_int = i*1800
             e_int = i*1800 +1800
             
-            if i == 47:
+            if i == self.time_int-1:
                 e_int = i*1800 +1800 - 1
             if self._belongs_to_interval( s_int, e_int, start_time, end_time):
                 p_list[i] = p_list[i] + priority    

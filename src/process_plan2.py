@@ -15,7 +15,7 @@ if __name__ == '__main__':
     time = []
     clusters = []
     probs = []
-    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_apr140', 'r') as f:
+    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_apr110', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     plotly.tools.set_credentials_file(username='RagulDeep', api_key= 'Ryk98QVNYFGBEtaZMKPS')
     data = traces
     fig = go.Figure(data = data)
-    py.plot(fig, filename='un_apr14_prob_vals')
+    py.plot(fig, filename='un_apr11_prob_vals')
 
 
 

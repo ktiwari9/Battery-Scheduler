@@ -9,26 +9,28 @@ class sample_generator:
     def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
         ur = rewards_dbscan.uncertain_rewards(validation)
         self.clusters, self.prob = ur.get_rewards()
-        len_test_rewards = 1 # no. of days to be tested
+        self.len_test_rewards = 1 # no. of days to be tested
+        self.time_int = 5
         if validation == True:
             self.test_rewards = ur.test_rewards
-            len_test_rewards = len(self.test_rewards)
-        self.rewards, self.cl_ids, self.act_rewards, self.exp_rewards = self.get_samples(validation,sampling_type,len_test_rewards) 
+            self.len_test_rewards = len(self.test_rewards)
+
+        self.rewards, self.cl_ids, self.act_rewards, self.exp_rewards = self.get_samples(validation,sampling_type) 
   
-    def get_samples(self, validation, sampling_type, len_test_rewards):
-        rewards = (48*len_test_rewards)*[0]
-        exp_rewards = (48*len_test_rewards)*[0]
-        act_rewards = (48*len_test_rewards)*[0]
-        cl_ids = (48*len_test_rewards)*[0]
+    def get_samples(self, validation, sampling_type):
+        rewards = (self.time_int*self.len_test_rewards)*[0]
+        exp_rewards = (self.time_int*self.len_test_rewards)*[0]
+        act_rewards = (self.time_int*self.len_test_rewards)*[0]
+        cl_ids = (self.time_int*self.len_test_rewards)*[0]
         
         if validation == False:
-            for i in range(48*len_test_rewards):
-                cl_len = len(self.clusters[i%48])
+            for i in range(self.time_int*self.len_test_rewards):
+                cl_len = len(self.clusters[i%self.time_int])
                 c = cl_len*[0]
                 p = cl_len*[0]
                 for j in range(cl_len):
-                    c[j] = self.clusters[i%48][j]
-                    p[j] = self.prob[i%48][j]
+                    c[j] = self.clusters[i%self.time_int][j]
+                    p[j] = self.prob[i%self.time_int][j]
                 ###### Sampling according to distribution
                 if sampling_type == 'prob':
                     indices = []
@@ -45,7 +47,7 @@ class sample_generator:
                             index = k     
                 
                 rewards[i] = c[index]
-                cl_ids[i] = (i%48)*5+index 
+                cl_ids[i] = (i%self.time_int)*5+index 
        
         elif validation == True:
             print 'Days available: ', len(self.test_rewards)
@@ -53,24 +55,24 @@ class sample_generator:
             for day in self.test_rewards:
                 print day
                 print self.test_rewards[day]
-                total_reward = total_reward + np.sum(self.test_rewards[day][16:42])
-            print 'ORIGINAL REWARDS ::', total_reward   
+            #    total_reward = total_reward + np.sum(self.test_rewards[day][16:42])
+            #print 'ORIGINAL REWARDS ::', total_reward   
             ## Testing for 3 days 
-            for i in range(0,len_test_rewards):
+            for i in range(0,self.len_test_rewards):
                 cl_no = 0
-                for j in range(48):
+                for j in range(self.time_int):
                     #print i, '-> ', j 
                     reward = self.test_rewards.values()[i][j]
                     #print 'actual_reward', reward
                     #print self.clusters[j]
                     cl_reward, index = self.closest_cluster(reward, self.clusters[j])
                     for k in range(len(self.clusters[j])):
-                        exp_rewards[i*48+j] = exp_rewards[i*48+j] + self.clusters[j][k]*self.prob[j][k]
+                        exp_rewards[i*self.time_int+j] = exp_rewards[i*self.time_int+j] + self.clusters[j][k]*self.prob[j][k]
                         
        
-                    act_rewards[i*48+j] = reward
-                    rewards[i*48+j] = cl_reward
-                    cl_ids[i*48+j] = cl_no +index
+                    act_rewards[i*self.time_int+j] = reward
+                    rewards[i*self.time_int+j] = cl_reward
+                    cl_ids[i*self.time_int+j] = cl_no +index
                     cl_no = cl_no+len(self.clusters[j])
         return rewards, cl_ids, act_rewards, exp_rewards
 

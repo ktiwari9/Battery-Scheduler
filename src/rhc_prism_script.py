@@ -152,7 +152,7 @@ class make_model:
 if __name__ == '__main__':
     ur = rewards_dbscan.uncertain_rewards(False)
     clusters, prob = ur.get_rewards()
-    mm = make_model('model_rhc.prism', 0, 70, 1, 1, clusters, prob, 'a', 'b')
+    mm = make_model('rhc_test.prism', 0, 70, 1, 1, clusters, prob, 'a', 'b')
         
         
         

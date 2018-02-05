@@ -14,6 +14,7 @@ class uncertain_rewards:
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
         self.min_clst = 5 # required - 1
+        self.time_int = 5
         
         if validation == False:
             rewards_by_day = self.get_rewards_by_day()
@@ -29,11 +30,12 @@ class uncertain_rewards:
             rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
             self.rewards_day = dict()
-            no_test_start = 4
-            no_test_end = 7
+            no_test_start = 0
+            no_test_end = 1
             num = 0
             for day in rewards_by_day:
-                if day[1] == 12:# and day[0] == 2017:
+                print day
+                if day[1] == 8 and day[0] == 2017:
                     if num >= no_test_start and num < no_test_end:
                         self.test_rewards.update({ day : rewards_by_day[day]})
                     num = num+1 
@@ -90,15 +92,15 @@ class uncertain_rewards:
                     zero_count = zero_count + 1
                     
             cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 100, zero_count) #change if you want zeros separately
-            print len(cl_centre)
-            print cl_centre
-            print p_cluster
+            #print len(cl_centre)
+            #print cl_centre
+            #print p_cluster
             len_clusters.append(len(cl_centre))
             
             expected_reward = 0
             for x in range(len(cl_centre)):
                 expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            print expected_reward    
+            #print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)
@@ -154,17 +156,17 @@ class uncertain_rewards:
     
     def _get_prioritylist(self, dictionary, date):
         if date not in dictionary:
-            p_list = 48*[0]
+            p_list = self.time_int*[0]
         else:
             p_list = dictionary[date]
         return p_list
                     
     def _update_prioritylist(self,p_list, start_time, end_time, priority):
-        for i in range(48):
+        for i in range(self.time_int):
             s_int = i*1800
             e_int = i*1800 +1800
             
-            if i == 47:
+            if i == self.time_int-1:
                 e_int = i*1800 +1800 - 1
             if self._belongs_to_interval( s_int, e_int, start_time, end_time):
                 p_list[i] = p_list[i] + priority    

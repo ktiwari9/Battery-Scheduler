@@ -27,7 +27,8 @@ class parse_model:
                     for line in state_file.readlines():
                         if '_da' not in line or 'battery' not in line:
                             state = line[:-2].split(':(')
-                            self.states.update({state[0] : (state[1].split(',')[1], state[1].split(',')[2], state[1].split(',')[3], state[1].split(',')[4])})
+                            s = state[1].split(',')
+                            self.states.update({state[0] : (s[1], s[2], s[3], s[4])})
     
             elif name[-4:] == '.adv':
                 with open(path+name, 'r') as adv_file: 
@@ -50,6 +51,7 @@ class parse_model:
         self.day = day
         self.clusters = clusters
         self.probs = probs
+        self.time_int = 5
         
     def get_initial_state(self):
         for element in self.labels:
@@ -62,20 +64,20 @@ class parse_model:
     def get_next_state(self, current_state):
         possible_states = self.policy[current_state]
         t_current = int(self.states[current_state][2])
-        matched_reward = self.sample_reward[self.day*48+t_current]  # the reward determined by the cluster (not much of use)
-        exp_reward = self.exp_reward[self.day*48+t_current]         # expected probability
-        act_reward = self.actual_reward[self.day*49+t_current]      # actual reward on completing task
-        cluster_group = self.clusters[self.day*49+t_current]
-        prob_group = self.probs[self.day*49+t_current]
+        matched_reward = self.sample_reward[self.day*self.time_int+t_current]  # the reward determined by the cluster (not much of use)
+        exp_reward = self.exp_reward[self.day*self.time_int+t_current]         # expected probability
+        act_reward = self.actual_reward[self.day*(self.time_int+1)+t_current]      # actual reward on completing task
+        cluster_group = self.clusters[self.day*(self.time_int+1)+t_current]
+        prob_group = self.probs[self.day*(self.time_int+1)+t_current]
 
         for ns_p_a in possible_states:
             t_next = int(self.states[ns_p_a[0]][2])
 
-            if self.day*48+t_next >= len(self.sample_reward): #return the only possibility for the last case
+            if self.day*self.time_int+t_next >= len(self.sample_reward): #return the only possibility for the last case
                 next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
 
-            req_id = int(self.cl_id[self.day*48+t_next])  
+            req_id = int(self.cl_id[self.day*self.time_int+t_next])  
             if int(self.states[ns_p_a[0]][3]) == req_id:
                 next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
@@ -88,8 +90,8 @@ class parse_model:
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/'
         with open(path + name + str(day), 'w') as f:
-            f.write('time charging battery  action  match_reward actual_reward exp_reward clusters probs\n')  
-            for k in range(48):
+            f.write('time battery charging  action  match_reward actual_reward exp_reward clusters probs\n')  
+            for k in range(self.time_int):
                 f.write('{0} {1} {2} '.format(self.states[in_state][2], self.states[in_state][0], self.states[in_state][1]))
                 next_state = self.get_next_state(in_state)
                 rewards.append(float(next_state[2]))

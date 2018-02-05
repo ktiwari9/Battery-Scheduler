@@ -2,6 +2,7 @@
 
 import subprocess
 import form_prism_script
+import prism_script_test
 import prism_simulate
 import rewards_dbscan
 import battery_data
@@ -11,7 +12,7 @@ import roslib
 if __name__ == '__main__':
     ur = rewards_dbscan.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    path_to_directory = ##TO BE ADDED 
+    #path_to_directory = ##TO BE ADDED 
     #charge_model, discharge_model = battery_data.get_battery_model(path_to_directory)
     charge_model = 'ab'
     discharge_model = 'cd'
@@ -38,15 +39,17 @@ if __name__ == '__main__':
     no_simulations = 1
     path_mod = main_path+ '/models/'
     for k in range(no_days):
-        pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
-        subprocess.call('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
-        pp = prism_simulate.parse_model(['model_tpre1.adv','model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
+        #pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
+        pm = prism_script_test.make_model('model_test.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
+        #subprocess.call('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
+        subprocess.call('./prism '+ path_mod + 'model_test.prism '+ path_mod +'test_prop.props -exportadv '+ path_mod+ 'model_test.adv -exportprodstates ' + path_mod +'model_test.sta -exporttarget '+path_mod+'model_test.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
+        pp = prism_simulate.parse_model(['model_testpre1.adv','model_test.sta','model_test.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         battery = no_simulations*[0]
         charging = no_simulations*[0]
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'un_apr11')  
+            rewards, action, final_state = pp.simulate(k,'un_aug18_10')  
             battery[i] = int(final_state[1])
             charging[i] = int(final_state[0])
             init_cluster[i] = int(final_state[3])

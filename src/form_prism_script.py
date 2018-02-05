@@ -15,10 +15,11 @@ class make_model:
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
         self.charge_model = charge_model
-        self.discharge_model = discharge_model   
+        self.discharge_model = discharge_model
+        self.time_int = 5   
         self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
+        # file for one day - 48 time steps
         
-    # file for one day - 48 time steps
     def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
         # path to prism files 
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/' +filname) 
@@ -103,17 +104,17 @@ class make_model:
             f.write('endmodule\n\n\n')
 
             f.write('module time_model\n\n')
-            f.write('t:[0..48] init {0};\n'.format(init_t))
+            f.write('t:[0..{0}] init {1};\n'.format(self.time_int,init_t))
             for action in self.actions:
-                f.write("[{0}] (t<48) -> (t'=t+1);\n".format(action))
+                f.write("[{0}] (t<{1}) -> (t'=t+1);\n".format(action,self.time_int))
             f.write('\n')
             f.write('endmodule\n\n\n')
 
             f.write('module cluster_evolution\n\n')
             f.write('cl:[0..{0}] init {1};\n\n'.format((self.total_cl), init_cluster))
             cl_no = 0
-            for i in range(49): #change to 48, if 48
-                if i == 48:
+            for i in range(self.time_int+1): #change to 48, if 48
+                if i == self.time_int:
                     for action in self.actions:
                         f.write('[{0}] (t={1}) -> '.format(action,i-1))
                         f.write("1:(cl'={0});\n".format(cl_no))
@@ -138,7 +139,7 @@ class make_model:
             f.write('rewards "rew"\n\n')
             # For n clusters in total in 49 time steps
             cl_no = 0
-            for i in range(48):
+            for i in range(self.time_int):
                 for j in range(len(self.clusters[i])):
                     f.write('[gather_reward](cl={0}):{1};\n'.format(cl_no, self.clusters[i][j]))
                     cl_no = cl_no+1

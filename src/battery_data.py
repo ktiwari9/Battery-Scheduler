@@ -132,7 +132,7 @@ def get_battery_model(path_to_directory):
                             count = 1
                         else:
                             count = bl_dict[next_bs.life] + 1
-                        bl_dict.update{(next_bs.life : count)}
+                        bl_dict.update({next_bs.life : count})
                         discharge_model.update({current_bs.life : bl_dict})
 
         f_discharge = file(path+'/models/battery_discharge_model.yaml', 'w')
