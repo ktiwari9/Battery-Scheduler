@@ -7,6 +7,7 @@ from scipy.cluster.vq import kmeans2
 from scipy.cluster.hierarchy import fcluster, linkage
 import matplotlib.pyplot as plt
 from collections import Counter
+from scipy.spatial.distance import pdist
 
 class uncertain_rewards:
     
@@ -14,7 +15,7 @@ class uncertain_rewards:
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
         self.min_clst = 5 # required - 1
-        self.time_int = 5
+        self.time_int = 8
         
         if validation == False:
             rewards_by_day = self.get_rewards_by_day()
@@ -34,13 +35,12 @@ class uncertain_rewards:
             no_test_end = 1
             num = 0
             for day in rewards_by_day:
-                print day
-                if day[1] == 8 and day[0] == 2017:
-                    if num >= no_test_start and num < no_test_end:
-                        self.test_rewards.update({ day : rewards_by_day[day]})
-                    num = num+1 
+                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
+                    self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
+                if day[1] == 8 and day[0] == 2017:
+                    num = num+1
                    
     def get_rewards_by_day(self):
         dated_tasks = dict()
@@ -91,16 +91,18 @@ class uncertain_rewards:
                 elif f_t[j][k] == 0:
                     zero_count = zero_count + 1
                     
-            cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 100, zero_count) #change if you want zeros separately
-            #print len(cl_centre)
-            #print cl_centre
-            #print p_cluster
+            p_dist = pdist(in_km, metric='cityblock')
+            p_dist_avg = np.sum(p_dist)/p_dist.size
+            cl_centre, p_cluster = self._form_clusters(in_km, p_dist_avg, zero_count) #change if you want zeros separately
+            print len(cl_centre)
+            print cl_centre
+            print p_cluster
             len_clusters.append(len(cl_centre))
             
             expected_reward = 0
             for x in range(len(cl_centre)):
                 expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            #print expected_reward    
+            print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)
@@ -145,14 +147,18 @@ class uncertain_rewards:
             prob_val = float(p_cluster[p])/float(total)
             p_cluster.update({ p : prob_val})  
         
-        if current_dist < 1000 and len(unique_id) >= 4:
-            cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
-        elif current_dist >= 1000 and current_dist < 10000 and len(unique_id) >= 6:
-           cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
-        elif current_dist >= 10000 and len(unique_id) > 9:
-            cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
+        # if current_dist < 1000 and len(unique_id) >= 4:
+        #     cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
+        # elif current_dist >= 1000 and current_dist < 10000 and len(unique_id) >= 6:
+        #    cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
+        # elif current_dist >= 10000 and len(unique_id) > 9:
+        #     cl_centre, p_cluster, current_dist = self._form_clusters(in_km, 2*current_dist, zero_count)
         
-        return cl_centre, p_cluster, current_dist
+        p_cluster_list = len(p_cluster.keys())*[0]
+        for i in range(len(p_cluster_list)):
+            p_cluster_list[i] = p_cluster[i]
+
+        return cl_centre, p_cluster_list#, current_dist
     
     def _get_prioritylist(self, dictionary, date):
         if date not in dictionary:
@@ -189,7 +195,7 @@ class uncertain_rewards:
              return False        
             
 if __name__ == '__main__':
-    ur = uncertain_rewards(False)
+    ur = uncertain_rewards(True)
 #    plotly.tools.set_credentials_file(username='MilanMariyaTomy', api_key='aoeKNl0QTEWLTb1jlFcB')
 #    rewards_day = ur.get_rewards_by_day()
 #    i = 0
