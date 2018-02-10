@@ -12,7 +12,7 @@ class uncertain_rewards:
     def __init__(self, validation):
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
-        self.time_int = 5
+        self.time_int = 8
         rewards_by_day = self.get_rewards_by_day()
         self.rewards_day = dict()
         
@@ -26,11 +26,13 @@ class uncertain_rewards:
             #print 'Days Available: ', len(self.rewards_day)
         elif validation == True: # for separating test rewards and validation rewards.
             self.test_rewards = dict()
-            no_test_start = 4
-            no_test_end = 5
+            no_test_start = 0
+            no_test_end = 1
             num = 0
             for day in rewards_by_day:
-                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end: 
+                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
+                    print num
+                    print day 
                     self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
@@ -95,7 +97,7 @@ class uncertain_rewards:
             expected_reward = 0
             for x in range(len(cl_centre)):
                 expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            #print expected_reward    
+            print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)

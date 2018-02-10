@@ -56,22 +56,34 @@ class StateProcessor:
     # either charge or discharge
     def _get_b_next(self, model):
         if model == 'charge':
-            if self.b > 0 and self.b < 81 :
-                nb = self.b + 20
-            elif self.b > 80:
+            if self.b <= 100 and self.b > 81:
                 nb = 100
+            elif self.b > 64 and self.b < 82:
+                nb = self.b + 19
+            elif self.b > 44 and self.b < 65:
+                nb = self.b + 19
+            elif self.b > 28 and self.b < 45:
+                nb = self.b + 29
+            elif self.b > 14 and self.b < 29:
+                nb = self.b + 39
+            elif self.b > 8 and self.b < 15:
+                nb = self.b + 49
+            elif self.b > 4 and self.b < 9:
+                nb = self.b + 59 
+            elif self.b >= 0 and self.b < 5:
+                nb = self.b + 69
+
             if self.c == 1 and nb != 100:
                 nb = nb +1 
 
         elif model == 'discharge':
-            if self.b > 60 and self.b <= 100:
-                nb = self.b - 30
-            elif self.b >19 and self.b < 61:
-                nb = self.b - 20
-            elif self.b < 20:
+            if self.b <= 100 and self.b > 89:
+                nb = self.b - 40
+            elif self.b > 49 and self.b < 90:
+                nb = self.b - 50
+            elif self.b <50 :
                 nb = 0
-        
-        print self.b, self.c, nb         
+                
         return nb
 
 
@@ -85,8 +97,7 @@ if __name__ == '__main__':
     clusters = []
     probs = []
     charging = []
-    time_int = 10
-        
+    time_int = 8
 
     #main_path = roslib.packages.get_pkg_dir('battery_scheduler')
     #path_rew = main_path +'/data/sample_rewards'
@@ -94,7 +105,7 @@ if __name__ == '__main__':
     path_result= main_path + '/data/test_result'
     path_model = main_path + '/models/'
  
-    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug18_100', 'r') as f:
+    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug11_80', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
@@ -183,7 +194,13 @@ if __name__ == '__main__':
                         rew = rew + array[i][k][j]
                 #print rew, 'rew'
                 #print probs[i][j], 'probs'
-                exp_rew = exp_rew + probs[i][j]*rew
+
+                ## for calculating exp_return over all possible states in a particular time interval
+                # exp_rew = exp_rew + probs[i][j]*rew
+
+                ## for calculating exp return from one particular state in a particular time interval
+                if matched_reward[i] == clusters[i][j]:
+                    exp_rew = rew
             exp_return.append(exp_rew)
         exp_return_list.append(exp_return)
 
@@ -239,8 +256,8 @@ if __name__ == '__main__':
         elif a == 'stay_charging':
             color2.append('rgba(236, 153, 28,0.5)')
     
-    plotly.tools.set_credentials_file(username='RagulDeep', api_key= 'Ryk98QVNYFGBEtaZMKPS')
+    plotly.tools.set_credentials_file(username='ThanwiraSiraj', api_key= 'y9AlaR5JI6kYeCml1NG4')
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward), go.Scatter(x=time, y=exp_return_list[1]), go.Scatter(x=time, y=exp_return_list[0])]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='un_aug18_5_exp')
+    py.plot(fig, filename='un_aug11_80_exp_dbsc')

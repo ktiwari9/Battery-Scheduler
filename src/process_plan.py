@@ -5,7 +5,7 @@ import plotly
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
-import rewards_dbscan
+
 
 class StateProcessor:
 
@@ -76,11 +76,11 @@ class StateProcessor:
             elif self.b > 0 and self.b < 5:
                 nb = self.b + 6
 
-            if self.c == 1 and self.b != 100:
+            if self.c == 1 and nb != 100:
                 nb = nb +1 
 
         elif model == 'discharge':
-            if self.b <= 100 or self.b > 89:
+            if self.b <= 100 and self.b > 89:
                 nb = self.b - 4
             elif self.b > 24 and self.b < 90:
                 nb = self.b - 5
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     path_result= main_path + '/data/result'
     path_model = main_path + '/models/'
  
-    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug18_50', 'r') as f:
+    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug7_480', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
@@ -197,32 +197,17 @@ if __name__ == '__main__':
                         rew = rew + array[i][k][j]
                 #print rew, 'rew'
                 #print probs[i][j], 'probs'
-                exp_rew = exp_rew + probs[i][j]*rew
+
+                ## for calculating exp_return over all possible states in a particular time interval
+                #exp_rew = exp_rew + probs[i][j]*rew
+
+                ## for calculating exp return from one particular state in a particular time interval
+                if matched_reward[i] == clusters[i][j]:
+                    exp_rew = rew
             exp_return.append(exp_rew)
         exp_return_list.append(exp_return)
 
 
-
-
-        # exp_return_charge = []
-        # for i in range(len(return_charge)):
-        #     rew = 0 
-        #     for j in range(len(return_charge[i])):
-        #         if i != 47:
-        #             rew = rew + probs[i+1][j]*return_charge[i][j]
-        #         else:
-        #             rew = rew + 1*return_charge[i][j]
-        #     exp_return_charge.append(rew)
-
-        # exp_return_work = []
-        # for i in range(len(return_work)):
-        #     rew = 0 
-        #     for j in range(len(return_work[i])):
-        #         if i != 47:
-        #             rew = rew + probs[i+1][j]*return_work[i][j]
-        #         else:
-        #             rew = rew + 1*return_work[i][j]
-        #     exp_return_work.append(rew)
 
     i = 0
     for t,b,c in zip(time, battery, charging):
@@ -254,9 +239,9 @@ if __name__ == '__main__':
         elif a == 'stay_charging':
             color2.append('rgba(236, 153, 28,0.5)')
     
-    plotly.tools.set_credentials_file(username='RagulDeep', api_key= 'Ryk98QVNYFGBEtaZMKPS')
+    plotly.tools.set_credentials_file(username='ThanwiraSiraj', api_key= 'y9AlaR5JI6kYeCml1NG4')
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward), go.Scatter(x=time, y=exp_return_list[1]), go.Scatter(x=time, y=exp_return_list[0])]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='un_apr11_exp')
+    py.plot(fig, filename='un_aug7_48_exp_hc')
  

@@ -14,8 +14,7 @@ class uncertain_rewards:
     def __init__(self, validation):
         t = read_tasks.getTasks()
         self.tasks = t.unique_tasks
-        self.min_clst = 5 # required - 1
-        self.time_int = 8
+        self.time_int = 48
         
         if validation == False:
             rewards_by_day = self.get_rewards_by_day()
@@ -32,7 +31,7 @@ class uncertain_rewards:
             self.test_rewards = dict()
             self.rewards_day = dict()
             no_test_start = 0
-            no_test_end = 1
+            no_test_end = 3
             num = 0
             for day in rewards_by_day:
                 if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:

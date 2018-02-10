@@ -16,7 +16,7 @@ class make_model:
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
         self.charge_model = charge_model
         self.discharge_model = discharge_model   
-        self.time_int = 5 # file for one day - 48 time steps ## multiply each battery by 5
+        self.time_int = 8 # file for one day - 48 time steps ## multiply each battery by 5
         self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
        
         
@@ -29,9 +29,85 @@ class make_model:
             f.write('module battery_model\n\n')
             f.write('battery:[0..100] init {0};\n\n'.format(init_b))
 
+            ## 48 inetrval
+            # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-4);\n")
+            # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-5);\n")
+            # f.write("[gather_reward] (battery>4) & (battery<25) -> (battery'=battery-4);\n")
+            # f.write("[gather_reward] (battery>2) & (battery<5) -> (battery'=battery-3);\n")
+            # f.write("[gather_reward] (battery=2) ->  (battery'=battery-2) ;\n")
+            # f.write("[gather_reward] (battery=1) -> (battery'=battery-1) ;\n")
+            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+6) ;\n")
+            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+5) ;\n")
+            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+4) ;\n")
+            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+3) ;\n")
+            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+2) ;\n")
+            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+1) ;\n")
+            # f.write("[go_charge]  (battery>64) & (battery<98) ->  (battery'=battery+2) ;\n")
+            # f.write("[go_charge]  (battery=98) -> (battery'=battery+1) ;\n")
+            # f.write("[go_charge]  (battery=99) -> (battery'=battery) ;\n")
+            # f.write("[go_charge]  (battery=100)  ->  (battery'=battery) ;\n")
+            # f.write("[stay_charging] (battery=0) -> (battery'=battery+7) ;\n")
+            # f.write("[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+7) ;\n")
+            # f.write("[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+6) ;\n")
+            # f.write("[stay_charging] (battery>8) & (battery<15) -> (battery'=battery+5) ;\n")
+            # f.write("[stay_charging] (battery>14) & (battery<29)  ->  (battery'=battery+4) ;\n")
+            # f.write("[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+3) ;\n")
+            # f.write("[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+2) ;\n")
+            # f.write("[stay_charging] (battery>64) & (battery<98)  ->(battery'=battery+3) ;\n")
+            # f.write("[stay_charging] (battery=98)  -> (battery'=battery+2) ;\n")
+            # f.write("[stay_charging] (battery=99)  ->  (battery'=battery+1) ;\n")
+            # f.write("[stay_charging] (battery=100) ->  (battery'=battery) ;\n")
+
+            # ## 16 inetrval
+            # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-12);\n")
+            # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-15);\n")
+            # f.write("[gather_reward] (battery>11) & (battery<25) -> (battery'=battery-12);\n")
+            # f.write("[gather_reward] (battery>0) & (battery<12) ->  (battery'=0) ;\n")
+            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+20) ;\n")
+            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+17) ;\n")
+            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+14) ;\n")
+            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+11) ;\n")
+            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+8) ;\n")
+            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+5) ;\n")
+            # f.write("[go_charge]  (battery>64) & (battery<93) ->  (battery'=battery+8) ;\n")
+            # f.write("[go_charge]  (battery>92) & (battery<=100) -> (battery'=100) ;\n")
+            # f.write("[stay_charging] (battery=0) -> (battery'=battery+21) ;\n")
+            # f.write("[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+21) ;\n")
+            # f.write("[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+18) ;\n")
+            # f.write("[stay_charging] (battery>8) & (battery<15) -> (battery'=battery+15) ;\n")
+            # f.write("[stay_charging] (battery>14) & (battery<29)  ->  (battery'=battery+12) ;\n")
+            # f.write("[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+9) ;\n")
+            # f.write("[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+6) ;\n")
+            # f.write("[stay_charging] (battery>64) & (battery<92)  ->(battery'=battery+9) ;\n")
+            # f.write("[stay_charging] (battery>91) & (battery<=100) -> (battery'=100) ;\n")
+
+            ## 24 inetrval
+            # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-8);\n")
+            # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-10);\n")
+            # f.write("[gather_reward] (battery>7) & (battery<25) -> (battery'=battery-8);\n")
+            # f.write("[gather_reward] (battery>0) & (battery<8) -> (battery'=0);\n")
+            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+13) ;\n")
+            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+11) ;\n")
+            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+9) ;\n")
+            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+7) ;\n")
+            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+5) ;\n")
+            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+3) ;\n")
+            # f.write("[go_charge]  (battery>64) & (battery<96) ->  (battery'=battery+5) ;\n")
+            # f.write("[go_charge]  (battery>95) & (battery<=100) -> (battery'=100) ;\n")
+            # f.write("[stay_charging] (battery=0) -> (battery'=battery+14) ;\n")
+            # f.write("[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+14) ;\n")
+            # f.write("[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+12) ;\n")
+            # f.write("[stay_charging] (battery>8) & (battery<15) -> (battery'=battery+10) ;\n")
+            # f.write("[stay_charging] (battery>14) & (battery<29)  ->  (battery'=battery+8) ;\n")
+            # f.write("[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+6) ;\n")
+            # f.write("[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+4) ;\n")
+            # f.write("[stay_charging] (battery>64) & (battery<95)  ->(battery'=battery+6) ;\n")
+            # f.write("[stay_charging] (battery>94) & (battery<=100)  -> (battery'=100) ;\n")
+            
+            ## 5 interval
             f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-40);\n")
             f.write("[gather_reward] (battery>49) & (battery<90) -> (battery'=battery-50);\n")
-            f.write("[gather_reward] (battery>0) & (battery<250) -> (battery'=0);\n")
+            f.write("[gather_reward] (battery>0) & (battery<50) -> (battery'=0);\n")
             f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+69) ;\n")
             f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+59) ;\n")
             f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+49) ;\n")
@@ -50,18 +126,19 @@ class make_model:
             f.write("[stay_charging] (battery>64) & (battery<71)  ->(battery'=battery+30) ;\n")
             f.write("[stay_charging] (battery>70) & (battery<=100) -> (battery'=100) ;\n")
             
+            ##10 interval
             # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-20);\n")
             # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-25);\n")
             # f.write("[gather_reward] (battery>19) & (battery<25) -> (battery'=battery-20);\n")
             # f.write("[gather_reward] (battery>0) & (battery<20) -> (battery'=0);\n")
-            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+30) ;\n")
-            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+25) ;\n")
-            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+20) ;\n")
-            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+15) ;\n")
-            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+10) ;\n")
-            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+5) ;\n")
-            # f.write("[go_charge]  (battery>64) & (battery<91) ->  (battery'=battery+10) ;\n")
-            # f.write("[go_charge]  (battery>90) & (battery<=100)-> (battery'=100) ;\n")
+            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+34) ;\n")
+            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+29) ;\n")
+            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+24) ;\n")
+            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+19) ;\n")
+            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+14) ;\n")
+            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+9) ;\n")
+            # f.write("[go_charge]  (battery>64) & (battery<87) ->  (battery'=battery+14) ;\n")
+            # f.write("[go_charge]  (battery>86) & (battery<=100)-> (battery'=100) ;\n")
             # f.write("[stay_charging] (battery=0) -> (battery'=battery+35) ;\n")
             # f.write("[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+35) ;\n")
             # f.write("[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+30) ;\n")
@@ -72,13 +149,7 @@ class make_model:
             # f.write("[stay_charging] (battery>64) & (battery<86)  ->(battery'=battery+15) ;\n")
             # f.write("[stay_charging] (battery>85) & (battery<=100)  -> (battery'=100) ;\n")
             
-            # f.write("[gather_reward] (battery>60) & (battery<=100) -> (battery'=battery-30);\n")
-            # f.write("[gather_reward] (battery>19) & (battery<61) -> (battery'=battery-20);\n")
-            # f.write("[gather_reward] (battery >0) & (battery < 20) -> (battery'=0) ;\n")
-            # f.write("[go_charge]  (battery>0) & (battery < 81)-> (battery'=battery+20) ;\n")
-            # f.write("[go_charge]  (battery>80) -> (battery'=100) ;\n")
-            # f.write("[stay_charging]  (battery>0) & (battery < 80)-> (battery'=battery+21) ;\n")
-            # f.write("[stay_charging]  (battery>79) -> (battery'=100) ;\n")
+            
             
             # for b in self.discharge_model:
             #     bnext_dict = self.discharge_model[b]
@@ -170,6 +241,6 @@ class make_model:
             f.write('\nendrewards\n\n')
                
 if __name__ == '__main__':
-    ur = rewards_dbscan.uncertain_rewards(False)
+    ur = rewards_dbscan.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    mm = make_model('model_test.prism', 0, 5, 1, 1, clusters, prob, 'a', 'b')
+    mm = make_model('model_test.prism', 0, 70, 1, 2, clusters, prob, 'a', 'b')

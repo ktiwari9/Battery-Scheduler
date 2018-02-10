@@ -51,7 +51,7 @@ class parse_model:
         self.day = day
         self.clusters = clusters
         self.probs = probs
-        self.time_int = 5
+        self.time_int = 48
         
     def get_initial_state(self):
         for element in self.labels:
@@ -66,21 +66,24 @@ class parse_model:
         t_current = int(self.states[current_state][2])
         matched_reward = self.sample_reward[self.day*self.time_int+t_current]  # the reward determined by the cluster (not much of use)
         exp_reward = self.exp_reward[self.day*self.time_int+t_current]         # expected probability
-        act_reward = self.actual_reward[self.day*(self.time_int+1)+t_current]      # actual reward on completing task
-        cluster_group = self.clusters[self.day*(self.time_int+1)+t_current]
-        prob_group = self.probs[self.day*(self.time_int+1)+t_current]
+        act_reward = self.actual_reward[self.day*self.time_int+t_current]      # actual reward on completing task
+        cluster_group = self.clusters[(self.day*self.time_int+t_current)%self.time_int]
+        prob_group = self.probs[(self.day*self.time_int+t_current)%self.time_int]
 
+        i = 0
         for ns_p_a in possible_states:
             t_next = int(self.states[ns_p_a[0]][2])
 
-            if self.day*self.time_int+t_next >= len(self.sample_reward): #return the only possibility for the last case
+            if self.day*self.time_int+t_next >= ((self.day+1)*self.time_int): #return the only possibility for the last case
                 next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
 
-            req_id = int(self.cl_id[self.day*self.time_int+t_next])  
-            if int(self.states[ns_p_a[0]][3]) == req_id:
+            req_id = int(self.cl_id[self.day*self.time_int+t_next]) 
+            if int(self.states[ns_p_a[0]][3]) == req_id: #and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[t_next][i]):
                 next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                 return next_state
+
+            i = i+1
             
     def simulate(self, day, name):
         in_state = self.get_initial_state()

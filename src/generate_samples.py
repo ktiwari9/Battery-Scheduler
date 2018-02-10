@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import rewards_uncertain_hk
 import rewards_dbscan
 import roslib
 import numpy as np
@@ -7,10 +7,11 @@ import numpy as np
 class sample_generator:
     
     def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
-        ur = rewards_dbscan.uncertain_rewards(validation)
+        ur = rewards_uncertain_hk.uncertain_rewards(validation)
+        #ur = rewards_dbscan.uncertain_rewards(validation)
         self.clusters, self.prob = ur.get_rewards()
-        self.len_test_rewards = 1 # no. of days to be tested
-        self.time_int = 5
+        self.len_test_rewards = 3 # no. of days to be tested
+        self.time_int = 48
         if validation == True:
             self.test_rewards = ur.test_rewards
             self.len_test_rewards = len(self.test_rewards)
