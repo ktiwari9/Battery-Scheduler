@@ -10,7 +10,7 @@ import roslib
 
 class parse_model:
 
-    def __init__(self, filenames, current time, cl_id, actual_reward, sample_reward, clusters):
+    def __init__(self, filenames, current_time, sample_reward, clusters):
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/'
         for name in filenames:
@@ -27,7 +27,8 @@ class parse_model:
                     for line in state_file.readlines():
                         if '_da' not in line or 'battery' not in line:
                             state = line[:-2].split(':(')
-                            self.states.update({state[0] : (state[1].split(',')[1], state[1].split(',')[2], state[1].split(',')[3], state[1].split(',')[4])})
+                            s = state[1].split(',')
+                            self.states.update({state[0] : (s[1], s[2], s[3], s[4])})
     
             elif name[-4:] == '.adv':
                 with open(path+name, 'r') as adv_file: 
@@ -43,9 +44,7 @@ class parse_model:
                             self.policy.update({array[0] : l})
             
         self.initial_state = self.get_initial_state()
-        self.cl_id = cl_id
         self.sample_reward = sample_reward
-        self.actual_reward = actual_reward
         self.current_t = current_time
         self.clusters = clusters
         
@@ -60,21 +59,32 @@ class parse_model:
     # when no observed state
     def get_next_state(self, current_state):
         possible_states = self.policy[current_state]
-        matched_reward = self.sample_reward[self.current_t]  # the reward determined by the cluster (not much of use)
-        exp_reward = self.exp_reward[self.current_t]         # expected probability
-        act_reward = self.actual_reward[self.current_t]      # actual reward on completing task
         t_next = self.current_t+1
-        next_cl_id = 0
-        for ns_p_a in possible_states:
-            cl_no = 0
-            for i in range(self.current_t):
-                cl_no = cl_no + len(self.clusters[i])
-            req_id = int(self.cl_id[t_next])
-  
-            if (cl_no+int(self.states[ns_p_a[0]][3])) == req_id:
-                next_state = [self.states[ns_p_a[0]], next_cl_id, ns_p_a[2], act_reward, matched_reward, exp_reward]   # state_id, cluster id (set for initial cluster), action to get to this state
-                return next_state
+
+        if t_next < len(self.sample_reward):
+            matched_reward = self.sample_reward[t_next]  # the reward determined by the cluster for next time int
+
+            cl_no = len(self.clusters[0])
+            for i in range(len(self.clusters[1])):
+                #print matched_reward, float(self.clusters[1][i])
+                #print type(matched_reward), type(self.clusters[1][i])
+                if round(matched_reward) == round(self.clusters[1][i]):
+                    req_id = cl_no + i
+                    break
             
-            next_cl_id = next_cl_id + 1
+            next_id = 0
+            for ns_p_a in possible_states:
+                next_cl_id = int(self.states[ns_p_a[0]][3])
+                #print next_cl_id, req_id
+                if next_cl_id == req_id:
+                    next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[batter, charging, time, cluster], action to get to this state
+                    return next_state                                  # rewards that could be achieved in this state
+            
+                next_id = next_id + 1
+        
+        else:
+            next_state = [self.states[possible_states[-1][0]], len(possible_states)-1,  possible_states[-1][2]]
+            return next_state
+            
             
     

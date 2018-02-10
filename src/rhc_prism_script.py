@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import rewards_dbscan
+import rewards_uncertain_hk
 import roslib
 import numpy as np
 
@@ -8,13 +8,14 @@ class make_model:
     
     def __init__(self,filename, from_t, init_b, init_ch, init_cluster, clusters, prob, charge_model, discharge_model):
         # initial values that make model. from_t, time from which model calculated
+        self.time_int = 48
         self.horizon = 48
         self.clusters = self.horizon*[0]
         self.prob = self.horizon*[0]
         self.total_cl = 0
         for k in range(self.horizon):  
-            self.prob[k] = prob[(from_t+k)%48]
-            self.clusters[k] = clusters[(from_t+k)%48]
+            self.prob[k] = prob[(from_t+k)%self.time_int]
+            self.clusters[k] = clusters[(from_t+k)%self.time_int]
             self.total_cl = self.total_cl+len(self.clusters[k])
         self.charge_model = charge_model
         self.discharge_model = discharge_model   
@@ -36,8 +37,7 @@ class make_model:
             f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-5);\n")
             f.write("[gather_reward] (battery>4) & (battery<25) -> (battery'=battery-4);\n")
             f.write("[gather_reward] (battery>2) & (battery<5) -> (battery'=battery-3);\n")
-            f.write("[gather_reward] (battery=2) ->  (battery'=battery-2) ;\n")
-            f.write("[gather_reward] (battery=1) -> (battery'=battery-1) ;\n")
+            f.write("[gather_reward] (battery>0) & (battery<3) ->  (battery'=0) ;\n")
             f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+6) ;\n")
             f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+5) ;\n")
             f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+4) ;\n")
@@ -56,10 +56,8 @@ class make_model:
             f.write("[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+3) ;\n")
             f.write("[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+2) ;\n")
             f.write("[stay_charging] (battery>64) & (battery<98)  ->(battery'=battery+3) ;\n")
-            f.write("[stay_charging] (battery=98)  -> (battery'=battery+2) ;\n")
-            f.write("[stay_charging] (battery=99)  ->  (battery'=battery+1) ;\n")
-            f.write("[stay_charging] (battery=100) ->  (battery'=battery) ;\n")
-
+            f.write("[stay_charging] (battery>97) & (battery<=100) -> (battery'=100) ;\n")
+            
             # for b in self.discharge_model:
             #     bnext_dict = self.discharge_model[b]
             #     total = np.sum(np.array(bnext_dict.values()))
@@ -150,7 +148,7 @@ class make_model:
             f.write('\nendrewards\n\n')
                
 if __name__ == '__main__':
-    ur = rewards_dbscan.uncertain_rewards(False)
+    ur = rewards_uncertain_hk.uncertain_rewards(False)
     clusters, prob = ur.get_rewards()
     mm = make_model('rhc_test.prism', 0, 70, 1, 1, clusters, prob, 'a', 'b')
         
