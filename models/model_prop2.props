@@ -1,0 +1,4 @@
+multi(Pmax=? [ G (battery>30) ], R{"rew"}max=? [ C ])
+
+multi( R{"rew"}max=? [ C ], P>=0.999999999999[ G F (battery>30) ])
+

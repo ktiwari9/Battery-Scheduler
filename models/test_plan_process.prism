@@ -1,0 +1,135 @@
+mdp
+
+module battery_model
+
+battery:[0..100] init 60;
+
+[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-40);
+[gather_reward] (battery>49) & (battery<90) -> (battery'=battery-50);
+[gather_reward] (battery>0) & (battery<50) -> (battery'=0);
+[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+69) ;
+[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+59) ;
+[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+49) ;
+[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+39) ;
+[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+29) ;
+[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+19) ;
+[go_charge]  (battery>64) & (battery<72) ->  (battery'=battery+29) ;
+[go_charge]  (battery>71) & (battery<=100)-> (battery'=100) ;
+[stay_charging] (battery=0) -> (battery'=battery+70) ;
+[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+70) ;
+[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+60) ;
+[stay_charging] (battery>8) & (battery<15) -> (battery'=battery+50) ;
+[stay_charging] (battery>14) & (battery<29)  ->  (battery'=battery+40) ;
+[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+30) ;
+[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+20) ;
+[stay_charging] (battery>64) & (battery<71)  ->(battery'=battery+30) ;
+[stay_charging] (battery>70) & (battery<=100) -> (battery'=100) ;
+[tick] (battery=0) -> (battery' = battery);
+
+endmodule
+
+
+module charging_state
+
+charging:[0..1] init 0;
+[gather_reward] (charging=0) | (charging=1) -> (charging'=0);
+[stay_charging] (charging=1) -> (charging'=1);
+[go_charge] (charging=0) -> (charging'=1);
+
+endmodule
+
+
+module time_model
+
+t:[0..8] init 7;
+[gather_reward] (t<8) -> (t'=t+1);
+[go_charge] (t<8) -> (t'=t+1);
+[stay_charging] (t<8) -> (t'=t+1);
+[tick] (t<8) -> (t'=t+1);
+
+endmodule
+
+
+module cluster_evolution
+
+cl:[0..36] init 35;
+
+[gather_reward] (t=0) -> 0.712328767123:(cl'=4) + 0.041095890411:(cl'=5) + 0.164383561644:(cl'=6) + 0.0821917808219:(cl'=7);
+[go_charge] (t=0) -> 0.712328767123:(cl'=4) + 0.041095890411:(cl'=5) + 0.164383561644:(cl'=6) + 0.0821917808219:(cl'=7);
+[stay_charging] (t=0) -> 0.712328767123:(cl'=4) + 0.041095890411:(cl'=5) + 0.164383561644:(cl'=6) + 0.0821917808219:(cl'=7);
+[tick] (t=0) -> 0.712328767123:(cl'=4) + 0.041095890411:(cl'=5) + 0.164383561644:(cl'=6) + 0.0821917808219:(cl'=7);
+[gather_reward] (t=1) -> 0.323943661972:(cl'=8) + 0.380281690141:(cl'=9) + 0.140845070423:(cl'=10) + 0.0422535211268:(cl'=11) + 0.112676056338:(cl'=12);
+[go_charge] (t=1) -> 0.323943661972:(cl'=8) + 0.380281690141:(cl'=9) + 0.140845070423:(cl'=10) + 0.0422535211268:(cl'=11) + 0.112676056338:(cl'=12);
+[stay_charging] (t=1) -> 0.323943661972:(cl'=8) + 0.380281690141:(cl'=9) + 0.140845070423:(cl'=10) + 0.0422535211268:(cl'=11) + 0.112676056338:(cl'=12);
+[tick] (t=1) -> 0.323943661972:(cl'=8) + 0.380281690141:(cl'=9) + 0.140845070423:(cl'=10) + 0.0422535211268:(cl'=11) + 0.112676056338:(cl'=12);
+[gather_reward] (t=2) -> 0.36231884058:(cl'=13) + 0.333333333333:(cl'=14) + 0.0724637681159:(cl'=15) + 0.0724637681159:(cl'=16) + 0.159420289855:(cl'=17);
+[go_charge] (t=2) -> 0.36231884058:(cl'=13) + 0.333333333333:(cl'=14) + 0.0724637681159:(cl'=15) + 0.0724637681159:(cl'=16) + 0.159420289855:(cl'=17);
+[stay_charging] (t=2) -> 0.36231884058:(cl'=13) + 0.333333333333:(cl'=14) + 0.0724637681159:(cl'=15) + 0.0724637681159:(cl'=16) + 0.159420289855:(cl'=17);
+[tick] (t=2) -> 0.36231884058:(cl'=13) + 0.333333333333:(cl'=14) + 0.0724637681159:(cl'=15) + 0.0724637681159:(cl'=16) + 0.159420289855:(cl'=17);
+[gather_reward] (t=3) -> 0.686567164179:(cl'=18) + 0.0746268656716:(cl'=19) + 0.044776119403:(cl'=20) + 0.194029850746:(cl'=21);
+[go_charge] (t=3) -> 0.686567164179:(cl'=18) + 0.0746268656716:(cl'=19) + 0.044776119403:(cl'=20) + 0.194029850746:(cl'=21);
+[stay_charging] (t=3) -> 0.686567164179:(cl'=18) + 0.0746268656716:(cl'=19) + 0.044776119403:(cl'=20) + 0.194029850746:(cl'=21);
+[tick] (t=3) -> 0.686567164179:(cl'=18) + 0.0746268656716:(cl'=19) + 0.044776119403:(cl'=20) + 0.194029850746:(cl'=21);
+[gather_reward] (t=4) -> 0.0985915492958:(cl'=22) + 0.338028169014:(cl'=23) + 0.323943661972:(cl'=24) + 0.0422535211268:(cl'=25) + 0.197183098592:(cl'=26);
+[go_charge] (t=4) -> 0.0985915492958:(cl'=22) + 0.338028169014:(cl'=23) + 0.323943661972:(cl'=24) + 0.0422535211268:(cl'=25) + 0.197183098592:(cl'=26);
+[stay_charging] (t=4) -> 0.0985915492958:(cl'=22) + 0.338028169014:(cl'=23) + 0.323943661972:(cl'=24) + 0.0422535211268:(cl'=25) + 0.197183098592:(cl'=26);
+[tick] (t=4) -> 0.0985915492958:(cl'=22) + 0.338028169014:(cl'=23) + 0.323943661972:(cl'=24) + 0.0422535211268:(cl'=25) + 0.197183098592:(cl'=26);
+[gather_reward] (t=5) -> 0.287671232877:(cl'=27) + 0.356164383562:(cl'=28) + 0.0684931506849:(cl'=29) + 0.0547945205479:(cl'=30) + 0.232876712329:(cl'=31);
+[go_charge] (t=5) -> 0.287671232877:(cl'=27) + 0.356164383562:(cl'=28) + 0.0684931506849:(cl'=29) + 0.0547945205479:(cl'=30) + 0.232876712329:(cl'=31);
+[stay_charging] (t=5) -> 0.287671232877:(cl'=27) + 0.356164383562:(cl'=28) + 0.0684931506849:(cl'=29) + 0.0547945205479:(cl'=30) + 0.232876712329:(cl'=31);
+[tick] (t=5) -> 0.287671232877:(cl'=27) + 0.356164383562:(cl'=28) + 0.0684931506849:(cl'=29) + 0.0547945205479:(cl'=30) + 0.232876712329:(cl'=31);
+[gather_reward] (t=6) -> 0.630136986301:(cl'=32) + 0.041095890411:(cl'=33) + 0.0547945205479:(cl'=34) + 0.27397260274:(cl'=35);
+[go_charge] (t=6) -> 0.630136986301:(cl'=32) + 0.041095890411:(cl'=33) + 0.0547945205479:(cl'=34) + 0.27397260274:(cl'=35);
+[stay_charging] (t=6) -> 0.630136986301:(cl'=32) + 0.041095890411:(cl'=33) + 0.0547945205479:(cl'=34) + 0.27397260274:(cl'=35);
+[tick] (t=6) -> 0.630136986301:(cl'=32) + 0.041095890411:(cl'=33) + 0.0547945205479:(cl'=34) + 0.27397260274:(cl'=35);
+[gather_reward] (t=7) -> 1:(cl'=36);
+[go_charge] (t=7) -> 1:(cl'=36);
+[stay_charging] (t=7) -> 1:(cl'=36);
+[tick] (t=7) -> 1:(cl'=36);
+
+
+endmodule
+
+
+rewards "rew"
+
+[gather_reward](cl=0):3512.36363636;
+[gather_reward](cl=1):59409.0;
+[gather_reward](cl=2):10522.0;
+[gather_reward](cl=3):0.0;
+[gather_reward](cl=4):2807.01923077;
+[gather_reward](cl=5):14755.6666667;
+[gather_reward](cl=6):10061.0833333;
+[gather_reward](cl=7):0.0;
+[gather_reward](cl=8):952.130434783;
+[gather_reward](cl=9):2981.92592593;
+[gather_reward](cl=10):10694.2;
+[gather_reward](cl=11):81222.0;
+[gather_reward](cl=12):0.0;
+[gather_reward](cl=13):986.4;
+[gather_reward](cl=14):3148.91304348;
+[gather_reward](cl=15):135074.4;
+[gather_reward](cl=16):10016.6;
+[gather_reward](cl=17):0.0;
+[gather_reward](cl=18):2024.86956522;
+[gather_reward](cl=19):10011.4;
+[gather_reward](cl=20):136426.0;
+[gather_reward](cl=21):0.0;
+[gather_reward](cl=22):9667.42857143;
+[gather_reward](cl=23):922.041666667;
+[gather_reward](cl=24):3328.86956522;
+[gather_reward](cl=25):83889.0;
+[gather_reward](cl=26):0.0;
+[gather_reward](cl=27):937.0;
+[gather_reward](cl=28):3547.38461538;
+[gather_reward](cl=29):9997.6;
+[gather_reward](cl=30):86702.0;
+[gather_reward](cl=31):0.0;
+[gather_reward](cl=32):1883.89130435;
+[gather_reward](cl=33):11643.3333333;
+[gather_reward](cl=34):99237.0;
+[gather_reward](cl=35):0.0;
+[gather_reward](cl=36):0;
+
+endrewards
+
