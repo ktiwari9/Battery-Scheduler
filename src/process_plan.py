@@ -5,6 +5,7 @@ import plotly
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
+import matplotlib.pyplot as plt
 
 
 class StateProcessor:

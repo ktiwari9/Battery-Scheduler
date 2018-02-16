@@ -97,7 +97,8 @@ class make_model:
             f.write('charging:[0..1] init {0};\n'.format(init_ch))
             f.write("[gather_reward] (charging=0) | (charging=1) -> (charging'=0);\n")
             f.write("[stay_charging] (charging=1) -> (charging'=1);\n")
-            f.write("[go_charge] (charging=0) -> (charging'=1);\n\n")
+            f.write("[go_charge] (charging=0) -> (charging'=1);\n")
+            f.write("[tick] (charging=0) -> (charging'=0);\n\n")
             f.write('endmodule\n\n\n')
 
             f.write('module time_model\n\n')

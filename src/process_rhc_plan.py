@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # for without RHC - do not activate both at same time
     # t = 0;
     # for i in range(no_days):
-    #     with open(data_path + 'wrhc_aug_'+ str(i), 'r') as f:
+    #     with open(data_path + 'wrhc_aug3'+ str(i), 'r') as f:
     #         for line in f.readlines():
     #             if 'time' not in line:
     #                 s = line.split(' ')[:-1]
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 
     # with RHC - do not activate both at same time
-    with open(data_path+'rhc_aug1', 'r') as f:
+    with open(data_path+'rrhc_aug2', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
@@ -67,5 +67,5 @@ if __name__ == '__main__':
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward)]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='rhc_aug1')
+    py.plot(fig, filename='rrhc_aug2')
  

@@ -30,8 +30,8 @@ class uncertain_rewards:
             rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
             self.rewards_day = dict()
-            no_test_start = 0
-            no_test_end = 3
+            no_test_start = 8
+            no_test_end = 11
             num = 0
             for day in rewards_by_day:
                 if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:

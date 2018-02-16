@@ -51,7 +51,7 @@ if __name__ == '__main__':
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'wrhc_aug_')  
+            rewards, action, final_state = pp.simulate(k,'wrhc_aug3')  
             battery[i] = int(final_state[0])
             charging[i] = int(final_state[1])
             init_cluster[i] = int(final_state[3])
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     
     for k in range(len(avg_totalreward)):
         print avg_totalreward[k], ' total_reward, day',k+1
-    print np.sum(avg_totalreward), ' : Reward for Dec'
+    print np.sum(avg_totalreward), ' : Reward for Aug'

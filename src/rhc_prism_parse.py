@@ -6,8 +6,6 @@ import os
 import roslib
  
 
-###### States are probabilistic, picking them randomly 
-
 class parse_model:
 
     def __init__(self, filenames, current_time, sample_reward, clusters):
