@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+import battery_model
 import subprocess
 import reduced_rhc_script
 #import rhc_mod_parse
@@ -11,10 +11,8 @@ import numpy as np
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    #path_to_directory = ##TO BE ADDED 
-    #charge_model, discharge_model = battery_data.get_battery_model(path_to_directory)
-    charge_model = 'ab'
-    discharge_model = 'cd'
+    path_to_directory = '/home/milan/battery_logs'
+    charge_model, discharge_model = battery_model.get_battery_model(path_to_directory)
     cl_id =[]
     sample_reward = []
     actual_reward = []

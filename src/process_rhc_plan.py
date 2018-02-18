@@ -15,32 +15,32 @@ if __name__ == '__main__':
     no_days = 3
     data_path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/'
     # for without RHC - do not activate both at same time
-    # t = 0;
-    # for i in range(no_days):
-    #     with open(data_path + 'wrhc_aug3'+ str(i), 'r') as f:
-    #         for line in f.readlines():
-    #             if 'time' not in line:
-    #                 s = line.split(' ')[:-1]
-    #                 time.append(t)
-    #                 t = t+1
-    #                 battery.append(int(s[1]))
-    #                 matched_reward.append(float(s[4]))
-    #                 exp_reward.append(float(s[6]))
-    #                 actual_reward.append(float(s[5]))
-    #                 action.append(s[3])
+    t = 0;
+    for i in range(no_days):
+        with open(data_path + 'wrhc_aug3'+ str(i), 'r') as f:
+            for line in f.readlines():
+                if 'time' not in line:
+                    s = line.split(' ')[:-1]
+                    time.append(t)
+                    t = t+1
+                    battery.append(int(s[1]))
+                    matched_reward.append(float(s[4]))
+                    exp_reward.append(float(s[6]))
+                    actual_reward.append(float(s[5]))
+                    action.append(s[3])
 
 
     # with RHC - do not activate both at same time
-    with open(data_path+'rrhc_aug2', 'r') as f:
-        for line in f.readlines():
-            if 'time' not in line:
-                s = line.split(' ')[:-1]
-                time.append(int(s[0]))
-                battery.append(int(s[2]))
-                matched_reward.append(float(s[4]))
-                exp_reward.append(float(s[6]))
-                actual_reward.append(float(s[5]))
-                action.append(s[3])
+    # with open(data_path+'rhc_aug3', 'r') as f:
+    #     for line in f.readlines():
+    #         if 'time' not in line:
+    #             s = line.split(' ')[:-1]
+    #             time.append(int(s[0]))
+    #             battery.append(int(s[2]))
+    #             matched_reward.append(float(s[4]))
+    #             exp_reward.append(float(s[6]))
+    #             actual_reward.append(float(s[5]))
+    #             action.append(s[3])
                 
         
         
@@ -67,5 +67,5 @@ if __name__ == '__main__':
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward)]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='rrhc_aug2')
+    py.plot(fig, filename='wrhc_aug3')
  

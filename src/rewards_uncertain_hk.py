@@ -30,15 +30,15 @@ class uncertain_rewards:
             rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
             self.rewards_day = dict()
-            no_test_start = 8
-            no_test_end = 11
+            no_test_start = 5
+            no_test_end = 8
             num = 0
             for day in rewards_by_day:
-                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
+                if day[1] == 9 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
                     self.test_rewards.update({ day : rewards_by_day[day]})    
                 elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
                     self.rewards_day.update({ day : rewards_by_day[day]})
-                if day[1] == 8 and day[0] == 2017:
+                if day[1] == 9 and day[0] == 2017:
                     num = num+1
                    
     def get_rewards_by_day(self):
