@@ -37,12 +37,17 @@ def extract_data(path_to_files):
                                     charging_data.append([battery_state])
                         
                                 else:
-                                    #print charging_data[-1][-1].epoch, battery_state.epoch
-                                    if abs(charging_data[-1][-1].epoch - battery_state.epoch)%60 == 0 and charging_data[-1][-1].epoch != battery_state.epoch:
+                                    if charging_data[-1][-1].epoch != battery_state.epoch:
                                         #print battery_state.life, battery_state.epoch
-                                        if charging_data[-1][-1].life <= battery_state.life:
-                                            charging_data[-1].append(battery_state)
-                                        else:
+                                        #print abs(charging_data[-1][-1].epoch - battery_state.epoch)
+                                        if abs(charging_data[-1][-1].epoch - battery_state.epoch) == 60:
+                                            if charging_data[-1][-1].life <= battery_state.life:
+                                        #        print battery_state.life, battery_state.epoch
+                                                charging_data[-1].append(battery_state)
+                                            else:
+                                                charging_data.append([battery_state])
+
+                                        elif abs(charging_data[-1][-1].epoch - battery_state.epoch) % 60 == 0:
                                             charging_data.append([battery_state])
                             
                             elif battery_state.is_charging == False:
@@ -50,13 +55,18 @@ def extract_data(path_to_files):
                                     discharging_data.append([battery_state])
                                     #print battery_state.life, battery_state.epoch
                                 else:
-                                    #print discharging_data[-1][-1].epoch, battery_state.epoch
-                                    if abs(discharging_data[-1][-1].epoch - battery_state.epoch)%60 == 0 and discharging_data[-1][-1].epoch != battery_state.epoch:
+                                    if discharging_data[-1][-1].epoch != battery_state.epoch:
                                         #print battery_state.life, battery_state.epoch
-                                        if discharging_data[-1][-1].life >= battery_state.life:
-                                            discharging_data[-1].append(battery_state)
-                                        else:
+                                        #print abs(discharging_data[-1][-1].epoch - battery_state.epoch)
+                                        if abs(discharging_data[-1][-1].epoch - battery_state.epoch) == 60:
+                                            if discharging_data[-1][-1].life >= battery_state.life:
+                                        #        print battery_state.life, battery_state.epoch
+                                                discharging_data[-1].append(battery_state)
+                                            else:
+                                                discharging_data.append([battery_state])
+                                        elif abs(discharging_data[-1][-1].epoch - battery_state.epoch) % 60 == 0:
                                             discharging_data.append([battery_state])
+
                         except ValueError:
                             continue
             
