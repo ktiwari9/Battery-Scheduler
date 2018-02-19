@@ -14,7 +14,7 @@ if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
     # ur = rewards_dbscan.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    path_to_directory = '/home/milan/battery_logs' 
+    path_to_directory = '/media/milan/DATA/battery_logs' 
     charge_model, discharge_model = battery_model.get_battery_model(path_to_directory)
     cl_id = []
     sample_reward = []

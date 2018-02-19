@@ -55,16 +55,17 @@ class make_model:
             # f.write("[stay_charging] (battery>97) & (battery<=100)  -> (battery'=100) ;\n")
             
             for b in self.discharge_model:
-                bnext_dict = self.discharge_model[b]
-                total = np.sum(np.array(bnext_dict.values()))
-                f.write("[gather_reward] (battery={0}) -> ".format(b))
-                plus = 0
-                for bnext, val in bnext_dict.items():
-                    if plus != 0:
-                        f.write(' + ')
-                    f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
-                    plus = plus +1
-                f.write(';\n')
+                if b != 0:
+                    bnext_dict = self.discharge_model[b]
+                    total = np.sum(np.array(bnext_dict.values()))
+                    f.write("[gather_reward] (battery={0}) -> ".format(b))
+                    plus = 0
+                    for bnext, val in bnext_dict.items():
+                        if plus != 0:
+                            f.write(' + ')
+                        f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
+                        plus = plus +1
+                    f.write(';\n')
 
             for b in self.charge_model:
                 bnext_dict = self.charge_model[b]

@@ -11,7 +11,7 @@ import numpy as np
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    path_to_directory = '/home/milan/battery_logs'
+    path_to_directory = '/media/milan/DATA/battery_logs'
     charge_model, discharge_model = battery_model.get_battery_model(path_to_directory)
     cl_id =[]
     sample_reward = []
@@ -50,7 +50,7 @@ if __name__ == '__main__':
             rhc_pm = reduced_rhc_script.make_model('rrhc.prism', t, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
             fw.write('{0} {1} {2} '.format(t, init_charging, init_battery))
             subprocess.call('./prism '+model_path+'rrhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'rrhc.adv -exportprodstates '+model_path+'rrhc.sta -exporttarget '+model_path+'rrhc.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
-            rhc_pp = rrhc_prism_parse.parse_model(['rrhcpre1.adv', 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters)
+            rhc_pp = rrhc_prism_parse.parse_model(['rrhcpre1.adv', 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
             next_state = rhc_pp.get_next_state(rhc_pp.initial_state)
             
             action.append(next_state[2])

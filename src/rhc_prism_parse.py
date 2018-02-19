@@ -68,21 +68,30 @@ class parse_model:
                 #print type(matched_reward), type(self.clusters[1][i])
                 if round(matched_reward) == round(self.clusters[1][i]):
                     req_id = cl_no + i
+                    next_id = i
                     break
             
-            next_id = 0
+            next_state_list = dict()
             for ns_p_a in possible_states:
                 next_cl_id = int(self.states[ns_p_a[0]][3])
                 #print next_cl_id, req_id
                 if next_cl_id == req_id:
                     next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[batter, charging, time, cluster], action to get to this state
-                    return next_state                                  # rewards that could be achieved in this state
+                    next_state_list.update({ ns_p_a[1] : next_state})           # rewards that could be achieved in this state
             
-                next_id = next_id + 1
-        
+            max_prob = max(next_state_list.keys())
+            return next_state_list[max_prob]
+                
         else:
-            next_state = [self.states[possible_states[-1][0]], len(possible_states)-1,  possible_states[-1][2]]
-            return next_state
+            next_id = max(self.states[ns_p_a[0]][3] for ns_p_a in possible_states )
+            next_state_list = dict()
+            for ns_p_a in possible_states:
+                next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]
+                next_state_list.update({ ns_p_a[1] : next_state})
+                
+            max_prob = max(next_state_list.keys())
+            return next_state_list[max_prob]
+            
             
             
     

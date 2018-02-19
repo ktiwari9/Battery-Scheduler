@@ -8,7 +8,7 @@ import roslib
 
 class parse_model:
 
-    def __init__(self, filenames, current_time, sample_reward, clusters):
+    def __init__(self, filenames, current_time, sample_reward, clusters, no_cluster):
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/'
         for name in filenames:
@@ -45,6 +45,7 @@ class parse_model:
         self.sample_reward = sample_reward
         self.current_t = current_time
         self.clusters = clusters
+        self.no_cluster = no_cluster
         
         
     def get_initial_state(self):
@@ -70,23 +71,36 @@ class parse_model:
                     req_id = cl_no + i
                     next_id = i
                     break
-
-            if len(possible_states)>1:
-                next_id = 0
+            
+            if self.states[possible_states[0][0]][2] < self.no_cluster:
+            
+                next_state_list = dict()
                 for ns_p_a in possible_states:
                     next_cl_id = int(self.states[ns_p_a[0]][3])
                     #print next_cl_id, req_id
                     if next_cl_id == req_id:
                         next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[batter, charging, time, cluster], action to get to this state
-                        return next_state                                  # rewards that could be achieved in this state
-            
-                    next_id = next_id + 1
+                        next_state_list.update({ ns_p_a[1] : next_state})          # rewards that could be achieved in this state
+                
+                max_prob = max(next_state_list.keys())
+                return next_state_list[max_prob]
 
             else:
-                ns_p_a = possible_states[0]
-                next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]
-                return next_state
+                next_state_list = dict()
+                for ns_p_a in possible_states:
+                    next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]
+                    next_state_list.update({ ns_p_a[1] : next_state})
+                
+                max_prob = max(next_state_list.keys())
+                return next_state_list[max_prob]
         
         else:
-            next_state = [self.states[possible_states[-1][0]], len(possible_states)-1,  possible_states[-1][2]]
-            return next_state
+            next_id = max(self.states[ns_p_a[0]][3] for ns_p_a in possible_states )
+            next_state_list = dict()
+            for ns_p_a in possible_states:
+                next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]
+                next_state_list.update({ ns_p_a[1] : next_state})
+                
+            max_prob = max(next_state_list.keys())
+            return next_state_list[max_prob]
+            
