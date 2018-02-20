@@ -60,43 +60,84 @@ class make_model:
             # f.write("[stay_charging] (battery>64) & (battery<98)  ->(battery'=battery+3) ;\n")
             # f.write("[stay_charging] (battery>97) & (battery<=100) -> (battery'=100) ;\n")
             
+            # for b in self.discharge_model:
+            #     if b != 0:
+            #         bnext_dict = self.discharge_model[b]
+            #         total = np.sum(np.array(bnext_dict.values()))
+            #         f.write("[gather_reward] (battery={0}) -> ".format(b))
+            #         plus = 0
+            #         for bnext, val in bnext_dict.items():
+            #             if plus != 0:
+            #                 f.write(' + ')
+            #             f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
+            #             plus = plus +1
+            #         f.write(';\n')
+
+                    
+            # for b in self.charge_model:
+            #     if b != 0:
+            #         if b == 100:
+            #             bnext_dict = self.charge_model[b]
+            #             total = np.sum(np.array(bnext_dict.values()))
+            #             f.write("[go_charge] (battery={0}) -> ".format(b))
+            #             plus = 0
+            #             for bnext, val in bnext_dict.items():
+            #                 if plus != 0:
+            #                     f.write(' + ')
+            #                 f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
+            #                 plus = plus +1
+            #             f.write(';\n')
+            #         else:
+            #             bnext_dict = self.charge_model[b]
+            #             total = np.sum(np.array(bnext_dict.values()))
+            #             f.write("[go_charge] (battery={0}) -> ".format(b))
+            #             plus = 0
+            #             for bnext, val in bnext_dict.items():
+            #                 if plus != 0:
+            #                     f.write(' + ')
+            #                 f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext-1))
+            #                 plus = plus +1
+            #             f.write(';\n')
+
+            # for b in self.charge_model:
+            #     bnext_dict = self.charge_model[b]
+            #     total = np.sum(np.array(bnext_dict.values()))
+            #     f.write("[stay_charging] (battery={0}) -> ".format(b))
+            #     plus = 0
+            #     for bnext, val in bnext_dict.items():
+            #         if plus != 0:
+            #             f.write(' + ')
+            #         f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
+            #         plus = plus +1
+            #     f.write(';\n')
+
             for b in self.discharge_model:
                 if b != 0:
                     bnext_dict = self.discharge_model[b]
                     total = np.sum(np.array(bnext_dict.values()))
-                    f.write("[gather_reward] (battery={0}) -> ".format(b))
-                    plus = 0
+                    avg = 0.0
                     for bnext, val in bnext_dict.items():
-                        if plus != 0:
-                            f.write(' + ')
-                        f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
-                        plus = plus +1
-                    f.write(';\n')
-
-                    
-            for b in self.charge_model:
-                bnext_dict = self.charge_model[b]
-                total = np.sum(np.array(bnext_dict.values()))
-                f.write("[go_charge] (battery={0}) -> ".format(b))
-                plus = 0
-                for bnext, val in bnext_dict.items():
-                    if plus != 0:
-                        f.write(' + ')
-                    f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext-1))
-                    plus = plus +1
-                f.write(';\n')
+                        avg = avg + bnext*val
+                    f.write("[gather_reward] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
 
             for b in self.charge_model:
                 bnext_dict = self.charge_model[b]
                 total = np.sum(np.array(bnext_dict.values()))
-                f.write("[stay_charging] (battery={0}) -> ".format(b))
-                plus = 0
+                avg = 0.0
                 for bnext, val in bnext_dict.items():
-                    if plus != 0:
-                        f.write(' + ')
-                    f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
-                    plus = plus +1
-                f.write(';\n')
+                    avg = avg + bnext*val
+                if b!= 0:
+                    if b == 100:
+                        f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+                    f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total)-1)))
+
+            for b in self.charge_model:
+                bnext_dict = self.charge_model[b]
+                total = np.sum(np.array(bnext_dict.values()))
+                avg = 0.0
+                for bnext, val in bnext_dict.items():
+                    avg = avg + bnext*val
+                f.write("[stay_charging] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
 
             f.write("[tick] (battery=0) -> (battery' = battery);\n\n")
             f.write('endmodule\n\n\n')

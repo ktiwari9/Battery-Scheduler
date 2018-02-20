@@ -3,6 +3,7 @@ import battery_model
 import rewards_uncertain_hk
 import roslib
 import numpy as np
+from scipy.cluster.vq import kmeans2 
 
 class make_model:
     
@@ -16,9 +17,16 @@ class make_model:
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
         self.charge_model = charge_model
         self.discharge_model = discharge_model
-        self.time_int = 48   
+        self.time_int = 48
+        # self.dm = dict()
+        # self.cm = dict()
+        # self.gm = dict()   
         self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
         # file for one day - 48 time steps
+
+    def reduce_battery_model(model):
+        for b in model:
+            if len
         
     def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
         # path to prism files 
@@ -28,7 +36,7 @@ class make_model:
             f.write('mdp\n\n')
             f.write('module battery_model\n\n')
             f.write('battery:[0..100] init {0};\n\n'.format(init_b))
-
+            ##### REAL BATTERY
             # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-4);\n")
             # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-5);\n")
             # f.write("[gather_reward] (battery>4) & (battery<25) -> (battery'=battery-4);\n")
@@ -54,6 +62,7 @@ class make_model:
             # f.write("[stay_charging] (battery>64) & (battery<98)  ->(battery'=battery+3) ;\n")
             # f.write("[stay_charging] (battery>97) & (battery<=100)  -> (battery'=100) ;\n")
             
+            ##### PROBABILISTIC BATTERY
             for b in self.discharge_model:
                 if b != 0:
                     bnext_dict = self.discharge_model[b]
@@ -68,16 +77,29 @@ class make_model:
                     f.write(';\n')
 
             for b in self.charge_model:
-                bnext_dict = self.charge_model[b]
-                total = np.sum(np.array(bnext_dict.values()))
-                f.write("[go_charge] (battery={0}) -> ".format(b))
-                plus = 0
-                for bnext, val in bnext_dict.items():
-                    if plus != 0:
-                        f.write(' + ')
-                    f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext-1))
-                    plus = plus +1
-                f.write(';\n')
+                if b != 0:
+                    if b == 100:
+                        bnext_dict = self.charge_model[b]
+                        total = np.sum(np.array(bnext_dict.values()))
+                        f.write("[go_charge] (battery={0}) -> ".format(b))
+                        plus = 0
+                        for bnext, val in bnext_dict.items():
+                            if plus != 0:
+                                f.write(' + ')
+                            f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
+                            plus = plus +1
+                        f.write(';\n')
+                    else:
+                        bnext_dict = self.charge_model[b]
+                        total = np.sum(np.array(bnext_dict.values()))
+                        f.write("[go_charge] (battery={0}) -> ".format(b))
+                        plus = 0
+                        for bnext, val in bnext_dict.items():
+                            if plus != 0:
+                                f.write(' + ')
+                            f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext-1))
+                            plus = plus +1
+                        f.write(';\n')
 
             for b in self.charge_model:
                 bnext_dict = self.charge_model[b]
@@ -90,6 +112,58 @@ class make_model:
                     f.write("{0}:(battery'={1})".format(float(val)/float(total), bnext))
                     plus = plus +1
                 f.write(';\n')
+
+
+            #### DET BATTERY
+            # for b in self.discharge_model:
+            #     if b != 0:
+            #         bnext_dict = self.discharge_model[b]
+            #         total = np.sum(np.array(bnext_dict.values()))
+            #         avg = 0.0
+            #         for bnext, val in bnext_dict.items():
+            #             avg = avg + bnext*val
+            #         f.write("[gather_reward] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+            #         # if b-int(round(avg/total)) not in self.dm:
+            #         #     b_list = []
+            #         # else:
+            #         #     b_list = self.dm[b-int(round(avg/total))]
+            #         # print b-int(round(avg/total)), b
+            #         # b_list.append(b)
+            #         # self.dm.update({b-int(round(avg/total)) : b_list })
+
+            # for b in self.charge_model:
+            #     bnext_dict = self.charge_model[b]
+            #     total = np.sum(np.array(bnext_dict.values()))
+            #     avg = 0.0
+            #     for bnext, val in bnext_dict.items():
+            #         avg = avg + bnext*val
+            #     if b!= 0:
+            #         if b == 100:
+            #             f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+            #         f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total)-1)))
+
+            #     # if int(round(avg/total))-1-b not in self.gm:
+            #     #     b_list = []
+            #     # else:
+            #     #     b_list = self.gm[int(round(avg/total))-1-b]
+            #     # print int(round(avg/total))-1-b, b
+            #     # b_list.append(b)
+            #     # self.gm.update({int(round(avg/total))-1-b : b_list })
+
+            # for b in self.charge_model:
+            #     bnext_dict = self.charge_model[b]
+            #     total = np.sum(np.array(bnext_dict.values()))
+            #     avg = 0.0
+            #     for bnext, val in bnext_dict.items():
+            #         avg = avg + bnext*val
+            #     f.write("[stay_charging] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+            #     # if int(round(avg/total))-b not in self.cm:
+            #     #     b_list = []
+            #     # else:
+            #     #     b_list = self.cm[int(round(avg/total))-b]
+            #     # print int(round(avg/total))-b, b
+            #     # b_list.append(b)
+            #     # self.cm.update({int(round(avg/total))-b : b_list })
 
             f.write("[tick] (battery=0) -> (battery' = battery);\n\n")
             f.write('endmodule\n\n\n')
@@ -150,6 +224,16 @@ if __name__ == '__main__':
     clusters, prob = ur.get_rewards()
     charge_model, discharge_model = battery_model.get_battery_model('/home/milan/battery_logs')
     mm = make_model('model_test.prism', 0, 70, 1, 1, clusters, prob, charge_model, discharge_model)
+    # print '############ GO CHARGE'
+    # for d,b in mm.gm.items():
+    #     print d, b
+    # print '############ STAY CHARGE'
+    # for d,b in mm.cm.items():
+    #     print d, b
+    # print '############ DISCHARGE'
+    # for d,b in mm.dm.items():
+    #     print d, b
+
         
         
         
