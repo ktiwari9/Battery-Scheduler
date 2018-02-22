@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 import subprocess
 import prism_script_test
+import form_prism_script
+import battery_model
 import plotly
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
+import numpy as np
 
 
 class StateProcessor:
 
-    def __init__(self, clusters):
+    def __init__(self, clusters, charge_model, discharge_model):
         self.t = 0
         self.b = 0
         self.c = 0
         self.cl_no = 0 
         #self.cl_id = 0
         self.clusters = clusters
+        self.charge_model = charge_model
+        self.discharge_model = discharge_model
         
     def current_state(self, current_time, current_battery, current_charging):
         self.t = current_time
@@ -55,34 +60,20 @@ class StateProcessor:
 
     # either charge or discharge
     def _get_b_next(self, model):
-        if model == 'charge':
-            if self.b <= 100 and self.b > 81:
-                nb = 100
-            elif self.b > 64 and self.b < 82:
-                nb = self.b + 19
-            elif self.b > 44 and self.b < 65:
-                nb = self.b + 19
-            elif self.b > 28 and self.b < 45:
-                nb = self.b + 29
-            elif self.b > 14 and self.b < 29:
-                nb = self.b + 39
-            elif self.b > 8 and self.b < 15:
-                nb = self.b + 49
-            elif self.b > 4 and self.b < 9:
-                nb = self.b + 59 
-            elif self.b >= 0 and self.b < 5:
-                nb = self.b + 69
 
-            if self.c == 1 and nb != 100:
-                nb = nb +1 
+        if model == 'charge':
+            total_count = np.sum(np.array(self.charge_model[self.b].values()))
+            b_items = self.charge_model[self.b].items()
+            nb = list(map(lambda x: [x[0],x[1]/total_count], b_items))
+
+            if self.c == 0 and self.b != 100:
+                nb = list(map(lambda x: [x[0]-1,x[1]/total_count], b_items)) 
+                
 
         elif model == 'discharge':
-            if self.b <= 100 and self.b > 89:
-                nb = self.b - 40
-            elif self.b > 49 and self.b < 90:
-                nb = self.b - 50
-            elif self.b <50 :
-                nb = 0
+            total_count = np.sum(np.array(self.discharge_model[self.b].values()))
+            b_items = self.discharge_model[self.b].items()
+            nb = list(map(lambda x: [x[0],x[1]/total_count], b_items))
                 
         return nb
 
@@ -97,15 +88,15 @@ if __name__ == '__main__':
     clusters = []
     probs = []
     charging = []
-    time_int = 8
-
+    time_int = 48
+    charge_model, discharge_model = battery_model.get_battery_model('/media/milan/DATA/battery_logs')
     #main_path = roslib.packages.get_pkg_dir('battery_scheduler')
     #path_rew = main_path +'/data/sample_rewards'
     main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     path_result= main_path + '/data/test_result'
     path_model = main_path + '/models/'
  
-    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug11_80', 'r') as f:
+    with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/un_aug11_pb40', 'r') as f:
         for line in f.readlines():
             if 'time' not in line:
                 s = line.split(' ')[:-1]
@@ -131,7 +122,7 @@ if __name__ == '__main__':
     return_charge = []
     return_work = []
     cases = ['charge', 'work']
-    sp = StateProcessor(clusters)
+    sp = StateProcessor(clusters, charge_model, discharge_model)
     for t,c,b, cluster in zip(time, charging, battery, clusters):
         for case in cases:
             sp.current_state(t,b,c)
@@ -141,31 +132,32 @@ if __name__ == '__main__':
                 #print cl_id_next
                 return_cluster = []
                 for i in range(len(cl_id_next)):
-                    pm = prism_script_test.make_model('test_plan_process.prism', t_next, b_next, c_next, cl_id_next[i], clusters, probs, 'ab', 'cd')
-                    subprocess.call('./prism '+ path_model + 'test_plan_process.prism '+ path_model +'test_prop.props -exportresults '+path_result,cwd='/home/milan/prism-svn/prism/bin',shell=True)
-                    with open(path_result, 'r') as f:
-                        for line in f.readlines():
-                            if 'Result' not in line:
-                                tuples = line[2:-3].split('), (')
-                                prob_pareto = []
-                                reward_pareto = []
-                                for element in tuples:
-                                    prob_rew = element.split(', ')
-                                    prob_pareto.append(float(prob_rew[0]))
-                                    reward_pareto.append(float(prob_rew[1])) 
-                    req_prob = min(prob_pareto, key=lambda x:abs(1-x))
-                    req_indx = prob_pareto.index(req_prob)
-                    total_reward = reward_pareto[req_indx]
+                    for j in range(len(b_next)):
+                        pm = form_prism_script.make_model('test_plan_process.prism', t_next, b_next[j][0], c_next, cl_id_next[i], clusters, probs, charge_model, discharge_model)
+                        subprocess.call('./prism '+ path_model + 'test_plan_process.prism '+ path_model +'test_prop.props -exportresults '+path_result,cwd='/home/milan/prism-svn/prism/bin',shell=True)
+                        with open(path_result, 'r') as f:
+                            for line in f.readlines():
+                                if 'Result' not in line:
+                                    tuples = line[2:-3].split('), (')
+                                    prob_pareto = []
+                                    reward_pareto = []
+                                    for element in tuples:
+                                        prob_rew = element.split(', ')
+                                        prob_pareto.append(float(prob_rew[0]))
+                                        reward_pareto.append(float(prob_rew[1])) 
+                        req_prob = min(prob_pareto, key=lambda x:abs(1-x))
+                        req_indx = prob_pareto.index(req_prob)
+                        total_reward = reward_pareto[req_indx]
 
-                    # gives return from different possible states
-                    return_cl = []
-                    for cl in cluster:
-                        if case == 'charge':
-                            return_cl.append(total_reward)
-                        elif case == 'work':
-                            return_cl.append(total_reward+cl)  
+                        # gives return from different possible current states to one particular next state
+                        return_cl = []
+                        for cl in cluster:
+                            if case == 'charge':
+                                return_cl.append(total_reward*b_next[j][1]*probs[t+1][i])
+                            elif case == 'work':
+                                return_cl.append((total_reward+cl)* b_next[j][1]*probs[t+1][i])  
 
-                    return_cluster.append(return_cl)
+                        return_cluster.append(return_cl)
                     
                 if case == 'charge':
                     return_charge.append(return_cluster)
@@ -189,7 +181,7 @@ if __name__ == '__main__':
                 rew = 0 
                 for k in range(len(array[i])):
                     if i != time_int-1:
-                        rew = rew + probs[i+1][k]*array[i][k][j]
+                        rew = rew + array[i][k][j]
                     else:
                         rew = rew + array[i][k][j]
                 #print rew, 'rew'
@@ -256,8 +248,8 @@ if __name__ == '__main__':
         elif a == 'stay_charging':
             color2.append('rgba(236, 153, 28,0.5)')
     
-    plotly.tools.set_credentials_file(username='ThanwiraSiraj', api_key= 'y9AlaR5JI6kYeCml1NG4')
+    plotly.tools.set_credentials_file(username='MilanMariyaTomy', api_key= 'wSfqCQnChPdSCqIMGPdp')
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward), go.Scatter(x=time, y=exp_return_list[1]), go.Scatter(x=time, y=exp_return_list[0])]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='un_aug11_80_exp_dbsc')
+    py.plot(fig, filename='un_aug11_exp_pb4')
