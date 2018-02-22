@@ -3,7 +3,6 @@
 import time
 import read_tasks
 import numpy as np
-from scipy.cluster.vq import kmeans2 
 from scipy.cluster.hierarchy import fcluster, linkage
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -30,8 +29,8 @@ class uncertain_rewards:
             rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
             self.rewards_day = dict()
-            no_test_start = 8
-            no_test_end = 11
+            no_test_start = 2
+            no_test_end = 3
             num = 0
             for day in rewards_by_day:
                 if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
@@ -79,7 +78,7 @@ class uncertain_rewards:
         
         clusters = []
         prob = []
-        len_clusters = []
+        # len_clusters = []
         for j in range(len(f_t)):
             zero_count = 0  #change if you want zeros separately
             in_km = []
@@ -93,20 +92,20 @@ class uncertain_rewards:
             p_dist = pdist(in_km, metric='cityblock')
             p_dist_avg = np.sum(p_dist)/p_dist.size
             cl_centre, p_cluster = self._form_clusters(in_km, p_dist_avg, zero_count) #change if you want zeros separately
-            print len(cl_centre)
-            print cl_centre
-            print p_cluster
-            len_clusters.append(len(cl_centre))
+            # print len(cl_centre)
+            # print cl_centre
+            # print p_cluster
+            # len_clusters.append(len(cl_centre))
             
-            expected_reward = 0
-            for x in range(len(cl_centre)):
-                expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            print expected_reward    
+            # expected_reward = 0
+            # for x in range(len(cl_centre)):
+            #     expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
+            # print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)
 
-        print Counter(len_clusters)
+        # print Counter(len_clusters)
 
         return clusters , prob
         

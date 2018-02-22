@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     battery.append(init_battery)
     charging.append(init_charging)
-    output_path = main_path + '/data/rrhc_aug3'
+    output_path = main_path + '/data/rrhc_aug3_db'
     model_path = main_path + '/models/'
     
     t1 = time.time()

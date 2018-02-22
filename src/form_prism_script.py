@@ -4,6 +4,7 @@ import rewards_uncertain_hk
 import roslib
 import numpy as np
 from scipy.cluster.vq import kmeans2 
+from collections import Counter
 
 class make_model:
     
@@ -15,8 +16,8 @@ class make_model:
             self.total_cl = self.total_cl + len(self.clusters[i])
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
-        self.charge_model = charge_model
-        self.discharge_model = discharge_model
+        self.charge_model = self.reduce_battery_model(charge_model)
+        self.discharge_model = self.reduce_battery_model(discharge_model)
         self.time_int = 48
         # self.dm = dict()
         # self.cm = dict()
@@ -24,9 +25,24 @@ class make_model:
         self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
         # file for one day - 48 time steps
 
-    def reduce_battery_model(model):
+    def reduce_battery_model(self, model):
         for b in model:
-            if len
+            if len(model[b].keys()) > 5:
+                in_arr = []
+                for nb in model[b]:
+                    in_arr.append([float(nb)])
+                centroid, labels = kmeans2(np.array(in_arr), 5, minit='points')
+                #print centroid
+                count_dict = Counter(labels)
+                b_model = dict()
+                for i in range(len(centroid)):
+                    b_model.update({int(centroid[i][0]) : count_dict[i]})
+                print b
+                print b_model
+                print '####'
+                model.update({b : b_model})
+        return model
+
         
     def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
         # path to prism files 
@@ -222,7 +238,7 @@ class make_model:
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(False)
     clusters, prob = ur.get_rewards()
-    charge_model, discharge_model = battery_model.get_battery_model('/home/milan/battery_logs')
+    charge_model, discharge_model = battery_model.get_battery_model('/media/milan/DATA/battery_logs')
     mm = make_model('model_test.prism', 0, 70, 1, 1, clusters, prob, charge_model, discharge_model)
     # print '############ GO CHARGE'
     # for d,b in mm.gm.items():
@@ -233,6 +249,7 @@ if __name__ == '__main__':
     # print '############ DISCHARGE'
     # for d,b in mm.dm.items():
     #     print d, b
+
 
         
         

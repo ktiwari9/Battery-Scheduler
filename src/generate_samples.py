@@ -10,7 +10,7 @@ class sample_generator:
         ur = rewards_uncertain_hk.uncertain_rewards(validation)
         #ur = rewards_dbscan.uncertain_rewards(validation)
         self.clusters, self.prob = ur.get_rewards()
-        self.len_test_rewards = 3 # no. of days to be tested
+        self.len_test_rewards = 1 # no. of days to be tested
         self.time_int = 48
         if validation == True:
             self.test_rewards = ur.test_rewards

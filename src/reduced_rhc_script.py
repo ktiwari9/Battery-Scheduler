@@ -21,10 +21,28 @@ class make_model:
         for j in range(self.no_cluster):
             self.total_cl = self.total_cl + len(self.clusters[j])
 
-        self.charge_model = charge_model
-        self.discharge_model = discharge_model   
+        self.charge_model = self.reduce_battery_model(charge_model)
+        self.discharge_model = self.reduce_battery_model(discharge_model)
         self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
-        self.write_prism_file(filename,init_b, init_ch, init_cluster)    
+        self.write_prism_file(filename,init_b, init_ch, init_cluster)
+
+    def reduce_battery_model(self, model):
+        for b in model:
+            if len(model[b].keys()) > 5:
+                in_arr = []
+                for nb in model[b]:
+                    in_arr.append([float(nb)])
+                centroid, labels = kmeans2(np.array(in_arr), 5, minit='points')
+                #print centroid
+                count_dict = Counter(labels)
+                b_model = dict()
+                for i in range(len(centroid)):
+                    b_model.update({int(centroid[i][0]) : count_dict[i]})
+                print b
+                print b_model
+                print '####'
+                model.update({b : b_model})
+        return model    
         
     def write_prism_file(self, filename,init_b, init_ch, init_cluster):
         # path to prism files   

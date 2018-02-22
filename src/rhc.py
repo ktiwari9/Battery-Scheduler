@@ -42,7 +42,7 @@ if __name__ == '__main__':
     battery.append(init_battery)
     charging.append(init_charging)
     t1 = time.time()
-    output_path = main_path + '/data/rhc_aug3'
+    output_path = main_path + '/data/rhc_aug3_db'
     model_path = main_path + '/models/'
     with open(output_path, 'w') as fw:
         fw.write('time charging battery action matched_reward actual_reward exp_reward  cluster_vals prob_vals\n')

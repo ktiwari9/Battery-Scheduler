@@ -12,12 +12,12 @@ if __name__ == '__main__':
     actual_reward = []
     battery = []
     time = []
-    no_days = 3
+    no_days = 1
     data_path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/'
     # for without RHC - do not activate both at same time
     t = 0;
     for i in range(no_days):
-        with open(data_path + 'wrhc_aug3'+ str(i), 'r') as f:
+        with open(data_path + 'un_aug11_pb4'+ str(i), 'r') as f:
             for line in f.readlines():
                 if 'time' not in line:
                     s = line.split(' ')[:-1]
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 
     # with RHC - do not activate both at same time
-    # with open(data_path+'rhc_aug3', 'r') as f:
+    # with open(data_path+'rhc_aug3_db', 'r') as f:
     #     for line in f.readlines():
     #         if 'time' not in line:
     #             s = line.split(' ')[:-1]
@@ -63,9 +63,9 @@ if __name__ == '__main__':
         elif a == 'stay_charging':
             color2.append('rgba(236, 153, 28,0.5)')
     
-    plotly.tools.set_credentials_file(username='ThanwiraSiraj', api_key= 'y9AlaR5JI6kYeCml1NG4')
+    plotly.tools.set_credentials_file(username='MilanMariyaTomy', api_key='wSfqCQnChPdSCqIMGPdp')#username='ThanwiraSiraj', api_key= 'y9AlaR5JI6kYeCml1NG4') 
     data = [go.Bar( x= time, y = actual_reward, marker=dict(color=color1)), go.Bar( x= time, y = matched_reward, marker=dict(color=color2)), go.Scatter(x=time, y= battery), go.Scatter( x= time, y = exp_reward)]
     
     fig = go.Figure(data = data)
-    py.plot(fig, filename='wrhc_aug3')
+    py.plot(fig, filename='un_aug11_pb4')
  

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random 
 import pymongo
 import rospy
 import time
@@ -56,7 +57,14 @@ class getTasks:
                         action = action[1:]
                     
             if action != 'cpm_action':
-                self.unique_tasks.update({task_id : (priority, start, end)})
+                if priority < 5000:
+                    new_priority = random.randint(0,10)
+                elif priority >= 5000 and < 50000:
+                    new_priority = random.randint(0,100)
+                elif priority >= 50000:
+                    new_priority = random.randint(0,1000)
+
+                self.unique_tasks.update({task_id : (new_priority, start, end)})
     
 
  
