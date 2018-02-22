@@ -107,6 +107,7 @@ def get_battery_model(path_to_directory):
                         current_bs = data[i]
                         if i < len(data)-30:
                             next_bs = data[i+30]
+                            # if abs(next_bs.life - current_bs.life) <= 10: #for fake battery model
                             if current_bs.is_charging == True:
                                 bl_dict = charge_model[current_bs.life]
                                 if next_bs.life not in bl_dict:
