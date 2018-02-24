@@ -76,19 +76,22 @@ class parse_model:
 
             if self.day*self.time_int+t_next >= ((self.day+1)*self.time_int): #return the only possibility for the last case
                 next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
-                next_state_list.update({ ns_p_a[1] : next_state})
+                next_state_list.update({ float(ns_p_a[1]) : next_state})
 
             else:
                 req_id = int(self.cl_id[self.day*self.time_int+t_next]) 
+                next_cl_prob = round(self.probs[self.day*self.time_int+t_next][i%len(self.probs[self.day*self.time_int+t_next])], 7)
                 # print req_id, int(self.states[ns_p_a[0]][3])
             
-                if int(self.states[ns_p_a[0]][3]) == req_id and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[t_next][i%len(self.clusters[t_next])]):
+                if int(self.states[ns_p_a[0]][3]) == req_id :#and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[self.day*self.time_int+t_next][i%len(self.clusters[self.day*self.time_int+t_next])]):
                     next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
-                    next_state_list.update({ns_p_a[1] : next_state})
+                    next_state_list.update({round(float(ns_p_a[1])/next_cl_prob, 7) : next_state})
+        
             i = i+1
 
-        max_prob = max(next_state_list.keys())
-        return next_state_list[max_prob]
+        prob = map(lambda x: x/sum(next_state_list.keys()), next_state_list.keys())
+        req_prob = np.random.choice(np.array(next_state_list.keys()), p=prob)
+        return next_state_list[req_prob]
             
     def simulate(self, day, name):
         in_state = self.get_initial_state()

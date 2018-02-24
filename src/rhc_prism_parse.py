@@ -77,20 +77,21 @@ class parse_model:
                 #print next_cl_id, req_id
                 if next_cl_id == req_id:
                     next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[batter, charging, time, cluster], action to get to this state
-                    next_state_list.update({ ns_p_a[1] : next_state})           # rewards that could be achieved in this state
+                    next_state_list.update({ float(ns_p_a[1]) : next_state})           # rewards that could be achieved in this state
             
-            max_prob = max(next_state_list.keys())
-            return next_state_list[max_prob]
+            prob = list(map( lambda x: x/sum(next_state_list.keys()), next_state_list.keys()))
+            req_prob = np.random.choice(np.array(next_state_list.keys()), p=prob)
+            return next_state_list[req_prob]
                 
         else:
             next_id = max(self.states[ns_p_a[0]][3] for ns_p_a in possible_states )
             next_state_list = dict()
             for ns_p_a in possible_states:
                 next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]
-                next_state_list.update({ ns_p_a[1] : next_state})
+                next_state_list.update({ float(ns_p_a[1]) : next_state})
                 
-            max_prob = max(next_state_list.keys())
-            return next_state_list[max_prob]
+            req_prob = np.random.choice(np.array(next_state_list.keys()), p=next_state_list.keys())
+            return next_state_list[req_prob]
             
             
             

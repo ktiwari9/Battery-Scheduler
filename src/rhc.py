@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     with open(output_path, 'w') as fw:
         fw.write('time charging battery action matched_reward actual_reward exp_reward  cluster_vals prob_vals\n')
-        for t in range(48*3):     # 48*3 for 3 days
+        for t in range(2):     # 48*3 for 3 days
             policy_file = None
 
             rhc_pm = rhc_prism_script.make_model('model_rhc.prism', t, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)

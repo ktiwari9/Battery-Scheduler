@@ -47,7 +47,7 @@ if __name__ == '__main__':
         
         pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
         
-        ## running prism and saving output from prism
+        # running prism and saving output from prism
         with open(path_data+'result_wrhc', 'w') as file:
             process = subprocess.Popen('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
