@@ -26,11 +26,11 @@ class getTasks:
         #self._get_unique_tasks('b')
         rospy.loginfo("%d unique tasks found" %len(self.unique_tasks))
         
+    
     def _get_unique_tasks(self, collection_indicator=None):
         for task in self.tasks:
-            
             for task_details in task['task'].keys():
-                
+                    
                 if task_details == 'start_after':
                     s = rospy.Time(task['task'][task_details]['secs'],task['task'][task_details]['nsecs'])  
                     start = time.localtime(rospy.Time.to_sec(s))
@@ -41,7 +41,7 @@ class getTasks:
 
                 elif task_details == 'task_id':
                     task_id = str(task['task'][task_details]) #+ collection_indicator
-                    
+                 
                 elif task_details == 'priority':
                     priority = task['task'][task_details]
                     
@@ -55,9 +55,13 @@ class getTasks:
                         action = 'un-named_action'
                     elif action[0] == '/':
                         action = action[1:]
-                    
-            if action != 'cpm_action':
+
+                elif task_details == 'start_node_id':
+                    node = task['task'][task_details]
+
+            if node != 'ChargingPoint1':
                 self.unique_tasks.update({task_id : (1, start, end)})
+            
     
 
  

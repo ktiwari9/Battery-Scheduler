@@ -68,7 +68,7 @@ class parse_model:
         cluster_group = self.clusters[(self.day*self.time_int+t_current)%self.time_int]
         prob_group = self.probs[(self.day*self.time_int+t_current)%self.time_int]
 
-        #i = 0
+        i = 0
         next_state_list = dict()
         for ns_p_a in possible_states:
             t_next = int(self.states[ns_p_a[0]][2])
@@ -80,12 +80,12 @@ class parse_model:
 
             else:
                 req_id = int(self.cl_id[self.day*self.time_int+t_next]) 
-                #print req_id, int(self.states[ns_p_a[0]][3])
+                # print req_id, int(self.states[ns_p_a[0]][3])
             
-                if int(self.states[ns_p_a[0]][3]) == req_id: #and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[t_next][i]):
+                if int(self.states[ns_p_a[0]][3]) == req_id and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[t_next][i%len(self.clusters[t_next])]):
                     next_state = [ns_p_a[0], ns_p_a[2], act_reward, matched_reward, exp_reward, prob_group, cluster_group]   # state_id, action to get to this state
                     next_state_list.update({ns_p_a[1] : next_state})
-        #    i = i+1
+            i = i+1
 
         max_prob = max(next_state_list.keys())
         return next_state_list[max_prob]

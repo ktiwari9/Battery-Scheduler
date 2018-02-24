@@ -2,11 +2,11 @@
 import battery_model
 import subprocess
 import reduced_rhc_script
-#import rhc_mod_parse
 import rrhc_prism_parse
 import rewards_uncertain_hk
 import time
 import numpy as np
+import sys
 
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
@@ -28,6 +28,7 @@ if __name__ == '__main__':
             actual_reward.append(float(line.split(' ')[2]))
             exp_reward.append(float(line.split(' ')[3]))
     
+    
     init_battery = 70
     init_charging = 1
     init_cluster = cl_id[0]
@@ -37,20 +38,42 @@ if __name__ == '__main__':
     battery = []
     charging = []
     action = []
-
     battery.append(init_battery)
     charging.append(init_charging)
+    
     output_path = main_path + '/data/rrhc_aug3_db'
     model_path = main_path + '/models/'
+    path_data = main_path + '/data/'
     
     t1 = time.time()
     with open(output_path, 'w') as fw:
         fw.write('time charging battery action matched_reward actual_reward exp_reward  cluster_vals prob_vals\n')
         for t in range(48*3):     # 48*3 for 3 days
+            policy_file = None
+
             rhc_pm = reduced_rhc_script.make_model('rrhc.prism', t, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
             fw.write('{0} {1} {2} '.format(t, init_charging, init_battery))
-            subprocess.call('./prism '+model_path+'rrhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'rrhc.adv -exportprodstates '+model_path+'rrhc.sta -exporttarget '+model_path+'rrhc.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
-            rhc_pp = rrhc_prism_parse.parse_model(['rrhcpre1.adv', 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
+            
+            ## running prism and saving output from prism
+            with open(path_data+'result_rrhc', 'w') as file:
+                process = subprocess.Popen('./prism '+model_path+'rrhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'rrhc.adv -exportprodstates '+model_path+'rrhc.sta -exporttarget '+model_path+'rrhc.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
+                for c in iter(lambda: process.stdout.read(1), ''):
+                    sys.stdout.write(c)
+                    file.write(c)
+            ##reading output from prism to find policy file
+            with open(path_data+'result_rrhc', 'r') as f:
+                line_list = f.readlines()
+                for i in range(len(line_list)):
+                    if 'Optimal value for weights [1.000000,0.000000] from initial state:' in line_list[i]:
+                        if 'pre' not in line_list[i+2]:
+                            start_p = len('Adversary written to file "'+model_path)
+                            policy_file = line_list[i+2][start_p:-3]
+        
+            if policy_file != None:
+                rhc_pp = rrhc_prism_parse.parse_model([str(policy_file), 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
+            else:
+                rhc_pp = rrhc_prism_parse.parse_model(['rrhcpre1.adv', 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
+            
             next_state = rhc_pp.get_next_state(rhc_pp.initial_state)
             
             action.append(next_state[2])

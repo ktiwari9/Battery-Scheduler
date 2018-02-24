@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import read_task_wo_priorities
 import time
 import read_tasks
 import numpy as np
@@ -12,6 +12,7 @@ class uncertain_rewards:
     
     def __init__(self, validation):
         t = read_tasks.getTasks()
+        # t = read_task_wo_priorities.getTasks()
         self.tasks = t.unique_tasks
         self.time_int = 48
         
@@ -66,6 +67,11 @@ class uncertain_rewards:
                 if not all( z == 0 for z in p_l):
                     dated_tasks.update({ (start_t[0], start_t[1], start_t[2]) : p_l})
         
+        for day in dated_tasks:
+            print day
+            print dated_tasks[day]
+
+        print len(dated_tasks.keys())
         return dated_tasks 
         
     def get_rewards(self):

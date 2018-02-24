@@ -1,13 +1,13 @@
 #! /usr/bin/env python
+
 import battery_model
 import subprocess
 import rhc_prism_script
-#import rhc_mod_parse
 import rhc_prism_parse
-#import rewards_dbscan
 import rewards_uncertain_hk
 import time
 import numpy as np
+import sys
 
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
@@ -18,10 +18,13 @@ if __name__ == '__main__':
     sample_reward = []
     actual_reward = []
     exp_reward = []
+    
     #main_path = roslib.packages.get_pkg_dir('battery_scheduler')
     #path_rew = main_path +'/data/sample_rewards'
     main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     path_rew = main_path + '/data/sample_rewards'
+    path_data = main_path + '/data/'
+    
     with open(path_rew,'r') as f:
         for line in f:
             cl_id.append(int(line.split(' ')[0]))
@@ -42,16 +45,38 @@ if __name__ == '__main__':
     battery.append(init_battery)
     charging.append(init_charging)
     t1 = time.time()
+
     output_path = main_path + '/data/rhc_aug3_db'
     model_path = main_path + '/models/'
+
     with open(output_path, 'w') as fw:
         fw.write('time charging battery action matched_reward actual_reward exp_reward  cluster_vals prob_vals\n')
         for t in range(48*3):     # 48*3 for 3 days
+            policy_file = None
+
             rhc_pm = rhc_prism_script.make_model('model_rhc.prism', t, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
             fw.write('{0} {1} {2} '.format(t, init_charging, init_battery))
-            # path to prism and prism files 
-            subprocess.call('./prism '+model_path+'model_rhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'model_rhc.adv -exportprodstates '+model_path+'model_rhc.sta -exporttarget '+model_path+'model_rhc.lab',cwd='/home/milan/prism-svn/prism/bin',shell=True)
-            rhc_pp = rhc_prism_parse.parse_model(['model_rhcpre1.adv', 'model_rhc.sta', 'model_rhc.lab'], t,  sample_reward, rhc_pm.clusters)
+
+            ## running prism and saving output from prism
+            with open(path_data+'result_rhc', 'w') as file:
+                process = subprocess.Popen('./prism '+model_path+'model_rhc.prism '+model_path+ 'model_prop.props -exportadv '+model_path+'model_rhc.adv -exportprodstates '+model_path+'model_rhc.sta -exporttarget '+model_path+'model_rhc.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
+                for c in iter(lambda: process.stdout.read(1), ''):
+                    sys.stdout.write(c)
+                    file.write(c)
+            ##reading output from prism to find policy file
+            with open(path_data+'result_rhc', 'r') as f:
+                line_list = f.readlines()
+                for i in range(len(line_list)):
+                    if 'Optimal value for weights [1.000000,0.000000] from initial state:' in line_list[i]:
+                        if 'pre' not in line_list[i+2]:
+                            start_p = len('Adversary written to file "'+model_path)
+                            policy_file = line_list[i+2][start_p:-3]
+            
+            if policy_file != None:
+                rhc_pp = rhc_prism_parse.parse_model([str(policy_file),'model_rhc.sta','model_rhc.lab'], t,  sample_reward, rhc_pm.clusters)
+            else:
+                rhc_pp = rhc_prism_parse.parse_model(['model_rhcpre1.adv', 'model_rhc.sta', 'model_rhc.lab'], t,  sample_reward, rhc_pm.clusters)
+            
             next_state = rhc_pp.get_next_state(rhc_pp.initial_state) ## next state, action, 
 
             ### Only appplicable for real robot.

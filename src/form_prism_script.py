@@ -27,7 +27,7 @@ class make_model:
 
     def reduce_battery_model(self, model):
         for b in model:
-            if len(model[b].keys()) > 5:
+            if len(model[b].keys()) > 10:
                 in_arr = []
                 for nb in model[b]:
                     in_arr.append([float(nb)])

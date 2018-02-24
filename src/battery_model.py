@@ -136,7 +136,10 @@ def get_battery_model(path_to_directory):
 
         for battery_val in charge_model:
             if len(charge_model[battery_val].keys()) == 0:
-                nb_dict = dict({100 : 1})
+                if battery_val == 0:
+                    nb_dict = charge_model[1]
+                else:
+                    nb_dict = dict({100 : 1})
                 charge_model.update({battery_val : nb_dict})
 
 
