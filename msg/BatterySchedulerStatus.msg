@@ -1,0 +1,6 @@
+uint32 current_int
+uint32 current_batterylife
+uint32 current_charging_state
+string current_action
+float32 current_matched_reward
+float32 current_actual_reward
