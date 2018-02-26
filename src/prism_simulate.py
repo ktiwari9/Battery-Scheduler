@@ -9,6 +9,8 @@ import roslib
 class parse_model:
 
     def __init__(self, filenames, cl_id, actual_reward, sample_reward, exp_reward, day, clusters, probs):
+        #######################SPECIFY LOCATION ######################
+
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/'
         for name in filenames:
@@ -98,6 +100,8 @@ class parse_model:
         rewards = []
         states_plan = []
         action = []
+        #######################SPECIFY LOCATION ######################
+        
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/'
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/'
         with open(path + name + str(day), 'w') as f:

@@ -11,6 +11,7 @@ import time
 class getTasks:
     
     def __init__(self):
+        ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
         rospy.loginfo("Connecting to mongodB")        
         self.tasks = client.message_store.task_events.find(None)

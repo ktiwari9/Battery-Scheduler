@@ -47,6 +47,9 @@ class make_model:
     def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
         # path to prism files 
         #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/models/' +filname) 
+
+        #######################SPECIFY LOCATION ######################
+        
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')

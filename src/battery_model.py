@@ -84,6 +84,7 @@ def check_variation_values(data):
 
 # input array of Battery
 def get_battery_model(path_to_directory):
+    ############### SPECIFY PATHS #######################
     path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     #path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):

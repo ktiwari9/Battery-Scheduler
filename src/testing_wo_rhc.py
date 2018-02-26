@@ -14,6 +14,7 @@ import battery_model
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
+    #######################SPECIFY LOCATION ######################
     path_to_directory = '/media/milan/DATA/battery_logs' 
     charge_model, discharge_model = battery_model.get_battery_model(path_to_directory)
     cl_id = []
@@ -22,6 +23,7 @@ if __name__ == '__main__':
     exp_reward = []
     
     #main_path = roslib.packages.get_pkg_dir('battery_scheduler')
+    #######################SPECIFY LOCATION ######################
     main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     path_rew = main_path + '/data/sample_rewards'
     path_mod = main_path + '/models/'
@@ -45,7 +47,7 @@ if __name__ == '__main__':
     for k in range(no_days):
                 
         pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
-        
+        #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(path_data+'result_wrhc', 'w') as file:
             process = subprocess.Popen('./prism '+ path_mod + 'model_t.prism '+ path_mod +'model_prop.props -exportadv '+ path_mod+ 'model_t.adv -exportprodstates ' + path_mod +'model_t.sta -exporttarget '+path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
@@ -75,7 +77,7 @@ if __name__ == '__main__':
                     else:
                         policy_file_name = s_policy_file[1][1]
 
-
+        #######################SPECIFY LOCATION AS BEFORE ######################
         print 'Reading from ', policy_file_name
         pp = prism_simulate.parse_model([str(policy_file_name),'model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         
@@ -85,7 +87,7 @@ if __name__ == '__main__':
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'f_un_aug_pbr_wrhc')  
+            rewards, action, final_state = pp.simulate(k,'f_un_aug_pbr_wrhc')  #######################SPECIFY LOCATION ######################
             battery[i] = int(final_state[0])
             print battery[i]
             charging[i] = int(final_state[1])

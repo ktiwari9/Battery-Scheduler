@@ -1,0 +1,250 @@
+PRISM
+=====
+
+Version: 4.4.beta
+Date: Mon Feb 26 12:05:18 AST 2018
+Hostname: milanmt-Satellite-L755
+Memory limits: cudd=1g, java(heap)=910.5m
+Command line: prism /home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.prism /home/milan/workspace/strands_ws/src/battery_scheduler/models/model_prop.props -exportadv /home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.adv -exportprodstates /home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.sta -exporttarget /home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.lab
+
+Parsing model file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.prism"...
+
+Parsing properties file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_prop.props"...
+
+1 property:
+(1) multi(Pmax=? [ G (battery>30) ], R{"rew"}max=? [ C ])
+
+Type:        MDP
+Modules:     battery_model charging_state time_model cluster_evolution 
+Variables:   battery charging t cl 
+
+---------------------------------------------------------------------
+
+Model checking: multi(Pmax=? [ G (battery>30) ], R{"rew"}max=? [ C ])
+
+Building model...
+
+Computing reachable states...
+
+Reachability (BFS): 49 iterations in 0.07 seconds (average 0.001429, setup 0.00)
+
+Time for model construction: 1.196 seconds.
+
+Warning: Deadlocks detected and fixed in 180 states
+
+Type:        MDP
+States:      39292 (1 initial)
+Transitions: 1501932
+Choices:     78199
+
+Transition matrix: 135207 nodes (4916 terminal), 1501932 minterms, vars: 22r/22c/4nd
+Switching engine since only sparse engine currently supports this computation...
+
+Warning: Disabling Prob1 since this is needed for adversary generation
+
+Building deterministic Rabin automaton (for G "L0")...
+Taking DRA from library...
+DRA has 2 states, 1 Rabin pairs.Time for Rabin translation: 0.133 seconds.
+
+Constructing MDP-DRA product...
+
+Reachability (BFS): 49 iterations in 0.07 seconds (average 0.001367, setup 0.00)
+States:      63546 (1 initial)
+Transitions: 2545399
+Choices:     126588
+
+Transition matrix: 138274 nodes (4916 terminal), 2545399 minterms, vars: 23r/23c/4nd
+Total time for product construction: 0.264 seconds.
+
+States:      63546 (1 initial)
+Transitions: 2545399
+Choices:     126588
+
+Transition matrix: 138274 nodes (4916 terminal), 2545399 minterms, vars: 23r/23c/4nd
+
+Exporting product state space to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.sta"...
+
+Finding accepting end components for G (battery>30)...
+Time for end component identification: 0.001 seconds.
+
+Exporting target states info to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc.lab"...
+Prob0A: 49 iterations in 0.04 seconds (average 0.000735, setup 0.00)
+
+yes = 119, no = 0, maybe = 63427
+
+Computing remaining probabilities...
+Switching engine since only sparse engine currently supports this computation...
+Engine: Sparse
+Optimising weighted sum for probability objective 1/1: weights (1.0, 0.0)
+Iterative method: 50 iterations in 2.95 seconds (average 0.059000, setup 0.00)
+Optimal value for weights [1.000000,0.000000] from initial state: 1.000000
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhcpre1.adv".
+Computed point: (1.0000000000078624, 2487.033676992872)
+Optimising weighted sum for reward objective 1/1: weights (0.0, 1.0)
+Iterative method: 50 iterations in 3.36 seconds (average 0.067240, setup 0.00)
+Optimal value for weights [0.000000,1.000000] from initial state: 4426.011002
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhcpre2.adv".
+Computed point: (0.0, 4426.011001524612)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9994845300574587, 5.154699425413297E-4)
+Iterative method: 50 iterations in 4.06 seconds (average 0.081240, setup 0.00)
+Optimal value for weights [0.999485,0.000515] from initial state: 3.231481
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc1.adv".
+Computed point: (0.9985720833092399, 4332.79212189922)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9894014106176784, 0.010598589382321584)
+Iterative method: 50 iterations in 3.79 seconds (average 0.075840, setup 0.00)
+Optimal value for weights [0.989401,0.010599] from initial state: 47.213357
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc2.adv".
+Computed point: (0.791992045259554, 4380.748925987933)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9999992263800294, 7.736199706403615E-7)
+Iterative method: 50 iterations in 3.37 seconds (average 0.067380, setup 0.00)
+Optimal value for weights [0.999999,0.000001] from initial state: 1.003346
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc3.adv".
+Computed point: (0.9999999999970096, 4325.512189273809)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9828029946790159, 0.017197005320984067)
+Iterative method: 50 iterations in 3.57 seconds (average 0.071380, setup 0.00)
+Optimal value for weights [0.982803,0.017197] from initial state: 76.202688
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc4.adv".
+Computed point: (0.38779522816457374, 4408.998001333116)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9957108487745383, 0.004289151225461646)
+Iterative method: 50 iterations in 3.43 seconds (average 0.068660, setup 0.00)
+Optimal value for weights [0.995711,0.004289] from initial state: 19.641560
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc5.adv".
+Computed point: (0.9544817732983588, 4357.778696306444)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.977713936701628, 0.022286063298372)
+Iterative method: 50 iterations in 3.51 seconds (average 0.070240, setup 0.00)
+Optimal value for weights [0.977714,0.022286] from initial state: 98.678259
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc6.adv".
+Computed point: (0.14349474136644774, 4421.50598397164)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9858935197765264, 0.01410648022347359)
+Iterative method: 50 iterations in 3.57 seconds (average 0.071480, setup 0.00)
+Optimal value for weights [0.985894,0.014106] from initial state: 62.600165
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc7.adv".
+Computed point: (0.6491273174493648, 4392.321383347084)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9929757619429787, 0.0070242380570213645)
+Iterative method: 50 iterations in 3.69 seconds (average 0.073700, setup 0.00)
+Optimal value for weights [0.992976,0.007024] from initial state: 31.575610
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc8.adv".
+Computed point: (0.8772734118094674, 4371.22123886836)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9982385481764484, 0.0017614518235515588)
+Iterative method: 50 iterations in 3.60 seconds (average 0.072080, setup 0.00)
+Optimal value for weights [0.998239,0.001761] from initial state: 8.639776
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc9.adv".
+Computed point: (0.9828055327865709, 4347.948360976443)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.969131039721847, 0.030868960278152956)
+Iterative method: 50 iterations in 3.25 seconds (average 0.065080, setup 0.00)
+Optimal value for weights [0.969131,0.030869] from initial state: 136.648627
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc10.adv".
+Computed point: (0.05553285350403109, 4424.988953216814)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9808426079944047, 0.019157392005595318)
+Iterative method: 50 iterations in 3.60 seconds (average 0.071900, setup 0.00)
+Optimal value for weights [0.980843,0.019157] from initial state: 84.851763
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc11.adv".
+Computed point: (0.25130561702906745, 4416.325123696502)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9845712091414405, 0.0154287908585595)
+Iterative method: 50 iterations in 3.27 seconds (average 0.065380, setup 0.00)
+Optimal value for weights [0.984571,0.015429] from initial state: 68.413677
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc12.adv".
+Computed point: (0.528595346472086, 4400.425024673016)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9878053094272843, 0.012194690572715765)
+Iterative method: 50 iterations in 3.65 seconds (average 0.073040, setup 0.00)
+Optimal value for weights [0.987805,0.012195] from initial state: 54.208520
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc13.adv".
+Computed point: (0.7235179679787495, 4386.648849338109)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9911285086731507, 0.008871491326849237)
+Iterative method: 50 iterations in 3.40 seconds (average 0.067980, setup 0.00)
+Optimal value for weights [0.991129,0.008871] from initial state: 39.653117
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc14.adv".
+Computed point: (0.8373570326436817, 4376.173824084819)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.994289217166329, 0.005710782833671009)
+Iterative method: 50 iterations in 3.57 seconds (average 0.071300, setup 0.00)
+Optimal value for weights [0.994289,0.005711] from initial state: 25.839396
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc15.adv".
+Computed point: (0.920748545476071, 4364.3588593356835)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9971270170485548, 0.0028729829514452165)
+Iterative method: 50 iterations in 3.43 seconds (average 0.068580, setup 0.00)
+Optimal value for weights [0.997127,0.002873] from initial state: 13.474801
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc16.adv".
+Computed point: (0.9715188479301561, 4352.992551928096)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9989608130322707, 0.001039186967729284)
+Iterative method: 50 iterations in 3.53 seconds (average 0.070640, setup 0.00)
+Optimal value for weights [0.998961,0.001039] from initial state: 5.502075
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc17.adv".
+Computed point: (0.991891968744978, 4341.099536137179)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9484652706466059, 0.05153472935339415)
+Iterative method: 50 iterations in 3.49 seconds (average 0.069780, setup 0.00)
+Optimal value for weights [0.948465,0.051535] from initial state: 228.110391
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc18.adv".
+Computed point: (0.018822093206485136, 4425.996644744306)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9753672404800421, 0.024632759519957918)
+Iterative method: 50 iterations in 3.35 seconds (average 0.066960, setup 0.00)
+Optimal value for weights [0.975367,0.024633] from initial state: 109.057166
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc19.adv".
+Computed point: (0.09370262413334246, 4423.612045917047)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.43270849146410495, 0.567291508535895)
+Iterative method: 50 iterations in 3.57 seconds (average 0.071300, setup 0.00)
+Optimal value for weights [0.432708,0.567292] from initial state: 2510.846028
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc20.adv".
+Computed point: (0.017498057693163396, 4426.010999533549)
+=====================================================================
+Optimising weighted sum of objectives: weights (0.9648499809635256, 0.03515001903647441)
+Iterative method: 50 iterations in 3.28 seconds (average 0.065660, setup 0.00)
+Optimal value for weights [0.964850,0.035150] from initial state: 155.593909
+
+Adversary written to file "/home/milan/workspace/strands_ws/src/battery_scheduler/models/model_rhc21.adv".
+Computed point: (0.028958691821362466, 4425.771957331874)
+The value iteration(s) took 83.968 seconds altogether.
+Number of weight vectors used: 22
+Multi-objective value iterations took 83.968 s.
+
+Value in the initial state: [(0.9999999999970096, 4325.512189273809), (0.9985720833092399, 4332.79212189922), (0.25130561702906745, 4416.325123696502), (0.14349474136644774, 4421.50598397164), (0.38779522816457374, 4408.998001333116), (0.528595346472086, 4400.425024673016), (0.6491273174493648, 4392.321383347084), (0.7235179679787495, 4386.648849338109), (0.791992045259554, 4380.748925987933), (0.8373570326436817, 4376.173824084819), (0.8772734118094674, 4371.22123886836), (0.920748545476071, 4364.3588593356835), (0.9544817732983588, 4357.778696306444), (0.9715188479301561, 4352.992551928096), (0.9828055327865709, 4347.948360976443), (0.991891968744978, 4341.099536137179), (0.09370262413334246, 4423.612045917047), (0.05553285350403109, 4424.988953216814), (0.017498057693163396, 4426.010999533549), (0.018822093206485136, 4425.996644744306), (0.028958691821362466, 4425.771957331874)]
+
+Time for model checking: 85.292 seconds.
+
+Result: [(0.9999999999970096, 4325.512189273809), (0.9985720833092399, 4332.79212189922), (0.25130561702906745, 4416.325123696502), (0.14349474136644774, 4421.50598397164), (0.38779522816457374, 4408.998001333116), (0.528595346472086, 4400.425024673016), (0.6491273174493648, 4392.321383347084), (0.7235179679787495, 4386.648849338109), (0.791992045259554, 4380.748925987933), (0.8373570326436817, 4376.173824084819), (0.8772734118094674, 4371.22123886836), (0.920748545476071, 4364.3588593356835), (0.9544817732983588, 4357.778696306444), (0.9715188479301561, 4352.992551928096), (0.9828055327865709, 4347.948360976443), (0.991891968744978, 4341.099536137179), (0.09370262413334246, 4423.612045917047), (0.05553285350403109, 4424.988953216814), (0.017498057693163396, 4426.010999533549), (0.018822093206485136, 4425.996644744306), (0.028958691821362466, 4425.771957331874)] (value in the initial state)
+
+---------------------------------------------------------------------
+
+Note: There were 2 warnings during computation.
+
