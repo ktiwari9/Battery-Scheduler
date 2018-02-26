@@ -35,6 +35,24 @@ def setting_execution_status(boolean):
   set_execution_status(boolean)
 
 
+def demand_wait_action():
+  try:
+    demand_task, set_execution_status = self.get_services()
+    demanded_wait = Task(action='wait_action', max_duration=rospy.Duration(int_duration-10), start_node_id='ChargingPoint')
+    set_execution_status(True)
+    print 'set execution'
+    task_utils.add_time_argument(demanded_wait, rospy.Time(0))
+    task_utils.add_duration_argument(demanded_wait, rospy.Duration(int_duration-10))
+    resp = demand_task(demanded_wait)
+    print 'demanded task as id: %s' % resp.task_id
+    rospy.loginfo('Success: %s' % resp.success)
+    rospy.loginfo('Wait: %s' % resp.remaining_execution_time)
+    if resp.success == False:
+      rospy.sleep(rospy.Duration(10))
+      rospy.loginfo('Demanding Task again due to failure')
+      self._demand_wait_action()
+    except ROSInterruptException:
+      raise
 
 class battery_scheduler:
   def __init__(self):
@@ -99,7 +117,6 @@ class battery_scheduler:
     rospy.loginfo('Obtained Initial Battery State')
     print 'Battery Life: ' , msg.lifePercent
     print 'Charging State: ', msg.charging
-    self.init_time = current_time_int
     self.init_battery = msg.lifePercent
     self.init_charging = 1 if msg.charging else 0
 
@@ -149,19 +166,21 @@ class battery_scheduler:
     rospy.loginfo('Action obtained: %s' % action)
     self.pub.publish(BatterySchedulerStatus(self.init_time, self.init_battery, self.init_charging, action, cl_reward, self.possible_reward))
 
+    self.init_time = self.init_time+1
+
     goal=MoveBaseGoal()
     goal.target_pose.pose.position.x = 3.22186541557 
     goal.target_pose.pose.position.y =  2.4388449192
     if action == 'go_charge' or action == 'stay_charging':
       rospy.loginfo('Demanded charging action...')
       self.dock_as.send_goal(goal)
+      demand_wait_action()
       setting_execution_status(False)
     else:
       rospy.loginfo('Continuing with normal tasks...')
       self.undock_as.send_goal(goal)
       setting_execution_status(True)
       
-    self.init_time = self.init_time+1
     
 
 if __name__ == '__main__':
