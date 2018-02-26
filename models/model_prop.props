@@ -1,2 +1,0 @@
-multi(Pmax=? [ G (battery>30) ], R{"rew"}max=? [ C ])
-

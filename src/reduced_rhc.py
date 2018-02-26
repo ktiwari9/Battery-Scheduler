@@ -41,7 +41,7 @@ if __name__ == '__main__':
     battery.append(init_battery)
     charging.append(init_charging)
     
-    output_path = main_path + '/data/rrhc_aug3_db'
+    output_path = main_path + '/data/rrhc_aug_pbr'
     model_path = main_path + '/models/'
     path_data = main_path + '/data/'
     
@@ -61,24 +61,35 @@ if __name__ == '__main__':
                     sys.stdout.write(c)
                     file.write(c)
             ##reading output from prism to find policy file
+            policy_file = []
             with open(path_data+'result_rrhc', 'r') as f:
                 line_list = f.readlines()
                 for i in range(len(line_list)):
-                    if 'Optimal value for weights [1.000000,0.000000] from initial state:' in line_list[i]:
-                        if 'pre' not in line_list[i+2]:
+                    if 'Computed point: ' in line_list[i]:
+                        el = line_list[i].split(' ')
+                        req_point = float(el[2][1:-1])
+                        if abs(1.0-req_point) < 0.00000001:
                             start_p = len('Adversary written to file "'+model_path)
-                            policy_file = line_list[i+2][start_p:-3]
-        
-            if policy_file != None:
-                rhc_pp = rrhc_prism_parse.parse_model([str(policy_file), 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
-            else:
-                rhc_pp = rrhc_prism_parse.parse_model(['rrhcpre1.adv', 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
+                            file_name = line_list[i-1][start_p:-3]
+                            policy_file.append((req_point, file_name))
+
+                    if 'Result:' in line_list[i]:
+                        s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+                        if len(s_policy_file) == 1:
+                            policy_file_name = s_policy_file[0][1]
+                        elif '('+str(s_policy_file[0][0])[:9] in line_list[i]:
+                            policy_file_name = s_policy_file[0][1]
+                        else:
+                            policy_file_name = s_policy_file[1][1]
+                
+            print 'Reading from ', policy_file_name
+            rhc_pp = rrhc_prism_parse.parse_model([str(policy_file_name), 'rrhc.sta', 'rrhc.lab'], t,  sample_reward, rhc_pm.clusters, rhc_pm.no_cluster)
             
             next_state = rhc_pp.get_next_state(rhc_pp.initial_state)
             
             action.append(next_state[2])
-            battery.append(next_state[0][0])
-            charging.append(next_state[0][1])
+            battery.append(next_state[0][1])
+            charging.append(next_state[0][2])
             time_v.append(t)
 
             if next_state[2] == 'gather_reward':
@@ -92,8 +103,8 @@ if __name__ == '__main__':
             for p in rhc_pm.prob[0]:
                 fw.write(' {0}'.format(p))
             fw.write('\n')
-            init_battery = int(next_state[0][0])
-            init_charging = int(next_state[0][1])
+            init_battery = int(next_state[0][1])
+            init_charging = int(next_state[0][2])
             init_cluster = int(next_state[1])
            
     print 'Time taken: ', (time.time()-t1)

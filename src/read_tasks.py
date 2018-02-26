@@ -19,7 +19,6 @@ class getTasks:
         #no_tasks = client.dump.task_events_unique.find(None).count() 
         rospy.loginfo("Connection established, %d tasks being analysed" %no_tasks)
         self.unique_tasks = dict()
-        random.seed = 7
         self._get_unique_tasks()
         #self.tasks = client.bob.task_events.find(None)
         #no_tasks = client.bob.task_events.find(None).count() 
@@ -61,16 +60,16 @@ class getTasks:
                     node = task['task'][task_details]
                     
             if action != 'cpm_action' and node != 'ChargingPoint1':
-                # if priority > 50 and priority < 5000:
-                #     new_priority = priority%11
-                # elif priority >= 5000 and priority < 50000:
-                #     new_priority = priority%101
-                # elif priority >= 50000:
-                #     new_priority = priority%1001
-                # else:
-                #     new_priority = priority
+                if priority > 50 and priority < 5000:
+                    new_priority = priority%11
+                elif priority >= 5000 and priority < 50000:
+                    new_priority = priority%101
+                elif priority >= 50000:
+                    new_priority = priority%1001
+                else:
+                    new_priority = priority
 
-                self.unique_tasks.update({task_id : (priority, start, end)})
+                self.unique_tasks.update({task_id : (new_priority, start, end)})
     
 
  

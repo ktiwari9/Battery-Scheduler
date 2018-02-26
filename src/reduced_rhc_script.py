@@ -5,6 +5,7 @@ import roslib
 import numpy as np
 from scipy.cluster.vq import kmeans2 
 from collections import Counter
+import battery_model
 
 class make_model:
     
@@ -52,6 +53,14 @@ class make_model:
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')
+
+            f.write('module time_model\n\n')
+            f.write('t:[0..{0}] init 0;\n'.format(self.horizon))
+            for action in self.actions:
+                f.write("[{0}] (t<{1}) -> (t'=t+1);\n".format(action, self.horizon))
+            f.write('\n')
+            f.write('endmodule\n\n\n')
+
             f.write('module battery_model\n\n')
             f.write('battery:[0..100] init {0};\n\n'.format(init_b))
 
@@ -60,7 +69,7 @@ class make_model:
                 if b != 0:
                     bnext_dict = self.discharge_model[b]
                     total = np.sum(np.array(bnext_dict.values()))
-                    f.write("[gather_reward] (battery={0}) -> ".format(b))
+                    f.write("[gather_reward] (battery={0}) & (t<{1})-> ".format(b,self.no_cluster))
                     plus = 0
                     for bnext, val in bnext_dict.items():
                         if plus != 0:
@@ -75,7 +84,7 @@ class make_model:
                     if b == 100:
                         bnext_dict = self.charge_model[b]
                         total = np.sum(np.array(bnext_dict.values()))
-                        f.write("[go_charge] (battery={0}) -> ".format(b))
+                        f.write("[go_charge] (battery={0}) & (t<{1}) -> ".format(b,self.no_cluster))
                         plus = 0
                         for bnext, val in bnext_dict.items():
                             if plus != 0:
@@ -86,7 +95,7 @@ class make_model:
                     else:
                         bnext_dict = self.charge_model[b]
                         total = np.sum(np.array(bnext_dict.values()))
-                        f.write("[go_charge] (battery={0}) -> ".format(b))
+                        f.write("[go_charge] (battery={0}) & (t<{1}) -> ".format(b,self.no_cluster))
                         plus = 0
                         for bnext, val in bnext_dict.items():
                             if plus != 0:
@@ -98,7 +107,7 @@ class make_model:
             for b in self.charge_model:
                 bnext_dict = self.charge_model[b]
                 total = np.sum(np.array(bnext_dict.values()))
-                f.write("[stay_charging] (battery={0}) -> ".format(b))
+                f.write("[stay_charging] (battery={0}) & (t<{1}) -> ".format(b,self.no_cluster))
                 plus = 0
                 for bnext, val in bnext_dict.items():
                     if plus != 0:
@@ -107,34 +116,34 @@ class make_model:
                     plus = plus +1
                 f.write(';\n')
 
-            ## Deterministic Model
-            # for b in self.discharge_model:
-            #     if b != 0:
-            #         bnext_dict = self.discharge_model[b]
-            #         total = np.sum(np.array(bnext_dict.values()))
-            #         avg = 0.0
-            #         for bnext, val in bnext_dict.items():
-            #             avg = avg + bnext*val
-            #         f.write("[gather_reward] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+            # Deterministic Model
+            for b in self.discharge_model:
+                if b != 0:
+                    bnext_dict = self.discharge_model[b]
+                    total = np.sum(np.array(bnext_dict.values()))
+                    avg = 0.0
+                    for bnext, val in bnext_dict.items():
+                        avg = avg + bnext*val
+                    f.write("[gather_reward] (battery={0}) & (t>{1}) -> 1:(battery'={2});\n".format(b,self.no_cluster-1, int(round(avg/total))))
 
-            # for b in self.charge_model:
-            #     bnext_dict = self.charge_model[b]
-            #     total = np.sum(np.array(bnext_dict.values()))
-            #     avg = 0.0
-            #     for bnext, val in bnext_dict.items():
-            #         avg = avg + bnext*val
-            #     if b!= 0:
-            #         if b == 100:
-            #             f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
-            #         f.write("[go_charge] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total)-1)))
+            for b in self.charge_model:
+                bnext_dict = self.charge_model[b]
+                total = np.sum(np.array(bnext_dict.values()))
+                avg = 0.0
+                for bnext, val in bnext_dict.items():
+                    avg = avg + bnext*val
+                if b!= 0:
+                    if b == 100:
+                        f.write("[go_charge] (battery={0}) & (t>{1}) -> 1:(battery'={2});\n".format(b, self.no_cluster-1,int(round(avg/total))))
+                    f.write("[go_charge] (battery={0}) & (t>{1}) -> 1:(battery'={2});\n".format(b,self.no_cluster-1, int(round(avg/total)-1)))
 
-            # for b in self.charge_model:
-            #     bnext_dict = self.charge_model[b]
-            #     total = np.sum(np.array(bnext_dict.values()))
-            #     avg = 0.0
-            #     for bnext, val in bnext_dict.items():
-            #         avg = avg + bnext*val
-            #     f.write("[stay_charging] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
+            for b in self.charge_model:
+                bnext_dict = self.charge_model[b]
+                total = np.sum(np.array(bnext_dict.values()))
+                avg = 0.0
+                for bnext, val in bnext_dict.items():
+                    avg = avg + bnext*val
+                f.write("[stay_charging] (battery={0}) & (t>{1}) -> 1:(battery'={2});\n".format(b,self.no_cluster-1, int(round(avg/total))))
 
             f.write("[tick] (battery=0) -> (battery' = battery);\n\n")
             f.write('endmodule\n\n\n')
@@ -147,12 +156,6 @@ class make_model:
             f.write("[tick] (charging=0) -> (charging'=0);\n\n")
             f.write('endmodule\n\n\n')
 
-            f.write('module time_model\n\n')
-            f.write('t:[0..{0}] init 0;\n'.format(self.horizon))
-            for action in self.actions:
-                f.write("[{0}] (t<{1}) -> (t'=t+1);\n".format(action, self.horizon))
-            f.write('\n')
-            f.write('endmodule\n\n\n')
 
             f.write('module cluster_evolution\n\n')
             f.write('cl:[0..{0}] init {1};\n\n'.format(self.total_cl, init_cluster))
@@ -211,5 +214,23 @@ class make_model:
                     print reward
                     print '----------'
             f.write('\nendrewards\n\n')
+
+if __name__ == '__main__':
+    ur = rewards_uncertain_hk.uncertain_rewards(True)
+    clusters, prob = ur.get_rewards()
+    charge_model, discharge_model = battery_model.get_battery_model('/media/milan/DATA/battery_logs')
+    mm = make_model('model_test.prism', 0, 70, 1, 1, clusters, prob, charge_model, discharge_model)
+    # print '############ GO CHARGE'
+    # for d,b in mm.gm.items():
+    #     print d, b
+    # print '############ STAY CHARGE'
+    # for d,b in mm.cm.items():
+    #     print d, b
+    # print '############ DISCHARGE'
+    # for d,b in mm.dm.items():
+    #     print d, b
+
+
+        
             
 

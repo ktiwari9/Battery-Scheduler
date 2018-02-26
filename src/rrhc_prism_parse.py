@@ -72,14 +72,14 @@ class parse_model:
                     next_id = i
                     break
             
-            if self.states[possible_states[0][0]][2] < self.no_cluster:
+            if self.states[possible_states[0][0]][0] < self.no_cluster:
             
                 next_state_list = dict()
                 for ns_p_a in possible_states:
                     next_cl_id = int(self.states[ns_p_a[0]][3])
                     #print next_cl_id, req_id
                     if next_cl_id == req_id:
-                        next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[batter, charging, time, cluster], action to get to this state
+                        next_state = [self.states[ns_p_a[0]], next_id, ns_p_a[2]]   # state[time, batter, charging,cluster], action to get to this state
                         next_state_list.update({ float(ns_p_a[1]) : next_state})          # rewards that could be achieved in this state
                 
                 prob = list(map( lambda x: x/sum(next_state_list.keys(), next_state_list.keys())))
