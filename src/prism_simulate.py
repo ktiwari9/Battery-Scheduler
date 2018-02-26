@@ -80,7 +80,7 @@ class parse_model:
 
             else:
                 req_id = int(self.cl_id[self.day*self.time_int+t_next]) 
-                next_cl_prob = round(self.probs[self.day*self.time_int+t_next][i%len(self.probs[self.day*self.time_int+t_next])], 7)
+                next_cl_prob = round(self.probs[(self.day*self.time_int+t_next)%self.time_int][i%len(self.probs[(self.day*self.time_int+t_next)%self.time_int])], 7)
                 # print req_id, int(self.states[ns_p_a[0]][3])
             
                 if int(self.states[ns_p_a[0]][3]) == req_id :#and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[self.day*self.time_int+t_next][i%len(self.clusters[self.day*self.time_int+t_next])]):
@@ -114,6 +114,10 @@ class parse_model:
                     f.write('{0} '.format(p))
                 f.write('\n')
                 in_state = next_state[0]
-        final_state = self.states[in_state]
+        
+        if len(self.cl_id) > (self.day+1)*self.time_int:
+            final_state = (self.states[in_state][0], self.states[in_state][1], self.states[in_state][2], self.cl_id[self.day*self.time_int+int(self.states[in_state][2])])
+        else:
+            final_state = self.states[in_state]
         return rewards, action, final_state
  

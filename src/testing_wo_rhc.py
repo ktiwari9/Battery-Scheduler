@@ -34,7 +34,7 @@ if __name__ == '__main__':
             actual_reward.append(float(line.split(' ')[2]))
             exp_reward.append(float(line.split(' ')[3]))        
     
-    no_days = 1
+    no_days = 3
     avg_totalreward = no_days*[0]
     init_battery = 70
     init_charging = 1
@@ -43,8 +43,7 @@ if __name__ == '__main__':
     no_simulations = 1
 
     for k in range(no_days):
-        policy_file = None
-        
+                
         pm = form_prism_script.make_model('model_t.prism', init_time, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
         
         # running prism and saving output from prism
@@ -54,28 +53,45 @@ if __name__ == '__main__':
                 sys.stdout.write(c)
                 file.write(c)
         ##reading output from prism to find policy file
+        policy_file = []
         with open(path_data+'result_wrhc', 'r') as f:
             line_list = f.readlines()
             for i in range(len(line_list)):
-                if 'Optimal value for weights [1.000000,0.000000] from initial state:' in line_list[i]:
-                    if 'pre' not in line_list[i+2]:
+                if 'Computed point: ' in line_list[i]:
+                    el = line_list[i].split(' ')
+                    req_point = float(el[2][1:-1])
+                    if abs(1.0-req_point) < 0.00000001:
                         start_p = len('Adversary written to file "'+path_mod)
-                        policy_file = line_list[i+2][start_p:-3]
+                        file_name = line_list[i-1][start_p:-3]
+                        policy_file.append((req_point, file_name))
+
+                if 'Result:' in line_list[i]:
+                    s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+                    
+                    if len(s_policy_file) == 1:
+                        policy_file_name = s_policy_file[0][1]
+                    elif '('+str(s_policy_file[0][0])[:9] in line_list[i]:
+                        policy_file_name = s_policy_file[0][1]
+                    else:
+                        policy_file_name = s_policy_file[1][1]
+
+
+        print 'Reading from ', policy_file_name
+        pp = prism_simulate.parse_model([str(policy_file_name),'model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         
-        if policy_file != None:
-            pp = prism_simulate.parse_model([str(policy_file),'model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
-        else:
-            pp = prism_simulate.parse_model(['model_tpre1.adv','model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
         
         battery = no_simulations*[0]
         charging = no_simulations*[0]
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'un_aug11_pb')  
+            rewards, action, final_state = pp.simulate(k,'f_un_aug_pbr_wrhc')  
             battery[i] = int(final_state[0])
+            print battery[i]
             charging[i] = int(final_state[1])
+            print charging[i]
             init_cluster[i] = int(final_state[3])
+            print init_cluster[i]
             tr_day[i] = 0
             for r in range(len(rewards)):
                 if action[r] == 'gather_reward':
