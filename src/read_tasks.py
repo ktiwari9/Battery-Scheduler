@@ -70,7 +70,7 @@ class getTasks:
                 else:
                     new_priority = priority
 
-                self.unique_tasks.update({task_id : (priority, start, end)})
+                self.unique_tasks.update({task_id : (new_priority, start, end)})
     
 
  

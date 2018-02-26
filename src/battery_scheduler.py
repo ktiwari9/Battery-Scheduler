@@ -122,20 +122,27 @@ class battery_scheduler:
         sys.stdout.write(c)
         file.write(c)
         ##reading output from prism to find policy file
+    policy_file = []
     with open(self.path_data+'result_rhc', 'r') as f:
       line_list = f.readlines()
       for i in range(len(line_list)):
-        if 'Optimal value for weights [1.000000,0.000000] from initial state:' in line_list[i]:
-          if 'pre' not in line_list[i+2]:
+        if 'Computed point: ' in line_list[i]:
+          el = line_list[i].split(' ')
+          req_point = float(el[2][1:-1])
+          if abs(1.0-req_point) < 0.00000001:
             start_p = len('Adversary written to file "'+self.model_path)
-            policy_file = line_list[i+2][start_p:-3]
-            
+            file_name = line_list[i-1][start_p:-3]
+            policy_file.append((req_point, file_name))
+
+        if 'Result:' in line_list[i]:
+          s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+          if '('+str(s_policy_file[0][0]) in line_list[i]:
+            policy_file_name = s_policy_file[0][1]
+          else:
+            policy_file_name = s_policy_file[1][1]
+
     rospy.loginfo('Reading PRISM policy...')
-    if policy_file != None:
-      rhc_pp = rhc_prism_parse.parse_model([str(policy_file),'model_rhc.sta','model_rhc.lab'])
-    else:
-      rhc_pp = rhc_prism_parse.parse_model(['model_rhcpre1.adv', 'model_rhc.sta', 'model_rhc.lab'])
-            
+    rhc_pp = rhc_prism_parse.parse_model([str(policy_file_name),'model_rhc.sta','model_rhc.lab'])
     action = rhc_pp.get_next_state(rhc_pp.initial_state) ## next state, action, 
 
     rospy.loginfo('Reward expected: %s' % cl_reward)
