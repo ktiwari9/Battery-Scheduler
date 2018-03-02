@@ -30,16 +30,24 @@ class uncertain_rewards:
             rewards_by_day = self.get_rewards_by_day()
             self.test_rewards = dict()
             self.rewards_day = dict()
-            no_test_start = 8              ##### CHANGE START AND END TO GET DIFFERENT DAYS OF THE SAME MONTH
-            no_test_end = 11              ####### CHANGE BELOW TO CHANGE MONTH
+            no_test_start = 0              ##### CHANGE START AND END TO GET DIFFERENT DAYS OF THE SAME MONTH
+            no_test_end = 3              ####### CHANGE BELOW TO CHANGE MONTH
             num = 0
             for day in rewards_by_day:
-                if day[1] == 8 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
-                    self.test_rewards.update({ day : rewards_by_day[day]})    
-                elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
+                if day[0] == 2016 and day[1] == 12 and day[2] == 9:
+                    self.test_rewards.update({ day : rewards_by_day[day]})
+                elif day[0] == 2016 and day[1] == 12 and day[2] == 20:
+                    self.test_rewards.update({ day : rewards_by_day[day]})
+                elif day[0] == 2016 and day[1] == 12 and day[2] == 21:
+                    self.test_rewards.update({ day : rewards_by_day[day]})
+                else:
                     self.rewards_day.update({ day : rewards_by_day[day]})
-                if day[1] == 8 and day[0] == 2017:
-                    num = num+1
+                # if day[1] == 9 and day[0] == 2017 and num >= no_test_start and num < no_test_end:
+                #     self.test_rewards.update({ day : rewards_by_day[day]})    
+                # elif day[1] == 11 or day[1] == 12 or day[0] == 2017:
+                #     self.rewards_day.update({ day : rewards_by_day[day]})
+                # if day[1] == 9 and day[0] == 2017:
+                #     num = num+1
                    
     def get_rewards_by_day(self):
         dated_tasks = dict()
@@ -76,37 +84,56 @@ class uncertain_rewards:
         
     def get_rewards(self):
         i = 0
-        f = len(self.rewards_day)*[0]
+        f = []
         for day in self.rewards_day:
-            f[i] = np.array(self.rewards_day[day])
-            i= i+1
+            if len(np.nonzero(self.rewards_day[day])[0]) > 8:
+                f.append(np.array(self.rewards_day[day]))
+                i= i+1
+
+        print 'num days avilable :', len(f)
         f_t = np.array(f).T 
         
         clusters = []
         prob = []
+
         # len_clusters = []
         for j in range(len(f_t)):
-            zero_count = 0  #change if you want zeros separately
-            in_km = []
-            # Converting to suitable input for kmeans    #change if you want zeros separately                         
-            for k in range(len(f_t[j])):
-                if f_t[j][k] < 1000000 and f_t[j][k] != 0:
-                    in_km.append([f_t[j][k]])
-                elif f_t[j][k] == 0:
-                    zero_count = zero_count + 1
-                    
-            p_dist = pdist(in_km, metric='cityblock')
-            p_dist_avg = np.sum(p_dist)/p_dist.size
-            cl_centre, p_cluster = self._form_clusters(in_km, p_dist_avg, zero_count) #change if you want zeros separately
-            # print len(cl_centre)
-            # print cl_centre
-            # print p_cluster
-            # len_clusters.append(len(cl_centre))
             
-            # expected_reward = 0
-            # for x in range(len(cl_centre)):
-            #     expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
-            # print expected_reward    
+
+            if len(set(f_t[j])) < 7:
+                cl_int = []
+                p_int = []
+                clusters_count = Counter(f_t[j])
+                total = float(sum(clusters_count.values()))
+                for cl,c in clusters_count.items():
+                    cl_int.append(cl)
+                    p_int.append(float(c)/total)
+
+                clusters.append(cl_int)
+                prob.append(p_int)
+
+            else:
+                zero_count = 0  #change if you want zeros separately
+                in_km = []
+                # Converting to suitable input for kmeans    #change if you want zeros separately                         
+                for k in range(len(f_t[j])):
+                    if f_t[j][k] < 1000000 and f_t[j][k] != 0:
+                        in_km.append([f_t[j][k]])
+                    elif f_t[j][k] == 0:
+                        zero_count = zero_count + 1
+                    
+                p_dist = pdist(in_km, metric='cityblock')
+                p_dist_avg = np.sum(p_dist)/p_dist.size
+                cl_centre, p_cluster = self._form_clusters(in_km, p_dist_avg, zero_count) #change if you want zeros separately
+                # print len(cl_centre)
+                # print cl_centre
+                # print p_cluster
+                # len_clusters.append(len(cl_centre))
+            
+                # expected_reward = 0
+                # for x in range(len(cl_centre)):
+                #     expected_reward = expected_reward + p_cluster[x]*cl_centre[x]
+                # print expected_reward    
             
             prob.append(p_cluster)
             clusters.append(cl_centre)
@@ -134,7 +161,8 @@ class uncertain_rewards:
         for cl_id, data in clusters.items():
             centre = np.mean(np.array(data))
             cl_centre[cl_id] = centre
-        cl_centre.append(0)  #change if you want zeros separately
+        if zero_count != 0:
+            cl_centre.append(0)  #change if you want zeros separately
         
         p_cluster = {}
         for z in range(len(in_km)):
@@ -144,7 +172,8 @@ class uncertain_rewards:
             else:
                 val = p_cluster[label] + 1
             p_cluster.update({ label : float(val)})
-        p_cluster.update({ len(cl_centre) - 1 : zero_count})   #change if you want zeros separately
+        if zero_count != 0:
+            p_cluster.update({ len(cl_centre) - 1 : zero_count})   #change if you want zeros separately
             
         total = np.sum(np.array(p_cluster.values()))
         for p in p_cluster:
@@ -215,5 +244,9 @@ if __name__ == '__main__':
 #    layout = go.Layout(title='Rewards across Days per Time Interval',xaxis=dict(title='Time Interval'), yaxis=dict(title='Total rewards'))
 #    fig1 = go.Figure(data=traces, layout=layout)
 #    plot_url = py.plot(fig1, filename='action_priorities')
-    clusters, prob = ur.get_rewards()       
+    clusters, prob = ur.get_rewards()     
+    for c in clusters:
+        print c
+    for p in prob:
+        print p  
 

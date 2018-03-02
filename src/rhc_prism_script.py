@@ -20,7 +20,7 @@ class make_model:
             self.total_cl = self.total_cl+len(self.clusters[k])
         self.charge_model = self.reduce_battery_model(charge_model)
         self.discharge_model = self.reduce_battery_model(discharge_model)   
-        self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
+        self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.write_prism_file(filename, init_b, init_ch, init_cluster) 
          
     def reduce_battery_model(self, model):
@@ -131,7 +131,7 @@ class make_model:
             #         avg = avg + bnext*val
             #     f.write("[stay_charging] (battery={0}) -> 1:(battery'={1});\n".format(b, int(round(avg/total))))
 
-            f.write("[tick] (battery=0) -> (battery' = battery);\n\n")
+            f.write("[finish] (battery=0) -> (battery' = battery);\n\n")
             f.write('endmodule\n\n\n')
 
             f.write('module charging_state\n\n')
@@ -139,13 +139,14 @@ class make_model:
             f.write("[gather_reward] (charging=0) | (charging=1) -> (charging'=0);\n")
             f.write("[stay_charging] (charging=1) -> (charging'=1);\n")
             f.write("[go_charge] (charging=0) -> (charging'=1);\n")
-            f.write("[tick] (charging=0) -> (charging'=0);\n\n")            
+            f.write("[finish] (charging=0) -> (charging'=0);\n\n")            
             f.write('endmodule\n\n\n')
 
             f.write('module time_model\n\n')
             f.write('t:[0..{0}] init 0;\n'.format(self.horizon))
             for action in self.actions:
                 f.write("[{0}] (t<{1}) -> (t'=t+1);\n".format(action, self.horizon))
+            f.write("[finish] (t<{0}) -> (t'={0});\n".format(self.time_int))
             f.write('\n')
             f.write('endmodule\n\n\n')
 
@@ -172,6 +173,7 @@ class make_model:
                         if action != self.actions[-1]:
                             cl_no = cl_no - len(self.prob[i])
 
+            f.write("[finish] true -> (cl'={0});\n".format(self.total_cl))
             f.write('\n\n')
             f.write('endmodule\n\n\n')
 

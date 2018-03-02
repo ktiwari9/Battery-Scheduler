@@ -16,6 +16,13 @@ class sample_generator:
             self.test_rewards = ur.test_rewards
             self.len_test_rewards = len(self.test_rewards)
 
+            ### expected data
+            # self.test_rewards = []
+            # with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/exp_rewards', 'r') as f:
+            #     for rew in f:
+            #         self.test_rewards.append(float(rew[:-1]))
+
+
         self.rewards, self.cl_ids, self.act_rewards, self.exp_rewards = self.get_samples(validation,sampling_type) 
   
     def get_samples(self, validation, sampling_type):
@@ -23,6 +30,12 @@ class sample_generator:
         exp_rewards = (self.time_int*self.len_test_rewards)*[0]
         act_rewards = (self.time_int*self.len_test_rewards)*[0]
         cl_ids = (self.time_int*self.len_test_rewards)*[0]
+
+        #####expected
+        # rewards = len(self.test_rewards)*[0]
+        # exp_rewards = len(self.test_rewards)*[0]
+        # act_rewards = len(self.test_rewards)*[0]
+        # cl_ids = len(self.test_rewards)*[0]
         
         if validation == False:
             for i in range(self.time_int*self.len_test_rewards):
@@ -75,6 +88,22 @@ class sample_generator:
                     rewards[i*self.time_int+j] = cl_reward
                     cl_ids[i*self.time_int+j] = cl_no +index
                     cl_no = cl_no+len(self.clusters[j])
+
+
+            ####exp rew
+            # cl_no = 0 
+            # for i in range(len(self.test_rewards)):
+            #     if i == 48 or i==96:
+            #         cl_no = 0
+            #     cl_reward, index = self.closest_cluster(self.test_rewards[i], self.clusters[i%self.time_int])
+            #     for k in range(len(self.clusters[i%self.time_int])):
+            #         exp_rewards[i] = exp_rewards[i] + self.clusters[i%self.time_int][k]*self.prob[i%self.time_int][k]           
+       
+            #     act_rewards[i] = self.test_rewards[i]
+            #     rewards[i] = cl_reward
+            #     cl_ids[i] = cl_no +index
+            #     cl_no = cl_no+len(self.clusters[i%self.time_int])
+
         return rewards, cl_ids, act_rewards, exp_rewards
 
     def closest_cluster(self, reward, clusters):

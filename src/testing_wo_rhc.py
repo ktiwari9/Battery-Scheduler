@@ -10,6 +10,7 @@ import numpy as np
 import roslib
 import sys
 import battery_model
+import reduced_rhc_script
 
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
@@ -61,25 +62,25 @@ if __name__ == '__main__':
             for i in range(len(line_list)):
                 if 'Computed point: ' in line_list[i]:
                     el = line_list[i].split(' ')
-                    req_point = float(el[2][1:-1])
-                    if abs(1.0-req_point) < 0.00000001:
+                    req_point = el[2][1:-1]
+                    if abs(1.0-float(req_point)) < 0.00000001:
                         start_p = len('Adversary written to file "'+path_mod)
                         file_name = line_list[i-1][start_p:-3]
                         policy_file.append((req_point, file_name))
 
                 if 'Result:' in line_list[i]:
-                    s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+                    s_policy_file = sorted(policy_file, key= lambda x: abs(1-float(x[0])))
                     
                     if len(s_policy_file) == 1:
                         policy_file_name = s_policy_file[0][1]
-                    elif '('+str(s_policy_file[0][0])[:9] in line_list[i]:
+                    elif '('+s_policy_file[0][0]+',' in line_list[i]:
                         policy_file_name = s_policy_file[0][1]
                     else:
                         policy_file_name = s_policy_file[1][1]
 
         #######################SPECIFY LOCATION AS BEFORE ######################
         print 'Reading from ', policy_file_name
-        pp = prism_simulate.parse_model([str(policy_file_name),'model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob)
+        pp = prism_simulate.parse_model([policy_file_name,'model_t.sta','model_t.lab'], cl_id, actual_reward, sample_reward, exp_reward,k, pm.clusters, pm.prob, charge_model, discharge_model)
         
         
         battery = no_simulations*[0]
@@ -87,7 +88,7 @@ if __name__ == '__main__':
         init_cluster= no_simulations*[0]
         tr_day = no_simulations*[0]
         for i in range(no_simulations):
-            rewards, action, final_state = pp.simulate(k,'f_un_aug_pbr_wrhc')  #######################SPECIFY LOCATION ######################
+            rewards, action, final_state = pp.simulate(k,'real_dec16_wrhc')  #######################SPECIFY LOCATION ######################
             battery[i] = int(final_state[0])
             print battery[i]
             charging[i] = int(final_state[1])

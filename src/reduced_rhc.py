@@ -41,14 +41,14 @@ if __name__ == '__main__':
     battery.append(init_battery)
     charging.append(init_charging)
     
-    output_path = main_path + '/data/rrhc_aug_pbr'
+    output_path = main_path + '/data/real_dec16_det'
     model_path = main_path + '/models/'
     path_data = main_path + '/data/'
     
     t1 = time.time()
     with open(output_path, 'w') as fw:
         fw.write('time charging battery action matched_reward actual_reward exp_reward  cluster_vals prob_vals\n')
-        for t in range(48*3):     # 48*3 for 3 days
+        for t in range(1):     # 48*3 for 3 days
             policy_file = None
 
             rhc_pm = reduced_rhc_script.make_model('rrhc.prism', t, init_battery, init_charging, init_cluster, clusters, prob, charge_model, discharge_model)
@@ -67,17 +67,17 @@ if __name__ == '__main__':
                 for i in range(len(line_list)):
                     if 'Computed point: ' in line_list[i]:
                         el = line_list[i].split(' ')
-                        req_point = float(el[2][1:-1])
-                        if abs(1.0-req_point) < 0.00000001:
+                        req_point = el[2][1:-1]
+                        if abs(1.0-float(req_point)) < 0.00000001:
                             start_p = len('Adversary written to file "'+model_path)
                             file_name = line_list[i-1][start_p:-3]
                             policy_file.append((req_point, file_name))
 
                     if 'Result:' in line_list[i]:
-                        s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+                        s_policy_file = sorted(policy_file, key= lambda x: abs(1-float(x[0])))
                         if len(s_policy_file) == 1:
                             policy_file_name = s_policy_file[0][1]
-                        elif '('+str(s_policy_file[0][0])[:9] in line_list[i]:
+                        elif '('+s_policy_file[0][0]+',' in line_list[i]:
                             policy_file_name = s_policy_file[0][1]
                         else:
                             policy_file_name = s_policy_file[1][1]

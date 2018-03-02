@@ -8,7 +8,7 @@ import roslib
 
 class parse_model:
 
-    def __init__(self, filenames, cl_id, actual_reward, sample_reward, exp_reward, day, clusters, probs):
+    def __init__(self, filenames, cl_id, actual_reward, sample_reward, exp_reward, day, clusters, probs, charge_model, discharge_model):
         #######################SPECIFY LOCATION ######################
 
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
@@ -52,6 +52,8 @@ class parse_model:
         self.clusters = clusters
         self.probs = probs
         self.time_int = 48
+        self.charge_model = charge_model
+        self.discharge_model = discharge_model
         
     def get_initial_state(self):
         for element in self.labels:
@@ -82,7 +84,7 @@ class parse_model:
 
             else:
                 req_id = int(self.cl_id[self.day*self.time_int+t_next]) 
-                next_cl_prob = round(self.probs[(self.day*self.time_int+t_next)%self.time_int][i%len(self.probs[(self.day*self.time_int+t_next)%self.time_int])], 7)
+                next_cl_prob = self.probs[(self.day*self.time_int+t_next)%self.time_int][i%len(self.probs[(self.day*self.time_int+t_next)%self.time_int])]
                 # print req_id, int(self.states[ns_p_a[0]][3])
             
                 if int(self.states[ns_p_a[0]][3]) == req_id :#and round(self.sample_reward[self.day*self.time_int+t_next]) == round(self.clusters[self.day*self.time_int+t_next][i%len(self.clusters[self.day*self.time_int+t_next])]):
@@ -91,8 +93,42 @@ class parse_model:
         
             i = i+1
 
+
         prob = map(lambda x: x/sum(next_state_list.keys()), next_state_list.keys())
         req_prob = np.random.choice(np.array(next_state_list.keys()), p=prob)
+
+
+        if next_state_list[req_prob][1] == 'gather_reward':
+            model = self.discharge_model
+        elif next_state_list[req_prob][1] == 'stay_charging' or next_state_list[req_prob][1] == 'go_charge':
+            model = self.charge_model
+        # print 'model'
+        # print model
+        # print int(self.states[current_state][0])
+        # print self.charge_model[int(self.states[current_state][0])]
+        if next_state_list[req_prob][1] == 'stay_charging':
+            exp_battery = 0
+            total = sum(self.charge_model[int(self.states[current_state][0])].values())
+            for nb, count in self.charge_model[int(self.states[current_state][0])].items():
+                exp_battery = (nb-1)*count + exp_battery
+            exp_battery = exp_battery/total
+        else:
+            exp_battery = 0
+            total = sum(model[int(self.states[current_state][0])].values())
+            # print model[int(self.states[current_state][0])]
+            for nb, count in model[int(self.states[current_state][0])].items():
+                exp_battery = nb*count + exp_battery
+            exp_battery = exp_battery/total
+
+        min = 15000
+        req_prob = None
+        for prob, element in next_state_list.items():
+            nb = int(self.states[element[0]][0])
+            if abs(nb-exp_battery) < min:
+                min = abs(nb-exp_battery)
+                req_prob = prob
+
+
         return next_state_list[req_prob]
             
     def simulate(self, day, name):

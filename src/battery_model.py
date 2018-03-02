@@ -156,15 +156,15 @@ def get_battery_model(path_to_directory):
 
 if __name__ == '__main__':
     
-    file_path = '/media/milan/DATA/battery_logs'
-    #ch_mod, dch_mod = get_battery_model(file_path)
-    ch_mod, dch_mod = extract_data(file_path)
-    for mod in [ch_mod, dch_mod]:
-        print '############'
-        for data in mod:
-            print '%%%%%%%%%%%%%%%%'
-            battery_l = list(map(lambda x: x.life, data))
-            print battery_l
+    file_path = '/media/milan/DATA/battery_logs/real_battery'
+    ch_mod, dch_mod = get_battery_model(file_path)
+    # ch_mod, dch_mod = extract_data(file_path)
+    # for mod in [ch_mod, dch_mod]:
+    #     print '############'
+    #     for data in mod:
+    #         print '%%%%%%%%%%%%%%%%'
+    #         battery_l = list(map(lambda x: x.life, data))
+    #         print battery_l
 
 
 

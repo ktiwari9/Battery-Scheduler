@@ -14,10 +14,10 @@ class getTasks:
         ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
         rospy.loginfo("Connecting to mongodB")        
-        self.tasks = client.message_store.task_events.find(None)
-        no_tasks = client.message_store.task_events.find(None).count() 
-        #self.tasks = client.dump.task_events_unique.find(None)
-        #no_tasks = client.dump.task_events_unique.find(None).count() 
+        # self.tasks = client.message_store.task_events.find(None)
+        # no_tasks = client.message_store.task_events.find(None).count() 
+        self.tasks = client.betty.task_events_unique.find(None)
+        no_tasks = client.betty.task_events_unique.find(None).count() 
         rospy.loginfo("Connection established, %d tasks being analysed" %no_tasks)
         self.unique_tasks = dict()
         self._get_unique_tasks()
@@ -60,17 +60,17 @@ class getTasks:
                 elif task_details == 'start_node_id':
                     node = task['task'][task_details]
                     
-            if action != 'cpm_action' and node != 'ChargingPoint1':
-                if priority > 50 and priority < 5000:
-                    new_priority = priority%11
-                elif priority >= 5000 and priority < 50000:
-                    new_priority = priority%101
-                elif priority >= 50000:
-                    new_priority = priority%1001
-                else:
-                    new_priority = priority
+            if node != 'ChargingPoint1' and action != 'cpm_action'and action != 'un-named_action':
+                # if priority > 50 and priority < 5000:
+                #     new_priority = priority%11
+                # elif priority >= 5000 and priority < 50000:
+                #     new_priority = priority%101
+                # elif priority >= 50000:
+                #     new_priority = priority%1001
+                # else:
+                #     new_priority = priority
 
-                self.unique_tasks.update({task_id : (new_priority, start, end)})
+                self.unique_tasks.update({task_id : (priority, start, end)})
     
 
  

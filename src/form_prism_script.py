@@ -15,7 +15,7 @@ class make_model:
         for i in range(len(clusters)):
             self.total_cl = self.total_cl + len(self.clusters[i])
         self.prob = prob
-        self.actions = ['gather_reward', 'go_charge', 'stay_charging', 'tick']
+        self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.charge_model = self.reduce_battery_model(charge_model)
         self.discharge_model = self.reduce_battery_model(discharge_model)
         self.time_int = 48
@@ -184,7 +184,7 @@ class make_model:
             #     # b_list.append(b)
             #     # self.cm.update({int(round(avg/total))-b : b_list })
 
-            f.write("[tick] (battery=0) -> (battery' = battery);\n\n")
+            f.write("[finish] (battery=0) -> (battery' = battery);\n\n")
             f.write('endmodule\n\n\n')
 
             f.write('module charging_state\n\n')
@@ -192,13 +192,14 @@ class make_model:
             f.write("[gather_reward] (charging=0) | (charging=1) -> (charging'=0);\n")
             f.write("[stay_charging] (charging=1) -> (charging'=1);\n")
             f.write("[go_charge] (charging=0) -> (charging'=1);\n")
-            f.write("[tick] (charging=0) -> (charging'=0);\n\n")
+            f.write("[finish] (charging=0) -> (charging'=0);\n\n")
             f.write('endmodule\n\n\n')
 
             f.write('module time_model\n\n')
             f.write('t:[0..{0}] init {1};\n'.format(self.time_int,init_t))
             for action in self.actions:
                 f.write("[{0}] (t<{1}) -> (t'=t+1);\n".format(action,self.time_int))
+            f.write("[finish] (t<{0}) -> (t'={0});\n".format(self.time_int))
             f.write('\n')
             f.write('endmodule\n\n\n')
 
@@ -225,6 +226,7 @@ class make_model:
                         if action != self.actions[-1]:
                             cl_no = cl_no - len(self.prob[i])
 
+            f.write("[finish] true -> 1:(cl'={0});\n".format(self.total_cl))
             f.write('\n\n')
             f.write('endmodule\n\n\n')
 

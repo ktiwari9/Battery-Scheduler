@@ -59,7 +59,7 @@ class getTasks:
                 elif task_details == 'start_node_id':
                     node = task['task'][task_details]
 
-            if node != 'ChargingPoint1':
+            if action == 'wait_action' and node != 'ChargingPoint1':
                 self.unique_tasks.update({task_id : (1, start, end)})
             
     

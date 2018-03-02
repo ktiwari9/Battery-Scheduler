@@ -12,7 +12,7 @@ import sys
 if __name__ == '__main__':
     ur = rewards_uncertain_hk.uncertain_rewards(True)
     clusters, prob = ur.get_rewards()
-    path_to_directory = '/media/milan/DATA/battery_logs' 
+    path_to_directory = '/media/milan/DATA/battery_logs/real_battery' 
     charge_model, discharge_model = battery_model.get_battery_model(path_to_directory)
     cl_id = []
     sample_reward = []
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     charging.append(init_charging)
     t1 = time.time()
 
-    output_path = main_path + '/data/rhc_aug_pbr'
+    output_path = main_path + '/data/real_dec16_rhc'
     model_path = main_path + '/models/'
 
     with open(output_path, 'w') as fw:
@@ -70,17 +70,17 @@ if __name__ == '__main__':
                 for i in range(len(line_list)):
                     if 'Computed point: ' in line_list[i]:
                         el = line_list[i].split(' ')
-                        req_point = float(el[2][1:-1])
-                        if abs(1.0-req_point) < 0.00000001:
+                        req_point = el[2][1:-1]
+                        if abs(1.0-float(req_point)) < 0.00000001:
                             start_p = len('Adversary written to file "'+model_path)
                             file_name = line_list[i-1][start_p:-3]
                             policy_file.append((req_point, file_name))
 
                     if 'Result:' in line_list[i]:
-                        s_policy_file = sorted(policy_file, key= lambda x: abs(1-x[0]))
+                        s_policy_file = sorted(policy_file, key= lambda x: abs(1-float(x[0])))
                         if len(s_policy_file) == 1:
                             policy_file_name = s_policy_file[0][1]
-                        elif '('+str(s_policy_file[0][0])[:9] in line_list[i]:
+                        elif '('+s_policy_file[0][0]+',' in line_list[i]:
                             policy_file_name = s_policy_file[0][1]
                         else:
                             policy_file_name = s_policy_file[1][1]
