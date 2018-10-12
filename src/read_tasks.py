@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-
-import random 
+import pandas as pd 
+import datetime
 import pymongo
+import random
 import rospy
 import time
 
@@ -26,6 +27,11 @@ class getTasks:
         #rospy.loginfo("Connection established, %d tasks being analysed" %no_tasks)
         #self._get_unique_tasks('b')
         rospy.loginfo("%d unique tasks found" %len(self.unique_tasks))
+        task_ids = [task_id for task_id in self.unique_tasks.keys()]
+        priorities = [self.unique_tasks[task_id][0] for task_id in task_ids]
+        start_times = [self.unique_tasks[task_id][1] for task_id in task_ids]
+        end_times = [self.unique_tasks[task_id][2] for task_id in task_ids]
+        self.tasks_df = pd.DataFrame(data=zip(task_ids, priorities, start_times, end_times), columns=['task_id', 'priority', 'start_time', 'end_time_flag'])
         
     def _get_unique_tasks(self, collection_indicator=None):
         for task in self.tasks:
@@ -34,12 +40,12 @@ class getTasks:
                 
                 if task_details == 'start_after':
                     s = rospy.Time(task['task'][task_details]['secs'],task['task'][task_details]['nsecs'])  
-                    start = time.localtime(rospy.Time.to_sec(s))
-
+                    start_datetime = datetime.datetime.fromtimestamp(rospy.Time.to_sec(s))
+                    
                 elif task_details == 'end_before':
                     e = rospy.Time(task['task'][task_details]['secs'],task['task'][task_details]['nsecs'])
-                    end = time.localtime(rospy.Time.to_sec(e))
-
+                    end_datetime = datetime.datetime.fromtimestamp(rospy.Time.to_sec(e))
+                    
                 elif task_details == 'task_id':
                     task_id = str(task['task'][task_details]) #+ collection_indicator
                     
@@ -60,7 +66,7 @@ class getTasks:
                 elif task_details == 'start_node_id':
                     node = task['task'][task_details]
                     
-            if node != 'ChargingPoint1' and action != 'cpm_action'and action != 'un-named_action':
+            if node != 'ChargingPoint1' and action != 'cpm_action'and action != 'un-named_action' and priority != 0:
                 # if priority > 50 and priority < 5000:
                 #     new_priority = priority%11
                 # elif priority >= 5000 and priority < 50000:
@@ -69,8 +75,12 @@ class getTasks:
                 #     new_priority = priority%1001
                 # else:
                 #     new_priority = priority
-
-                self.unique_tasks.update({task_id : (priority, start, end)})
+                if end_datetime.date() > start_datetime.date():
+                    plus_one = True 
+                else:
+                    plus_one = False
+                self.unique_tasks.update({task_id : (priority, start_datetime, (end_datetime, plus_one))})
     
-
- 
+if __name__ == '__main__':
+    gt = getTasks()
+    # print (gt.unique_tasks)
