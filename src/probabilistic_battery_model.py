@@ -3,6 +3,7 @@
 from datetime import datetime, time, date 
 import pandas as pd
 from io import open
+import codecs
 import yaml
 import os
 
@@ -106,6 +107,7 @@ class BatteryModel:
             for model in [self.charge_model, self.discharge_model]:
                 for i in range (101):
                     model.update({ i : dict()})
+            self.discharge_model[100] = self.discharge_model[99]
 
             files = self.get_files(paths)
             self.extract_data(files)
