@@ -10,67 +10,28 @@ class PrismModel:
         self.clusters = clusters
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging']
-        self.charge_model = self.reduce_battery_model(charge_model)
-        self.discharge_model = self.reduce_battery_model(discharge_model)
+        self.charge_model = charge_model
+        self.discharge_model = discharge_model
         self.time_int = 48
-        # self.dm = dict()
-        # self.cm = dict()
-        # self.gm = dict()   
-        self.write_prism_file(filename, init_t, init_b, init_ch, init_cluster) 
-        # file for one day - 48 time steps
-
-    def reduce_battery_model(self, model):
-        for b in model:
-            if len(model[b].keys()) > 10:
-                in_arr = []
-                for nb in model[b]:
-                    in_arr.append([float(nb)])
-                centroid, labels = kmeans2(np.array(in_arr), 5, minit='points')
-                #print centroid
-                count_dict = Counter(labels)
-                b_model = dict()
-                for i in range(len(centroid)):
-                    b_model.update({int(centroid[i][0]) : count_dict[i]})
-                print b
-                print b_model
-                print '####'
-                model.update({b : b_model})
-        return model
-
+        self.write_prism_file(filename, init_t, init_b, init_ch) 
         
-    def write_prism_file(self, filename, init_t, init_b, init_ch, init_cluster):
+    def write_prism_file(self, filename, init_t, init_b, init_ch):
         #######################SPECIFY LOCATION ######################       
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')
-            f.write('module battery_model\n\n')
+            f.write('module time_model\n')
+            f.write('t:[0..{0}] init {1}\n'.format(self.time_int,init_t))
+            f.write('task_present:[0..1] init 0\n')
+            f.write('o:[0..1] init 0\n')
+            f.write("[observe] (t<{0}) & (o=0) -> 0.5:(task_present'=1) & (o'=1) + 0.5:(task_present'=0) & (o'=1);\n".format(self.time_int))
+            for action in self.actions:
+                f.write("[{0}] (t<{1}) & (o=1) -> (t'=t+1) & (o'=0);\n".format(action, self.time_int))
+            f.write("[dead] (t<{0}) -> (t'=t+1) & (o'=0);\n".format(self.time_int))
+            f.write('endmodule\n\n')
+
+            f.write('module battery_model\n')
             f.write('battery:[0..100] init {0};\n\n'.format(init_b))
-            ##### REAL BATTERY
-            # f.write("[gather_reward] (battery>89) & (battery<=100) -> (battery'=battery-4);\n")
-            # f.write("[gather_reward] (battery>24) & (battery<90) -> (battery'=battery-5);\n")
-            # f.write("[gather_reward] (battery>4) & (battery<25) -> (battery'=battery-4);\n")
-            # f.write("[gather_reward] (battery>2) & (battery<5) -> (battery'=battery-3);\n")
-            # f.write("[gather_reward] (battery>0) & (battery<3) ->  (battery'=0) ;\n")
-            # f.write("[go_charge]  (battery>0) & (battery<5) -> (battery'=battery+6) ;\n")
-            # f.write("[go_charge]  (battery>4) & (battery<9) -> (battery'=battery+5) ;\n")
-            # f.write("[go_charge]  (battery>8) & (battery<15)-> (battery'=battery+4) ;\n")
-            # f.write("[go_charge]  (battery>14) & (battery<29)-> (battery'=battery+3) ;\n")
-            # f.write("[go_charge]  (battery>28) & (battery<45)-> (battery'=battery+2) ;\n")
-            # f.write("[go_charge]  (battery>44) & (battery<65) -> (battery'=battery+1) ;\n")
-            # f.write("[go_charge]  (battery>64) & (battery<98) ->  (battery'=battery+2) ;\n")
-            # f.write("[go_charge]  (battery=98) -> (battery'=battery+1) ;\n")
-            # f.write("[go_charge]  (battery=99) -> (battery'=battery) ;\n")
-            # f.write("[go_charge]  (battery=100)  ->  (battery'=battery) ;\n")
-            # f.write("[stay_charging] (battery=0) -> (battery'=battery+7) ;\n")
-            # f.write("[stay_charging] (battery>0) & (battery<5) ->  (battery'=battery+7) ;\n")
-            # f.write("[stay_charging] (battery>4) & (battery<9)  ->  (battery'=battery+6) ;\n")
-            # f.write("[stay_charging] (battery>8) & (battery<15) -> (battery'=battery+5) ;\n")
-            # f.write("[stay_charging] (battery>14) & (battery<29)  ->  (battery'=battery+4) ;\n")
-            # f.write("[stay_charging] (battery>28) & (battery<45)  -> (battery'=battery+3) ;\n")
-            # f.write("[stay_charging] (battery>44) & (battery<65) -> (battery'=battery+2) ;\n")
-            # f.write("[stay_charging] (battery>64) & (battery<98)  ->(battery'=battery+3) ;\n")
-            # f.write("[stay_charging] (battery>97) & (battery<=100)  -> (battery'=100) ;\n")
-            
             ##### PROBABILISTIC BATTERY
             for b in self.discharge_model:
                 if b != 0:
