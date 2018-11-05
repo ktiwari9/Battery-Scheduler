@@ -30,13 +30,12 @@ class uncertain_rewards:
         adjusted_end = self.tasks['end_time_flag'].apply(lambda x: datetime.combine(date.today(), x[0].time()) if x[1] == False else datetime.combine((datetime.today()+timedelta(days=1)).date(), x[0].time()) )
         self.tasks['adjusted_start'] = adjusted_start
         self.tasks['adjusted_end'] = adjusted_end
-        self.probabilistic_rewards = self.__get_probabilistic_model()
-
+        
     def __cluster_rewards(self):
         X = np.array(self.tasks['priority']).reshape(-1,1)
         dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 500,covariance_type='spherical', random_state=0).fit(X)
         priorities_as_states = dpgmm.predict(X)
-        reward_states = [m[0] for m in dpgmm.means_]
+        reward_states = [m[0] for m in dpgmm.means_]  ## Means indxed by state
 
         # states = np.unique(priorities_as_states)
         # print ('Number of states: ', len(np.unique(priorities_as_states)), states)
@@ -50,7 +49,7 @@ class uncertain_rewards:
         # plt.show()
         return priorities_as_states, reward_states
 
-    def __get_probabilistic_model(self):
+    def get_probabilistic_reward_model(self):
         no_int = 1440/self.time_int   # 1440 is total minutes in a day
         start_int = datetime.combine(date.today(),time(0,0)) 
         reward_prob = np.zeros((no_int,len(self.state_means)))   
@@ -62,7 +61,7 @@ class uncertain_rewards:
             for r, p in zip(r_unique,r_prob):
                 reward_prob[i,r] = p
             start_int = end_int
-        return reward_prob
+        return reward_prob, self.state_means
 
 if __name__ == '__main__':
     ur = uncertain_rewards()
