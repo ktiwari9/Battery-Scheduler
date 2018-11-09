@@ -27,9 +27,13 @@ class PrismModel:
             f.write('t:[0..{0}] init {1};\n'.format(self.time_int,init_t))
             f.write('task_present:[0..1] init 0;\n')
             f.write('o:[0..1] init 0;\n')
-            f.write("[observe] (t<{0}) & (o=0) -> 0.5:(task_present'=1) & (o'=1) + 0.5:(task_present'=0) & (o'=1);\n".format(self.time_int))
+            f.write('e:[0..1] init 0;\n')
+            f.write("[observe] (t<{0}) & (o=0) & (e=0) -> 0.5:(task_present'=1) & (o'=1) + 0.5:(task_present'=0) & (o'=1);\n".format(self.time_int))
+            f.write("[evaluate] (t<{0}) & (o=1) & (task_present=1) & (e=0) -> (e'=1);\n".format(self.time_int))
             for action in self.actions:
-                f.write("[{0}] (t<{1}) & (o=1) -> (t'=t+1) & (o'=0);\n".format(action, self.time_int))
+                f.write("[{0}] (t<{1}) & (o=1) & (task_present=1) & (e=1) -> (t'=t+1) & (o'=0) & (e'=0) ;\n".format(action, self.time_int))
+            for action in self.actions[1:]:
+                f.write("[{0}] (t<{1}) & (o=1) & (task_present=0) -> (t'=t+1) & (o'=0);\n".format(action, self.time_int))
             f.write("[dead] (t<{0}) -> (t'=t+1) & (o'=0);\n".format(self.time_int))
             f.write('endmodule\n\n')
 
@@ -86,6 +90,8 @@ class PrismModel:
                     plus = plus +1
                 f.write(';\n')
 
+            f.write("[evaluate] (battery>0) -> (battery'=battery);\n")
+            f.write("[observe] (battery>0) -> (battery'=battery);\n")
             f.write("[dead] (battery=0) & (t>-1) -> (battery' = battery);\n")
             f.write('endmodule\n\n')
 
@@ -101,7 +107,7 @@ class PrismModel:
             f.write('module cluster_evolution\n\n')
             f.write('cl:[0..{0}] init 0;\n'.format(len(self.clusters)))
             for t in range(self.time_int):
-                f.write('[gather_reward] (task_present=1) & (t={0}) -> '.format(t))
+                f.write('[evaluate] (task_present=1) & (t={0}) -> '.format(t))
                 plus = 0
                 for cl in range(len(self.clusters)):
                     p = self.prob[t][cl]
@@ -129,7 +135,7 @@ def get_battery_model():
         print ('Battery Models Found at: ' +path+'/models/battery_discharge_model.yaml'+', '+ path+'/models/battery_charge_model.yaml' )
         return charge_model, discharge_model
     else:
-        raise ValueError('First create battery model with probabilistic_battery_model.py')
+        raise ValueError('No models found. First create battery model with probabilistic_battery_model.py')
                
 if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards()
