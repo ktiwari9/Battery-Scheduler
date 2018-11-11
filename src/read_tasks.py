@@ -15,10 +15,10 @@ class getTasks:
         ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
         rospy.loginfo("Connecting to mongodB")        
-        # self.tasks = client.message_store.task_events.find(None)
-        # no_tasks = client.message_store.task_events.find(None).count() 
-        self.tasks = client.betty.task_events_unique.find(None)
-        no_tasks = client.betty.task_events_unique.find(None).count() 
+        self.tasks = client.message_store.task_events.find(None)
+        no_tasks = client.message_store.task_events.find(None).count() 
+        # self.tasks = client.betty.task_events_unique.find(None)
+        # no_tasks = client.betty.task_events_unique.find(None).count() 
         rospy.loginfo("Connection established, %d tasks being analysed" %no_tasks)
         self.unique_tasks = dict()
         self._get_unique_tasks()
@@ -31,7 +31,7 @@ class getTasks:
         priorities = [self.unique_tasks[task_id][0] for task_id in task_ids]
         start_times = [self.unique_tasks[task_id][1] for task_id in task_ids]
         end_times = [self.unique_tasks[task_id][2] for task_id in task_ids]
-        self.tasks_df = pd.DataFrame(data=zip(task_ids, priorities, start_times, end_times), columns=['task_id', 'priority', 'start_time', 'end_time_flag'])
+        self.tasks_df = pd.DataFrame(data=zip(task_ids, priorities, start_times, end_times), columns=['task_id', 'priority', 'start_time', 'end_time'])
         
     def _get_unique_tasks(self, collection_indicator=None):
         for task in self.tasks:
@@ -79,7 +79,7 @@ class getTasks:
                     plus_one = True 
                 else:
                     plus_one = False
-                self.unique_tasks.update({task_id : (priority, start_datetime, (end_datetime, plus_one))})
+                self.unique_tasks.update({task_id : (priority, start_datetime, end_datetime)})
     
 if __name__ == '__main__':
     gt = getTasks()
