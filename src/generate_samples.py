@@ -1,20 +1,21 @@
 #!/usr/bin/env python
-import rewards_uncertain_hk
-import rewards_dbscan
-import roslib
+from datetime import datetime, date, time, timedelta
+import probabilistic_rewards
+import pandas as pd
 import numpy as np
 
 class sample_generator:
     
     def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
-        ur = rewards_uncertain_hk.uncertain_rewards(validation)
-        #ur = rewards_dbscan.uncertain_rewards(validation)
-        self.clusters, self.prob = ur.get_rewards()
-        self.len_test_rewards = 1 # no. of days to be tested
+        ur = probabilistic_rewards.uncertain_rewards()
+        self.clusters, self.prob = ur.get_probabilistic_reward_model()
+        self.no_days = 1 # no. of days to be tested
         self.time_int = 48
+        self.int_duration = 1440/self.time_int
         if validation == True:
-            self.test_rewards = ur.test_rewards
-            self.len_test_rewards = len(self.test_rewards)
+            self.test_days = ur.test_days
+            self.test_tasks = ur.tasks[ur.tasks['start_days'].isin(test_days)]
+            self.no_days = len(test_days)
 
             ### expected data
             # self.test_rewards = []
@@ -22,14 +23,13 @@ class sample_generator:
             #     for rew in f:
             #         self.test_rewards.append(float(rew[:-1]))
 
-
         self.rewards, self.cl_ids, self.act_rewards, self.exp_rewards = self.get_samples(validation,sampling_type) 
   
     def get_samples(self, validation, sampling_type):
-        rewards = (self.time_int*self.len_test_rewards)*[0]
-        exp_rewards = (self.time_int*self.len_test_rewards)*[0]
-        act_rewards = (self.time_int*self.len_test_rewards)*[0]
-        cl_ids = (self.time_int*self.len_test_rewards)*[0]
+        rewards = (self.time_int*self.no_days)*[0]
+        exp_rewards = (self.time_int*self.no_days)*[0]
+        act_rewards = (self.time_int*self.no_days)*[0]
+        cl_ids = (self.time_int*self.no_days)*[0]
 
         #####expected
         # rewards = len(self.test_rewards)*[0]
@@ -38,33 +38,45 @@ class sample_generator:
         # cl_ids = len(self.test_rewards)*[0]
         
         if validation == False:
-            for i in range(self.time_int*self.len_test_rewards):
-                cl_len = len(self.clusters[i%self.time_int])
-                c = cl_len*[0]
-                p = cl_len*[0]
-                for j in range(cl_len):
-                    c[j] = self.clusters[i%self.time_int][j]
-                    p[j] = self.prob[i%self.time_int][j]
+            cl_len = len(self.clusters)
+            total_prob = self.prob
+            for i in range(self.no_days-1):
+               total_prob =  np.vtack(total_prob,self.prob)
+            column_indices = [i for in range(cl_len)]
+            for i in range(self.time_int*self.no_days):                
                 ###### Sampling according to distribution
                 if sampling_type == 'prob':
-                    indices = []
-                    for i in range(len(p)):
-                        indices.append(i)
-                    index = np.random.choice(indices,p=p)
+                    index = np.random.choice(column_indices,p=total_prob[i])
                     
                 ###### Sampling the highest value available
                 elif sampling_type ==  'max':
-                    max_cl = 0
-                    for k in range(cl_len):
-                        if c[k] > max_cl:
-                            max_cl = c[k]
-                            index = k     
-                
-                rewards[i] = c[index]
-                cl_ids[i] = (i%self.time_int)*5+index 
+                    index = list(total_prob[i]).index(np.max(total_prob[i]))
+ 
+                rewards[i] = self.clusters[index]
+                cl_ids[i] = index
        
         elif validation == True:
-            print 'Days available: ', len(self.test_rewards)
+            print 'Days available: ', len(self.no_days)
+            test_rewards = np.zeros((self.no_days*self.time_int))
+            for i in range(len(test_rewards)):
+                day_i = i/self.time_int
+                print day_i
+                interval = i%self.time_int
+                if interval == 0:
+                    start_int = datetime.combine(self.test_days[day_i],time(0,0))
+                else:
+                    start_int = end_int
+                end_int = start_int + timedelta(minutes=self.int_duration)
+
+                sum_rew = self.test_tasks[self.test_tasks['start_time']<end_int & self.test_tasks['end_time']]
+
+
+
+
+
+
+
+
             total_reward = 0
             for day in self.test_rewards:
                 print day
@@ -72,7 +84,7 @@ class sample_generator:
             #    total_reward = total_reward + np.sum(self.test_rewards[day][16:42])
             #print 'ORIGINAL REWARDS ::', total_reward   
             ## Testing for 3 days 
-            for i in range(0,self.len_test_rewards):
+            for i in range(0,self.no_days):
                 cl_no = 0
                 for j in range(self.time_int):
                     #print i, '-> ', j 
