@@ -42,36 +42,18 @@ class uncertain_rewards:
             if el == [0]:
                 rews_as_states[e] = len(dpgmm.means_)
 
-        # mean_dict = dict()
-        # for e,s in enumerate(rews_as_states):
-        #     if s not in mean_dict:
-        #         mean_dict.update({s : [X[e][0]]})
-        #     else:
-        #         mean_dict[s].append(X[e][0])
+        mean_dict = dict()
+        for e,s in enumerate(rews_as_states):
+            if s not in mean_dict:
+                mean_dict.update({s : [X[e][0]]})
+            else:
+                mean_dict[s].append(X[e][0])
 
-        # reward_states = np.zeros((dpgmm.means_.shape[0]+1))
-        # for state, vals in mean_dict.items():
-        #     reward_states[int(state)] = np.mean(vals)
+        reward_states = np.zeros((dpgmm.means_.shape[0]+1))
+        for state, vals in mean_dict.items():
+            reward_states[int(state)] = np.mean(vals)
  
         rews_as_states = rews_as_states.reshape(len(self.rewards_day),self.no_int)
-        X = X.reshape(len(self.rewards_day),self.no_int)
-
-        
-        for e,s_row in enumerate(rews_as_states):
-            mean_dict = dict()
-            for f,s in enumerate(s_row):
-                if s not in mean_dict:
-                    mean_dict.update({s : [X[e][f]]})
-                else:
-                    mean_dict[s].append(X[e][f])
-
-            reward_states = np.zeros((dpgmm.means_.shape[0]+1))
-            for state, vals in mean_dict.items():
-                reward_states[int(state)] = np.mean(vals)
-                print state, np.mean(vals)
-
-
-        
         return rews_as_states, reward_states
 
     def __update_rewards_day(self, tasks, day): 
