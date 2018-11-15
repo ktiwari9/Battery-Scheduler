@@ -20,7 +20,7 @@ class ParseAdversary:
                         if '_da' not in line or 'battery' not in line:
                             state = line[:-2].split(':(')
                             s = state[1].split(',')
-                            self.states.update({state[0] : (s[1], s[2], s[3], s[4])})
+                            self.states.update({state[0] : (el.strip() for el in s)})
     
             elif name[-4:] == '.adv':
                 with open(path+name, 'r') as adv_file: 
@@ -29,16 +29,16 @@ class ParseAdversary:
                         array = line[:-1].split(' ')
                         if len(array) > 2:
                             if array[0] not in self.policy:
-                                l = []                
+                                self.policy.update({array[0] : [array[1:]]})              
                             else:
-                                l = self.policy[array[0]]
-                            l.append(array[1:])
-                            self.policy.update({array[0] : l})
-            
+                                self.policy[array[0]].append(array[1:])
+           
         self.initial_state = self.get_initial_state()
      
     def get_initial_state(self):
         for element in self.labels:
             if int(element[1]) == 0:
-                initial_state = element[0] 
-        return initial_state
+                return element[0]
+
+    def get_possible_next_states(self,state):
+        return self.policy[state]
