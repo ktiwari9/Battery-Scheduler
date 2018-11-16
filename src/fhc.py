@@ -24,7 +24,7 @@ def get_battery_model():
 
 class FiniteHorizonControl:
 
-    def __init__(self, init_battery, init_charging, init_time):
+    def __init__(self, init_battery, init_charging, init_time=0):
         self.ur = probabilistic_rewards.uncertain_rewards()
         self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
@@ -57,45 +57,39 @@ class FiniteHorizonControl:
         self.init_charging = init_charging
         self.init_time = init_time
         self.no_simulations = 1
-
-        
+        self.actions = []
+        self.obtained_rewards = []
+        self.battery = []
+        self.charging = []
+        self.time =[]
+     
     def simulate(self):
         for k in range(self.no_days):
-            self.pp = self.obatin_prism_model()
-                
+            self.pp = self.obtain_prism_model()
 
-        ### from  current get to state which gathers rewards or charges
-        ### match cluster according to rewards.
-        ### pick battery ac to probability distribution     
-        
             battery = no_simulations*[0]
             charging = no_simulations*[0]
             init_cluster= no_simulations*[0]
             tr_day = no_simulations*[0]
             for i in range(no_simulations):
-                rewards, action, final_state = self.simulate_day(k,'real_dec16_wrhc')  #######################SPECIFY LOCATION ######################
-                battery[i] = int(final_state[0])
+                self.simulate_day()  #######################SPECIFY LOCATION ######################
+                battery[i] = self.battery[-1]
                 print battery[i]
-                charging[i] = int(final_state[1])
+                charging[i] = self.charging[-1]
                 print charging[i]
-                tr_day[i] = 0
-                for r in range(len(rewards)):
-                    if action[r] == 'gather_reward':
-                        tr_day[i] = rewards[r] + tr_day[i]
-
+                tr_day[i] = np.sum(self.obtained_rewards[k*self.no_int:(k+1)*self.no_int])
+                
             self.init_battery = int(np.average(np.array(battery)))
             self.init_charging = int(np.average(np.array(charging)))
-            self.init_cluster = int(np.average(np.array(init_cluster)))
             self.avg_totalreward[k] = np.average(np.array(tr_day))
-            print init_battery, ' end battery'
-            print init_charging, ' end charging'
-            print init_cluster, ' end cluster'
+            print self.init_battery, ' end battery'
+            print self.init_charging, ' end charging'
     
-        for k in range(len(avg_totalreward)):
-            print avg_totalreward[k], ' total_reward, day',k+1
-        print np.sum(avg_totalreward), ' : Reward for Aug'
+        for k in range(len(self.avg_totalreward)):
+            print self.avg_totalreward[k], ' total_reward, day',k+1
+        print np.sum(self.avg_totalreward), ' : Reward for Aug'
 
-    def simulate_day(self, fname):
+    def simulate_day(self):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
             actions = []
@@ -105,12 +99,28 @@ class FiniteHorizonControl:
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.states[s]
                         if self.actual_reward[i] != 0:
+                            current_state = s
+                elif all(a == 'evaluate' for a in actions):
+                    for s in nx_s:
+                        t, tp, o, e, b, ch, cl = self.pp.states[s]
+                        if int(cl) == self.cl_id[i]:
+                            current_state = s
+
+                elif any(a == 'stay_charging' or a == 'go_charge' or a == 'gather_reward' for a in actions):
+                    t, tp, o, e, b, ch, cl = self.pp.states[current_state]
+                    self.charging.append(ch)
+                    self.battery.append(b)
+                    self.time.append(t)
+                    current_state = np.random.choice(nx_s, p=tp)
+                    req_a = actions[nx_s.index(current_state)]
+                    self.actions.append(req_a)
+                    if req_a == 'stay_charging' or req_a == 'go_charge':
+                        self.obtained_rewards.append(0)
+                    elif req_a == 'gather_reward':
+                        self.obtained_rewards.append(actual_reward[i])
 
 
-
-
-
-    def obatin_prism_model(self):
+    def obtain_prism_model(self):
         pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
@@ -146,4 +156,7 @@ class FiniteHorizonControl:
         print 'Reading from ', policy_file_name
         pp = read_adversary.ParseAdversary([policy_file_name, 'model_t.sta', 'model_t.lab'])
         return pp
+
+    def get_plan(self, fname):
+        ## to do - write to file 'aug11_18_fhc'
 
