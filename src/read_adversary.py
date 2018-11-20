@@ -41,4 +41,7 @@ class ParseAdversary:
                 return element[0]
 
     def get_possible_next_states(self,state):
-        return self.policy[state]
+        next_states = [l[0] for l in self.policy[state]]
+        trans_prob = [l[1] for l in self.policy[state]]
+        actions = [l[2] for l in self.policy[state]]
+        return next_states, trans_prob, actions
