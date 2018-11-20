@@ -23,16 +23,20 @@ def get_battery_model():
  
 
 class FiniteHorizonControl:
-
     def __init__(self, init_battery, init_charging, init_time=0):
-        self.ur = probabilistic_rewards.uncertain_rewards()
+        ur = probabilistic_rewards.uncertain_rewards()
         self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
         self.cl_id = []
         self.sample_reward = []
         self.actual_reward = []
-        # self.exp_reward = []
-    
+        self.exp_reward = []
+        self.no_int = ur.no_int 
+        self.no_days = len(ur.test_days)
+        self.no_simulations = 1
+        for z in range(self.no_int*self.no_days):
+            self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
+   
         #######################SPECIFY LOCATION ######################
         self.main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
         self.path_rew = self.main_path + '/data/sample_rewards'
@@ -48,15 +52,11 @@ class FiniteHorizonControl:
                 self.cl_id.append(int(float(x[0].strip())))
                 self.sample_reward.append(float(x[1].strip()))
                 self.actual_reward.append(float(x[2].strip()))
-                # self.exp_reward.append(float(line.split(' ')[3]))        
-    
-        self.no_int = ur.no_int 
-        self.no_days = len(ur.test_days)
+
         self.avg_totalreward = np.zeros((self.no_days))
         self.init_battery = init_battery
         self.init_charging = init_charging
         self.init_time = init_time
-        self.no_simulations = 1
         self.actions = []
         self.obtained_rewards = []
         self.battery = []
@@ -66,16 +66,16 @@ class FiniteHorizonControl:
     def simulate(self):
         for k in range(self.no_days):
             self.pp = self.obtain_prism_model()
-
-            battery = no_simulations*[0]
-            charging = no_simulations*[0]
-            init_cluster= no_simulations*[0]
-            tr_day = no_simulations*[0]
-            for i in range(no_simulations):
-                self.simulate_day()  #######################SPECIFY LOCATION ######################
-                battery[i] = self.battery[-1]
+            battery = self.no_simulations*[0]
+            charging = self.no_simulations*[0]
+            init_cluster= self.no_simulations*[0]
+            tr_day = self.no_simulations*[0]
+            for i in range(self.no_simulations):
+                final_state = self.simulate_day() 
+                t, tp, o, e, b, ch, cl = self.pp.states[s] 
+                battery[i] = b
                 print battery[i]
-                charging[i] = self.charging[-1]
+                charging[i] = ch
                 print charging[i]
                 tr_day[i] = np.sum(self.obtained_rewards[k*self.no_int:(k+1)*self.no_int])
                 
@@ -94,7 +94,7 @@ class FiniteHorizonControl:
         for i in range(self.no_int):
             actions = []
             while (('gather_reward' not in actions) or ('go_charge' not in actions) or ('stay_charging' not in actions)):
-                nx_s, tp, actions = pp.get_possible_next_states(current_state)
+                nx_s, tp, actions = self.pp.get_possible_next_states(current_state)
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.states[s]
@@ -118,17 +118,18 @@ class FiniteHorizonControl:
                         self.obtained_rewards.append(0)
                     elif req_a == 'gather_reward':
                         self.obtained_rewards.append(actual_reward[i])
+        return current_state
 
 
     def obtain_prism_model(self):
-        pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
-        #######################SPECIFY LOCATION ######################
-        # running prism and saving output from prism
-        with open(self.path_data+'result_fhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
-            for c in iter(lambda: process.stdout.read(1), ''):
-                sys.stdout.write(c)
-                file.write(c)
+        # pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
+        # #######################SPECIFY LOCATION ######################
+        # # running prism and saving output from prism
+        # with open(self.path_data+'result_fhc', 'w') as file:
+        #     process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
+        #     for c in iter(lambda: process.stdout.read(1), ''):
+        #         sys.stdout.write(c)
+        #         file.write(c)
         ##reading output from prism to find policy file
         policy_file = []
         with open(self.path_data+'result_fhc', 'r') as f:
@@ -138,7 +139,7 @@ class FiniteHorizonControl:
                     el = line_list[i].split(' ')
                     req_point = el[2][1:-1]
                     if abs(1.0-float(req_point)) < 0.001:
-                        start_p = len('Adversary written to file "'+path_mod)
+                        start_p = len('Adversary written to file "'+self.path_mod)
                         file_name = line_list[i-1][start_p:-3]
                         policy_file.append((req_point, file_name))
 
@@ -158,5 +159,12 @@ class FiniteHorizonControl:
         return pp
 
     def get_plan(self, fname):
-        ## to do - write to file 'aug11_18_fhc'
+        with open(self.path_data + fname, 'w') as f:
+            f.write('time battery charging  action  obtained_reward match_reward actual_reward exp_reward\n')
+            for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
+                f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
+if __name__ == '__main__':
+    fhc = FiniteHorizonControl(70, 1)
+    fhc.simulate()
+    fhc.get_plan('fhc_aug')
