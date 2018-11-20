@@ -9,7 +9,6 @@ class sample_generator:
     def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
         ur = probabilistic_rewards.uncertain_rewards()
         self.prob, self.clusters = ur.get_probabilistic_reward_model()
-        self.no_days = 1 # no. of days to be tested
         self.time_int = 48
         self.int_duration = 1440/self.time_int
         if validation == True:
@@ -23,9 +22,13 @@ class sample_generator:
             #     for rew in f:
             #         self.test_rewards.append(float(rew[:-1]))
 
+        else:
+            self.no_days = 1 # no. of days to be tested, if not using validation
+
         self.rewards, self.cl_ids, self.act_rewards = self.get_samples(validation,sampling_type) 
   
     def get_samples(self, validation, sampling_type):
+        print 'Generating samples...'
         rewards =  np.zeros((self.no_days*self.time_int))
         # exp_rewards =  np.zeros((self.no_days*self.time_int))
         act_rewards =  np.zeros((self.no_days*self.time_int))
@@ -93,7 +96,7 @@ class sample_generator:
                 cl_id = e
                 cl_reward = cl
                 minimum = diff
-        return cl_reward, cl_id
+        return cl_reward, int(cl_id)
         
 
 if __name__ == '__main__':

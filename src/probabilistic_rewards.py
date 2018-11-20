@@ -14,7 +14,7 @@ def timing_wrapper(func):
         t = datetime.now()
         result = func(*args,**kwargs)
         t1 = datetime.now()
-        print func, ' took time:', t1-t, 's'
+        print func, ' took time:', t1-t
         return result
     return wrapper
 
@@ -22,6 +22,7 @@ def timing_wrapper(func):
 class uncertain_rewards:
     @timing_wrapper
     def __init__(self):
+        print 'Reading Tasks...'
         tasks_processor = read_tasks.getTasks()
         # t = read_task_wo_priorities.getTasks()
         self.tasks = tasks_processor.tasks_df
@@ -31,6 +32,7 @@ class uncertain_rewards:
         self.tasks['start_day'] = self.tasks['start_time'].apply(lambda x: x.date())
         self.tasks['end_day'] = self.tasks['end_time'].apply(lambda x: x.date())
         self.test_days = [date(2017, 8, 11), date(2017,8,18)]
+        self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
         self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
         
     def __cluster_rewards(self):
@@ -74,6 +76,7 @@ class uncertain_rewards:
 
     @timing_wrapper
     def get_probabilistic_reward_model(self):
+        print 'Obtaining Rewards Model...'
         days = self.tasks['start_day'].unique().tolist()
         for day in days:
             current_tasks = self.tasks[self.tasks['start_day']==day]
@@ -106,5 +109,5 @@ class uncertain_rewards:
 if __name__ == '__main__':
     ur = uncertain_rewards()
     prob_m, state_means = ur.get_probabilistic_reward_model()
-    # print prob_m
+    print prob_m
     print state_means
