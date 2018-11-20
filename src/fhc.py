@@ -30,6 +30,7 @@ def get_battery_model():
  
 
 class FiniteHorizonControl:
+    
     def __init__(self, init_battery, init_charging, init_time=0):
         ur = probabilistic_rewards.uncertain_rewards()
         self.prob, self.clusters = ur.get_probabilistic_reward_model()
@@ -73,22 +74,22 @@ class FiniteHorizonControl:
     def simulate(self):
         for k in range(self.no_days):
             self.pp = self.obtain_prism_model()
-            battery = self.no_simulations*[0]
-            charging = self.no_simulations*[0]
-            init_cluster= self.no_simulations*[0]
-            tr_day = self.no_simulations*[0]
+            battery = np.zeros((self.no_simulations))
+            charging = np.zeros((self.no_simulations))
+            init_cluster= np.zeros((self.no_simulations))
+            tr_day = np.zeros((self.no_simulations))
             for i in range(self.no_simulations):
-                final_state = self.simulate_day() 
-                t, tp, o, e, b, ch, cl = self.pp.get_state(s) 
-                battery[i] = b
+                final_state = self.simulate_day(k) 
+                t, tp, o, e, b, ch, cl = self.pp.get_state(final_state) 
+                battery[i] = int(b)
                 print battery[i]
-                charging[i] = ch
+                charging[i] = int(ch)
                 print charging[i]
                 tr_day[i] = np.sum(self.obtained_rewards[k*self.no_int:(k+1)*self.no_int])
                 
-            self.init_battery = int(np.average(np.array(battery)))
-            self.init_charging = int(np.average(np.array(charging)))
-            self.avg_totalreward[k] = np.average(np.array(tr_day))
+            self.init_battery = int(np.mean(battery))
+            self.init_charging = int(np.mean(charging))
+            self.avg_totalreward[k] = np.mean(tr_day)
             print self.init_battery, ' end battery'
             print self.init_charging, ' end charging'
     
@@ -96,14 +97,14 @@ class FiniteHorizonControl:
             print self.avg_totalreward[k], ' total_reward, day',k+1
         print np.sum(self.avg_totalreward), ' : Reward for Aug'
 
-    def simulate_day(self):
+    def simulate_day(self, day):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
-            print i, self.actual_reward[i]
+            # print i, self.actual_reward[i]
             actions = []
             while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
                 nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
-                print nx_s, trans_prob, actions
+                # print nx_s, trans_prob, actions
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
@@ -120,9 +121,9 @@ class FiniteHorizonControl:
 
                 else:
                     ct, ctp, co, ce, cb, cch, ccl = self.pp.get_state(current_state)
-                    self.charging.append(ch)
-                    self.battery.append(b)
-                    self.time.append(t)
+                    self.charging.append(cch)
+                    self.battery.append(cb)
+                    self.time.append(self.no_int*day+int(ct))
         
                     if all(a == 'stay_charging' for a in actions):
                         prob = []
@@ -160,14 +161,14 @@ class FiniteHorizonControl:
 
 
     def obtain_prism_model(self):
-        # pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
-        # #######################SPECIFY LOCATION ######################
-        # # running prism and saving output from prism
-        # with open(self.path_data+'result_fhc', 'w') as file:
-        #     process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
-        #     for c in iter(lambda: process.stdout.read(1), ''):
-        #         sys.stdout.write(c)
-        #         file.write(c)
+        pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
+        #######################SPECIFY LOCATION ######################
+        # running prism and saving output from prism
+        with open(self.path_data+'result_fhc', 'w') as file:
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism-svn/prism/bin', shell=True, stdout=subprocess.PIPE)
+            for c in iter(lambda: process.stdout.read(1), ''):
+                sys.stdout.write(c)
+                file.write(c)
         ##reading output from prism to find policy file
         policy_file = []
         with open(self.path_data+'result_fhc', 'r') as f:
@@ -197,6 +198,7 @@ class FiniteHorizonControl:
         return pp
 
     def get_plan(self, fname):
+        print 'Writing plan..'
         with open(self.path_data + fname, 'w') as f:
             f.write('time battery charging  action  obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
