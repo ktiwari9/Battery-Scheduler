@@ -17,6 +17,13 @@ def get_battery_model():
         with open (path+'/models/battery_discharge_model.yaml', 'r') as f_discharge:
             discharge_model = yaml.load(f_discharge)
         print ('Battery Models Found at: ' +path+'/models/battery_discharge_model.yaml'+', '+ path+'/models/battery_charge_model.yaml' )
+
+        for model in [charge_model, discharge_model]:
+            for b in model:
+                bnext_dict = model[b]
+                total = np.sum(np.array(bnext_dict.values()))
+                for bn in bnext_dict:
+                    bnext_dict[bn] = float(bnext_dict[bn])/total
         return charge_model, discharge_model
     else:
         raise ValueError('No models found. First create battery model with probabilistic_battery_model.py')
@@ -72,7 +79,7 @@ class FiniteHorizonControl:
             tr_day = self.no_simulations*[0]
             for i in range(self.no_simulations):
                 final_state = self.simulate_day() 
-                t, tp, o, e, b, ch, cl = self.pp.states[s] 
+                t, tp, o, e, b, ch, cl = self.pp.get_state(s) 
                 battery[i] = b
                 print battery[i]
                 charging[i] = ch
@@ -92,7 +99,7 @@ class FiniteHorizonControl:
     def simulate_day(self):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
-            print i
+            print i, self.actual_reward[i]
             actions = []
             while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
                 nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
@@ -111,19 +118,44 @@ class FiniteHorizonControl:
                         if int(cl) == self.cl_id[i]:
                             current_state = s
 
-                elif any(a == 'stay_charging' or a == 'go_charge' or a == 'gather_reward' for a in actions):
-                    t, tp, o, e, b, ch, cl = self.pp.get_state(s)
+                else:
+                    ct, ctp, co, ce, cb, cch, ccl = self.pp.get_state(current_state)
                     self.charging.append(ch)
                     self.battery.append(b)
                     self.time.append(t)
-                    current_state = np.random.choice(nx_s, p=np.array([float(p) for p in trans_prob]))
-                    ## can't use from txt file
-                    req_a = actions[nx_s.index(current_state)]
-                    self.actions.append(req_a)
-                    if req_a == 'stay_charging' or req_a == 'go_charge':
+        
+                    if all(a == 'stay_charging' for a in actions):
+                        prob = []
+                        for s in nx_s:
+                            t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
+                            prob.append(self.charge_model[int(cb)][int(b)])
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                        req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(0)
-                    elif req_a == 'gather_reward':
-                        self.obtained_rewards.append(actual_reward[i])
+
+                    elif all(a == 'go_charge' for a in actions):
+                        prob = []
+                        for s in nx_s:
+                            t, tp, o, e, b, ch, cl = self.pp.get_state(s) 
+                            if int(cb) == 100 or int(cb) == 99:                 
+                                prob.append(self.charge_model[int(cb)][int(b)])
+                            else:
+                                prob.append(self.charge_model[int(cb)][int(b)+1])
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                        req_a = actions[nx_s.index(current_state)]
+                        self.obtained_rewards.append(0)
+            
+                    elif all(a == 'gather_reward' for a in actions):
+                        prob = []
+                        for s in nx_s:
+                            t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
+                            prob.append(self.discharge_model[int(cb)][int(b)])
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                        req_a = actions[nx_s.index(current_state)]
+                        self.obtained_rewards.append(self.actual_reward[i])
+
+                    self.actions.append(req_a)
+        
         return current_state
 
 
