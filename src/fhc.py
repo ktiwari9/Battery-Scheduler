@@ -92,26 +92,32 @@ class FiniteHorizonControl:
     def simulate_day(self):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
+            print i
             actions = []
-            while (('gather_reward' not in actions) or ('go_charge' not in actions) or ('stay_charging' not in actions)):
-                nx_s, tp, actions = self.pp.get_possible_next_states(current_state)
+            while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
+                nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
+                print nx_s, trans_prob, actions
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.states[s]
-                        if self.actual_reward[i] != 0:
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)
+                        if self.actual_reward[i] != 0 and tp == '1':
                             current_state = s
+                        if self.actual_reward == 0 and tp == '0':
+                            current_state = s 
+                
                 elif all(a == 'evaluate' for a in actions):
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.states[s]
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)
                         if int(cl) == self.cl_id[i]:
                             current_state = s
 
                 elif any(a == 'stay_charging' or a == 'go_charge' or a == 'gather_reward' for a in actions):
-                    t, tp, o, e, b, ch, cl = self.pp.states[current_state]
+                    t, tp, o, e, b, ch, cl = self.pp.get_state(s)
                     self.charging.append(ch)
                     self.battery.append(b)
                     self.time.append(t)
-                    current_state = np.random.choice(nx_s, p=tp)
+                    current_state = np.random.choice(nx_s, p=np.array([float(p) for p in trans_prob]))
+                    ## can't use from txt file
                     req_a = actions[nx_s.index(current_state)]
                     self.actions.append(req_a)
                     if req_a == 'stay_charging' or req_a == 'go_charge':
