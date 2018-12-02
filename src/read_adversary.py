@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+
+
 class PolicyError(Exception):
     pass
-class ParseAdversary:
 
+
+class ParseAdversary:
     def __init__(self, filenames):
         #######################SPECIFY LOCATION ######################
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'

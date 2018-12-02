@@ -8,23 +8,23 @@ import os
 
 class PrismModel:
     
-    def __init__(self,filename, init_t, init_b, init_ch, clusters, prob, charge_model, discharge_model):
+    def __init__(self,filename, init_b, init_ch, clusters, prob, charge_model, discharge_model):
         # initial values that make model. from_t set to zero
         self.clusters = clusters
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.charge_model = charge_model
         self.discharge_model = discharge_model
-        self.time_int = 48
-        self.write_prism_file(filename, init_t, init_b, init_ch) 
+        self.time_int = len(self.clusters)
+        self.write_prism_file(filename, init_b, init_ch) 
         
-    def write_prism_file(self, filename, init_t, init_b, init_ch):
+    def write_prism_file(self, filename, init_b, init_ch):
         #######################SPECIFY LOCATION ######################       
         path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')
             f.write('module time_model\n')
-            f.write('t:[0..{0}] init {1};\n'.format(self.time_int,init_t))
+            f.write('t:[0..{0}] init 0;\n'.format(self.time_int))
             f.write('task_present:[0..1] init 0;\n')
             f.write('o:[0..1] init 0;\n')
             f.write('e:[0..1] init 0;\n')

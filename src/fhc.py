@@ -31,7 +31,7 @@ def get_battery_model():
 
 class FiniteHorizonControl:
     
-    def __init__(self, init_battery, init_charging, init_time=0):
+    def __init__(self, init_battery, init_charging):
         ur = probabilistic_rewards.uncertain_rewards()
         self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
@@ -64,7 +64,6 @@ class FiniteHorizonControl:
         self.avg_totalreward = np.zeros((self.no_days))
         self.init_battery = init_battery
         self.init_charging = init_charging
-        self.init_time = init_time
         self.actions = []
         self.obtained_rewards = []
         self.battery = []
@@ -161,7 +160,7 @@ class FiniteHorizonControl:
 
 
     def obtain_prism_model(self):
-        pm = prism_model.PrismModel('model_t.prism', self.init_time, self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
+        pm = prism_model.PrismModel('model_t.prism', self.init_battery, self.init_charging, self.clusters, self.prob, self.charge_model, self.discharge_model)
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_fhc', 'w') as file:
