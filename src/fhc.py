@@ -99,7 +99,7 @@ class FiniteHorizonControl:
     def simulate_day(self, day):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
-            # print i, self.actual_reward[i]
+            # print self.no_int*day+i, self.actual_reward[self.no_int*day+i]
             actions = []
             while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
                 nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
@@ -107,7 +107,7 @@ class FiniteHorizonControl:
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
-                        if self.actual_reward[i] != 0 and tp == '1':
+                        if self.actual_reward[self.no_int*day+i] != 0 and tp == '1':
                             current_state = s
                         if self.actual_reward == 0 and tp == '0':
                             current_state = s 
@@ -115,7 +115,7 @@ class FiniteHorizonControl:
                 elif all(a == 'evaluate' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
-                        if int(cl) == self.cl_id[i]:
+                        if int(cl) == self.cl_id[self.no_int*day+i]:
                             current_state = s
 
                 else:
@@ -152,7 +152,7 @@ class FiniteHorizonControl:
                             prob.append(self.discharge_model[int(cb)][int(b)])
                         current_state = np.random.choice(nx_s, p=np.array(prob))
                         req_a = actions[nx_s.index(current_state)]
-                        self.obtained_rewards.append(self.actual_reward[i])
+                        self.obtained_rewards.append(self.actual_reward[self.no_int*day+i])
 
                     self.actions.append(req_a)
         
