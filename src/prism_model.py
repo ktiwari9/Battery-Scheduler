@@ -29,7 +29,8 @@ class PrismModel:
             f.write('task_present:[0..1] init 0;\n')
             f.write('o:[0..1] init 0;\n')
             f.write('e:[0..1] init 0;\n')
-            f.write("[observe] (t<{0}) & (o=0) & (e=0) -> 0.5:(task_present'=1) & (o'=1) + 0.5:(task_present'=0) & (o'=1);\n".format(self.time_int))
+            for i in range(self.time_int):
+                f.write("[observe] (t={0}) & (o=0) & (e=0) -> {1}:(task_present'=1) & (o'=1) + {2}:(task_present'=0) & (o'=1);\n".format(i, self.task_prob[i][1], self.task_prob[i][0]))
             f.write("[evaluate] (t<{0}) & (o=1) & (task_present=1) & (e=0) -> (e'=1);\n".format(self.time_int))
             for action in self.actions:
                 f.write("[{0}] (t<{1}) & (o=1) & (task_present=1) & (e=1) -> (t'=t+1) & (o'=0) & (e'=0) ;\n".format(action, self.time_int))
