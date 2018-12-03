@@ -37,9 +37,10 @@ class uncertain_rewards:
         
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
-        dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 500,covariance_type='spherical', random_state=0).fit(X)
+        X_wz = np.array([x for x in X if x[0] != 0])
+        dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
+        
         rews_as_states = dpgmm.predict(X) 
-       
         for e,el in enumerate(list(X)):
             if el == [0]:
                 rews_as_states[e] = len(dpgmm.means_)
@@ -87,6 +88,7 @@ class uncertain_rewards:
         z_l = np.max(states)
 
         prob_m = np.zeros((self.no_int, len(states)-1))
+        task_prob = np.zeros((self.no_int, 2))
         rewardst = rewards.T
         for i in range(rewardst.shape[0]):
             st, st_c = np.unique(rewardst[i], return_counts=True)
@@ -94,8 +96,12 @@ class uncertain_rewards:
             if z_l in st:
                 z_ind = st.index(z_l)
                 total_c = np.sum(st_c) - st_c[z_ind]
+                
+                task_prob[i][0] = float(st_c[z_ind])/np.sum(st_c)
+                task_prob[i][1] = float(total_c)/np.sum(st_c)
             else:
                 total_c = np.sum(st_c)
+                task_prob[i][1] = 1
             
             st_c = st_c/float(total_c)
             for j, s in enumerate(st):
@@ -103,11 +109,12 @@ class uncertain_rewards:
                     prob_m[i][states.index(s)] = st_c[j]
 
         state_means = [round(reward_states[int(s)]) for s in states if s != z_l]
-        return prob_m, state_means
+        return task_prob, prob_m, state_means
 
 
 if __name__ == '__main__':
     ur = uncertain_rewards()
-    prob_m, state_means = ur.get_probabilistic_reward_model()
+    task_prob, prob_m, state_means = ur.get_probabilistic_reward_model()
+    print task_prob
     print prob_m
     print state_means

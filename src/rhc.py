@@ -33,7 +33,7 @@ class RecedingHorizonControl:
     
     def __init__(self, init_battery, init_charging):
         ur = probabilistic_rewards.uncertain_rewards()
-        self.prob, self.clusters = ur.get_probabilistic_reward_model()
+        self.task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
         self.cl_id = []
         self.sample_reward = []
@@ -147,12 +147,13 @@ class RecedingHorizonControl:
         
         return current_state
 
-
     def obtain_prism_model(self,t):
         prob_c = np.zeros((self.horizon, len(self.clusters)))
+        prob_t = np.zeros((self.horizon, 2))
         for k in range(self.horizon):  
             prob_c[k] = self.prob[(t+k)%self.no_int]
-        pm = prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, self.clusters, prob_c, self.charge_model, self.discharge_model)
+            prob_t[k] = self.task_prob[(t+k)%self.no_int]
+        pm = prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_rhc', 'w') as file:

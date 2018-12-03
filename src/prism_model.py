@@ -8,14 +8,15 @@ import os
 
 class PrismModel:
     
-    def __init__(self,filename, init_b, init_ch, clusters, prob, charge_model, discharge_model):
+    def __init__(self,filename, init_b, init_ch, task_prob, clusters, prob, charge_model, discharge_model):
         # initial values that make model. from_t set to zero
+        self.task_prob = task_prob
         self.clusters = clusters
         self.prob = prob
         self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.charge_model = charge_model
         self.discharge_model = discharge_model
-        self.time_int = len(self.clusters)
+        self.time_int = self.prob.shape[0]
         self.write_prism_file(filename, init_b, init_ch) 
         
     def write_prism_file(self, filename, init_b, init_ch):
@@ -139,6 +140,6 @@ def get_battery_model():
                
 if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards()
-    prob, clusters = ur.get_probabilistic_reward_model()
+    task_prob, prob, clusters = ur.get_probabilistic_reward_model()
     charge_model, discharge_model = get_battery_model()
-    mm = PrismModel('model_test.prism', 0, 70, 1, clusters, prob, charge_model, discharge_model)
+    mm = PrismModel('model_test.prism', 70, 1, task_prob, clusters, prob, charge_model, discharge_model)
