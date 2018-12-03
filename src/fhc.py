@@ -99,11 +99,11 @@ class FiniteHorizonControl:
     def simulate_day(self, day):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
-            # print self.no_int*day+i, self.actual_reward[self.no_int*day+i]
+            print self.no_int*day+i, self.actual_reward[self.no_int*day+i]
             actions = []
             while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
                 nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
-                # print nx_s, trans_prob, actions
+                print nx_s, trans_prob, actions
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
@@ -113,9 +113,10 @@ class FiniteHorizonControl:
                             current_state = s 
                 
                 elif all(a == 'evaluate' for a in actions):
+                    min_cl = np.inf
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
-                        if int(cl) == self.cl_id[self.no_int*day+i]:
+                        if abs(self.clusters[int(cl)] - self.actual_reward[self.no_int*day+i]) < min_cl:
                             current_state = s
 
                 else:

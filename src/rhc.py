@@ -87,11 +87,12 @@ class RecedingHorizonControl:
         print np.sum(self.totalreward), ' : Reward for Aug'
 
     def get_next_state(self,i):
+        print i
         current_state = self.pp.initial_state
         actions = []
         while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
             nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
-            # print nx_s, trans_prob, actions
+            print nx_s, trans_prob, actions
             if all(a == 'observe' for a in actions):
                 for s in nx_s:
                     t, tp, o, e, b, ch, cl = self.pp.get_state(s)
@@ -101,9 +102,10 @@ class RecedingHorizonControl:
                         current_state = s 
                 
             elif all(a == 'evaluate' for a in actions):
+                min_cl = np.inf
                 for s in nx_s:
                     t, tp, o, e, b, ch, cl = self.pp.get_state(s)
-                    if int(cl) == self.cl_id[i]:
+                    if abs(self.clusters[int(cl)] - self.actual_reward[i]) < min_cl:
                         current_state = s
 
             else:
