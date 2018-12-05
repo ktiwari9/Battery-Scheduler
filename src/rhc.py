@@ -181,7 +181,7 @@ class RecedingHorizonControl:
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
             print 'Reading from model_rhc'+f_no+'.adv'
-            pp = read_adversary.ParseAdversary(['model_rhc'+f_np+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
+            pp = read_adversary.ParseAdversary(['model_rhc'+f_no+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
             return pp
         else:
             raise ValueError('Adversary Not Found !!!')
