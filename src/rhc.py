@@ -87,12 +87,12 @@ class RecedingHorizonControl:
         print np.sum(self.totalreward), ' : Reward for Aug'
 
     def get_next_state(self,i):
-        print i
+        # print i
         current_state = self.pp.initial_state
         actions = []
         while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
             nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
-            print nx_s, trans_prob, actions
+            # print nx_s, trans_prob, actions
             if all(a == 'observe' for a in actions):
                 for s in nx_s:
                     t, tp, o, e, b, ch, cl = self.pp.get_state(s)
@@ -153,7 +153,9 @@ class RecedingHorizonControl:
         for k in range(self.horizon):  
             prob_c[k] = self.prob[(t+k)%self.no_int]
             prob_t[k] = self.task_prob[(t+k)%self.no_int]
+        
         pm = prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
+       
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_rhc', 'w') as file:
@@ -161,33 +163,28 @@ class RecedingHorizonControl:
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
+        
         ##reading output from prism to find policy file
         policy_file = []
         with open(self.path_data+'result_rhc', 'r') as f:
             line_list = f.readlines()
-            for i in range(len(line_list)):
-                if 'Computed point: ' in line_list[i]:
-                    el = line_list[i].split(' ')
-                    req_point = el[2][1:-1]
-                    if abs(1.0-float(req_point)) < 0.001:
-                        start_p = len('Adversary written to file "'+self.path_mod)
-                        file_name = line_list[i-1][start_p:-3]
-                        policy_file.append((req_point, file_name))
-
-                if 'Result:' in line_list[i]:
-                    s_policy_file = sorted(policy_file, key= lambda x: abs(1-float(x[0])))
-                    
-                    if len(s_policy_file) == 1:
-                        policy_file_name = s_policy_file[0][1]
-                    elif '('+s_policy_file[0][0]+',' in line_list[i]:
-                        policy_file_name = s_policy_file[0][1]
-                    else:
-                        policy_file_name = s_policy_file[1][1]
-
-        #######################SPECIFY LOCATION AS BEFORE ######################
-        print 'Reading from ', policy_file_name
-        pp = read_adversary.ParseAdversary([policy_file_name, 'model_rhc.sta', 'model_rhc.lab'])
-        return pp
+            f_no = None
+            min_prob_diff = np.inf
+            for line in line_list:
+                if ': New point is (' in line:
+                    el = line.split(' ')
+                    prob30 = float(el[4][1:-1])
+                    if abs(1.0 - prob30) < min_prob_diff:
+                        f_no = str(int(el[0][:-1])-1)
+                        min_prob_diff = abs(1.0 - prob30) 
+        
+        if f_no != None:
+            #######################SPECIFY LOCATION AS BEFORE ######################
+            print 'Reading from model_rhc'+f_no+'.adv'
+            pp = read_adversary.ParseAdversary(['model_rhc'+f_np+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
+            return pp
+        else:
+            raise ValueError('Adversary Not Found !!!')
 
     def get_plan(self, fname):
         print 'Writing plan..'
@@ -195,6 +192,7 @@ class RecedingHorizonControl:
             f.write('time battery charging  action  obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
+
 
 if __name__ == '__main__':
     fhc = RecedingHorizonControl(70, 1)

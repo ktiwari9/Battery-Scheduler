@@ -99,11 +99,11 @@ class FiniteHorizonControl:
     def simulate_day(self, day):
         current_state = self.pp.initial_state
         for i in range(self.no_int):
-            print self.no_int*day+i, self.actual_reward[self.no_int*day+i]
+            # print self.no_int*day+i, self.actual_reward[self.no_int*day+i]
             actions = []
             while not(('gather_reward' in actions) or ('go_charge' in actions) or ('stay_charging' in actions)):
                 nx_s, trans_prob, actions = self.pp.get_possible_next_states(current_state)
-                print nx_s, trans_prob, actions
+                # print nx_s, trans_prob, actions
                 if all(a == 'observe' for a in actions):
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
@@ -169,33 +169,30 @@ class FiniteHorizonControl:
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
+        
         ##reading output from prism to find policy file
         policy_file = []
         with open(self.path_data+'result_fhc', 'r') as f:
             line_list = f.readlines()
-            for i in range(len(line_list)):
-                if 'Computed point: ' in line_list[i]:
-                    el = line_list[i].split(' ')
-                    req_point = el[2][1:-1]
-                    if abs(1.0-float(req_point)) < 0.001:
-                        start_p = len('Adversary written to file "'+self.path_mod)
-                        file_name = line_list[i-1][start_p:-3]
-                        policy_file.append((req_point, file_name))
+            f_no = None
+            min_prob_diff = np.inf
+            for line in line_list:
+                if ': New point is (' in line:
+                    el = line.split(' ')
+                    prob30 = float(el[4][1:-1])
+                    if abs(1.0- prob30) < min_prob_diff:
+                        min_prob_diff = abs(1.0- prob30)
+                        f_no = str(int(el[0][:-1])-1)
 
-                if 'Result:' in line_list[i]:
-                    s_policy_file = sorted(policy_file, key= lambda x: abs(1-float(x[0])))
-                    
-                    if len(s_policy_file) == 1:
-                        policy_file_name = s_policy_file[0][1]
-                    elif '('+s_policy_file[0][0]+',' in line_list[i]:
-                        policy_file_name = s_policy_file[0][1]
-                    else:
-                        policy_file_name = s_policy_file[1][1]
+        if f_no != None:
+            #######################SPECIFY LOCATION AS BEFORE ######################
+            print 'Reading from model_t'+f_no+'.adv'
+            pp = read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
+            return pp
+        
+        else:
+            raise ValueError('Adversary Not Found!!!')
 
-        #######################SPECIFY LOCATION AS BEFORE ######################
-        print 'Reading from ', policy_file_name
-        pp = read_adversary.ParseAdversary([policy_file_name, 'model_t.sta', 'model_t.lab'])
-        return pp
 
     def get_plan(self, fname):
         print 'Writing plan..'
