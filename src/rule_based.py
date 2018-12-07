@@ -53,7 +53,7 @@ class RuleBasedControl:
 			
 			if (self.current_battery > 30 and self.current_battery < 70 and self.current_charging == 1) or (self.current_charging ==1 and r == 0):
 				self.action.append('stay_charging')
-				self.current_charging = 1
+				self.obtained_reward.append(0)
 				
 				nb = []
 				p = []
@@ -62,10 +62,12 @@ class RuleBasedControl:
 					p.append(prob)
 
 				self.current_battery = np.random.choice(nb, p=p)
+				self.current_charging = 1
+
 			
 			elif self.current_battery > 30 and r != 0:
 				self.action.append('gather_reward')
-				self.current_charging = 0
+				self.obtained_reward.append(r)
 
 				nb = []
 				p = []
@@ -74,11 +76,12 @@ class RuleBasedControl:
 					p.append(prob)
 
 				self.current_battery = np.random.choice(nb, p=p)
+				self.current_charging = 0
 
 			else:
 				self.action.append('go_charge')
-				self.current_charging = 1
-
+				self.obtained_reward.append(0)
+		
 				nb = []
 				p = []
 				for b,prob in self.charge_model[self.current_battery].items():
@@ -89,9 +92,17 @@ class RuleBasedControl:
 					self.current_battery = np.random.choice(nb, p=p)-1 
 				else:
 					self.current_battery = np.random.choice(nb, p=p)
+				self.current_charging = 1
+
 
 	def get_plan(self, fname):
 		print 'Writing plan..'
+		print self.time
+		print self.charging
+		print self.battery
+		print self.action
+		print self.obtained_reward
+
 		file_name = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/' + fname
 		with open(file_name, 'w') as f:
 			f.write('time battery charging  action  obtained_reward \n')
