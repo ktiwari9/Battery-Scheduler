@@ -61,7 +61,8 @@ class RuleBasedControl:
 					nb.append(b)
 					p.append(prob)
 
-				self.current_battery = np.random.choice(nb, p=p)
+				# self.current_battery = np.random.choice(nb, p=p)
+				self.current_battery = int(sum(np.array(nb)*np.array(p)))
 				self.current_charging = 1
 
 			
@@ -75,7 +76,8 @@ class RuleBasedControl:
 					nb.append(b)
 					p.append(prob)
 
-				self.current_battery = np.random.choice(nb, p=p)
+				# self.current_battery = np.random.choice(nb, p=p)
+				self.current_battery = int(sum(np.array(nb)*np.array(p)))
 				self.current_charging = 0
 
 			else:
@@ -89,28 +91,48 @@ class RuleBasedControl:
 					p.append(prob)
 
 				if self.current_battery != 99 or self.current_battery != 100:
-					self.current_battery = np.random.choice(nb, p=p)-1 
+					# self.current_battery = np.random.choice(nb, p=p)-1
+					self.current_battery = int(sum(np.array(nb)*np.array(p)))-1
+ 
+
 				else:
-					self.current_battery = np.random.choice(nb, p=p)
+					# self.current_battery = np.random.choice(nb, p=p)
+					self.current_battery = int(sum(np.array(nb)*np.array(p)))
+
 				self.current_charging = 1
 
 
 	def get_plan(self, fname):
 		print 'Writing plan..'
-		print self.time
-		print self.charging
-		print self.battery
-		print self.action
-		print self.obtained_reward
-
 		file_name = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/' + fname
 		with open(file_name, 'w') as f:
-			f.write('time battery charging  action  obtained_reward \n')
-			for t, b, ch, a, obr in zip(self.time, self.battery, self.charging, self.action, self.obtained_reward):
-				f.write('{0} {1} {2} {3} {4}\n'.format(t, b, ch, a, obr))
+			f.write('time battery charging action obtained_reward actual_reward\n')
+			for t, b, ch, a, obr, ar in zip(self.time, self.battery, self.charging, self.action, self.obtained_reward, self.test_rewards):
+				f.write('{0} {1} {2} {3} {4} {5}\n'.format(t, b, ch, a, obr, ar))
+
+	def get_rewards_from_plan(self, fname):
+		print 'Reading Plan...'
+		file_name = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/' + fname
+		rewards_obtained = []
+		with open(file_name, 'r') as f:
+			for line in f:
+				if 'time' not in line:
+					s = line.split(' ')
+					rewards_obtained.append(float(s[4]))
+		return rewards_obtained
+
 
 
 if __name__ == '__main__':
-	rbc = RuleBasedControl(70,1)
+	no_int = 48
+	f_name = 'rbc_oct202122_40b'
+	rbc = RuleBasedControl(40,1)
+	
 	rbc.simulate()
-	rbc.get_plan('rbc_aug1118_1')
+	rbc.get_plan(f_name)
+	rewards_obtained = rbc.get_rewards_from_plan(f_name)
+	no_days = len(rbc.test_rewards)/no_int
+	for i in range(no_days):
+		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
+	print 'Total : ', sum(rewards_obtained)
+

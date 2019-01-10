@@ -25,6 +25,7 @@ def get_battery_model():
                 for bn in bnext_dict:
                     bnext_dict[bn] = float(bnext_dict[bn])/total
         return charge_model, discharge_model
+    
     else:
         raise ValueError('No models found. First create battery model with probabilistic_battery_model.py')
  
@@ -72,6 +73,7 @@ class FiniteHorizonControl:
      
     def simulate(self):
         for k in range(self.no_days):
+            print 'Day: ', k 
             self.pp = self.obtain_prism_model()
             battery = np.zeros((self.no_simulations))
             charging = np.zeros((self.no_simulations))
@@ -109,7 +111,7 @@ class FiniteHorizonControl:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)
                         if self.actual_reward[self.no_int*day+i] != 0 and tp == '1':
                             current_state = s
-                        if self.actual_reward == 0 and tp == '0':
+                        if self.actual_reward[self.no_int*day+i] == 0 and tp == '0':
                             current_state = s 
                 
                 elif all(a == 'evaluate' for a in actions):
@@ -127,31 +129,63 @@ class FiniteHorizonControl:
         
                     if all(a == 'stay_charging' for a in actions):
                         prob = []
+                        next_b = [] 
                         for s in nx_s:
                             t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
                             prob.append(self.charge_model[int(cb)][int(b)])
-                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                            next_b.append(int(b))
+                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+                        
+                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        try:
+                            current_state_ind = next_b.index(current_battery)
+                        except ValueError:
+                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        current_state = nx_s[current_state_ind]
+                        
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(0)
 
                     elif all(a == 'go_charge' for a in actions):
                         prob = []
+                        next_b = []
                         for s in nx_s:
                             t, tp, o, e, b, ch, cl = self.pp.get_state(s) 
+                            next_b.append(int(b))
                             if int(cb) == 100 or int(cb) == 99:                 
                                 prob.append(self.charge_model[int(cb)][int(b)])
                             else:
                                 prob.append(self.charge_model[int(cb)][int(b)+1])
-                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                        
+                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+
+                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        try:
+                            current_state_ind = next_b.index(current_battery)
+                        except ValueError:
+                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        current_state = nx_s[current_state_ind]
+
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(0)
             
                     elif all(a == 'gather_reward' for a in actions):
                         prob = []
+                        next_b = []
                         for s in nx_s:
                             t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
                             prob.append(self.discharge_model[int(cb)][int(b)])
-                        current_state = np.random.choice(nx_s, p=np.array(prob))
+                            next_b.append(int(b))
+                        
+                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+
+                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        try:
+                            current_state_ind = next_b.index(current_battery)
+                        except ValueError:
+                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        current_state = nx_s[current_state_ind]
+
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(self.actual_reward[self.no_int*day+i])
 
@@ -162,15 +196,16 @@ class FiniteHorizonControl:
 
     def obtain_prism_model(self):
         pm = prism_model.PrismModel('model_t.prism', self.init_battery, self.init_charging, self.task_prob, self.clusters, self.prob, self.charge_model, self.discharge_model)
+        
         #######################SPECIFY LOCATION ######################
-        # running prism and saving output from prism
+        ### running prism and saving output from prism
         with open(self.path_data+'result_fhc', 'w') as file:
             process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -v -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
         
-        ##reading output from prism to find policy file
+        ### reading output from prism to find policy file
         policy_file = []
         with open(self.path_data+'result_fhc', 'r') as f:
             line_list = f.readlines()
@@ -193,15 +228,16 @@ class FiniteHorizonControl:
         else:
             raise ValueError('Adversary Not Found!!!')
 
-
+    
     def get_plan(self, fname):
         print 'Writing plan..'
         with open(self.path_data + fname, 'w') as f:
-            f.write('time battery charging  action  obtained_reward match_reward actual_reward exp_reward\n')
+            f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
+
 if __name__ == '__main__':
-    fhc = FiniteHorizonControl(70, 1)
+    fhc = FiniteHorizonControl(40, 1)
     fhc.simulate()
-    fhc.get_plan('fhc_aug')
+    fhc.get_plan('fhc_oct202122_40b')

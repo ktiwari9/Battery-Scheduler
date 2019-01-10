@@ -74,6 +74,7 @@ class RecedingHorizonControl:
     def simulate(self):
         print 'Simulating...'
         for k in range(self.no_days*self.no_int):
+            print k, '----------------------------------------------------------------------------------'
             self.pp = self.obtain_prism_model(k)
             self.time.append(k)
             next_state = self.get_next_state(k) 
@@ -98,7 +99,7 @@ class RecedingHorizonControl:
                     t, tp, o, e, b, ch, cl = self.pp.get_state(s)
                     if self.actual_reward[i] != 0 and tp == '1':
                         current_state = s
-                    if self.actual_reward == 0 and tp == '0':
+                    if self.actual_reward[i] == 0 and tp == '0':
                         current_state = s 
                 
             elif all(a == 'evaluate' for a in actions):
@@ -115,31 +116,64 @@ class RecedingHorizonControl:
                     
                 if all(a == 'stay_charging' for a in actions):
                     prob = []
+                    next_b = []
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
                         prob.append(self.charge_model[int(cb)][int(b)])
-                    current_state = np.random.choice(nx_s, p=np.array(prob))
+                        next_b.append(int(b))
+
+                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+
+                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    try:
+                        current_state_ind = next_b.index(current_battery)
+                    except ValueError:
+                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    current_state = nx_s[current_state_ind]
+                    
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(0)
 
                 elif all(a == 'go_charge' for a in actions):
                     prob = []
+                    next_b = []
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.get_state(s) 
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)
+                        next_b.append(int(b)) 
                         if int(cb) == 100 or int(cb) == 99:                 
                             prob.append(self.charge_model[int(cb)][int(b)])
                         else:
                             prob.append(self.charge_model[int(cb)][int(b)+1])
-                    current_state = np.random.choice(nx_s, p=np.array(prob))
+                    
+                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+                    
+                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    try:
+                        current_state_ind = next_b.index(current_battery)
+                    except ValueError:
+                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    current_state = nx_s[current_state_ind]
+
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(0)
             
                 elif all(a == 'gather_reward' for a in actions):
                     prob = []
+                    next_b = []
                     for s in nx_s:
                         t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
                         prob.append(self.discharge_model[int(cb)][int(b)])
-                    current_state = np.random.choice(nx_s, p=np.array(prob))
+                        next_b.append(int(b))
+
+                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+                    
+                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    try:
+                        current_state_ind = next_b.index(current_battery)
+                    except ValueError:
+                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    current_state = nx_s[current_state_ind]
+
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(self.actual_reward[i])
 
@@ -189,12 +223,12 @@ class RecedingHorizonControl:
     def get_plan(self, fname):
         print 'Writing plan..'
         with open(self.path_data + fname, 'w') as f:
-            f.write('time battery charging  action  obtained_reward match_reward actual_reward exp_reward\n')
+            f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
 
 if __name__ == '__main__':
-    fhc = RecedingHorizonControl(70, 1)
-    fhc.simulate()
-    fhc.get_plan('rhc_aug')
+    rhc = RecedingHorizonControl(70, 1)
+    rhc.simulate()
+    rhc.get_plan('rhc_oct202122_70b_1')
