@@ -31,7 +31,9 @@ class uncertain_rewards:
         self.rewards_day  = dict()
         self.tasks['start_day'] = self.tasks['start_time'].apply(lambda x: x.date())
         self.tasks['end_day'] = self.tasks['end_time'].apply(lambda x: x.date())
-        self.test_days = [date(2017, 8, 11), date(2017,8,18)]
+        # all_days = self.tasks['start_day'].sort_values()
+        # print all_days.unique()
+        self.test_days = [date(2017, 10, 20), date(2017, 10, 21), date(2017, 10, 22)]
         self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
         self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
         
@@ -115,6 +117,6 @@ class uncertain_rewards:
 if __name__ == '__main__':
     ur = uncertain_rewards()
     task_prob, prob_m, state_means = ur.get_probabilistic_reward_model()
-    print task_prob
-    print prob_m
-    print state_means
+    # print task_prob
+    # print prob_m
+    # print state_means

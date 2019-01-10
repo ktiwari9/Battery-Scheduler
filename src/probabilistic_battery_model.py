@@ -121,7 +121,7 @@ class BatteryModel:
 
 if __name__ == '__main__':
     ################ SPECIFY PATHS OF DATA #######################
-    paths = ['/media/milan/DATA/data_project/battery_data/betty','/media/milan/DATA/data_project/battery_data/bob', '/media/milan/DATA/battery_logs/real_battery']
+    paths = ['/media/milan/DATA/data_project/battery_data/betty', '/media/milan/DATA/battery_logs/real_battery']
     bm = BatteryModel(paths)
     # print (bm.charge_model)
     # print (bm.discharge_model)
