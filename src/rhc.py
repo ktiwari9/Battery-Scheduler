@@ -124,7 +124,7 @@ class RecedingHorizonControl:
 
                     # current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                     try:
                         current_state_ind = next_b.index(current_battery)
                     except ValueError:
@@ -147,7 +147,7 @@ class RecedingHorizonControl:
                     
                     # current_state = np.random.choice(nx_s, p=np.array(prob))
                     
-                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                     try:
                         current_state_ind = next_b.index(current_battery)
                     except ValueError:
@@ -167,7 +167,7 @@ class RecedingHorizonControl:
 
                     # current_state = np.random.choice(nx_s, p=np.array(prob))
                     
-                    current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                     try:
                         current_state_ind = next_b.index(current_battery)
                     except ValueError:
@@ -229,6 +229,6 @@ class RecedingHorizonControl:
 
 
 if __name__ == '__main__':
-    rhc = RecedingHorizonControl(70, 1)
+    rhc = RecedingHorizonControl(100, 1)
     rhc.simulate()
-    rhc.get_plan('rhc_oct202122_70b_1')
+    rhc.get_plan('rhc_oct202122_100b')

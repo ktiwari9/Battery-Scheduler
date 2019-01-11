@@ -62,7 +62,7 @@ class RuleBasedControl:
 					p.append(prob)
 
 				# self.current_battery = np.random.choice(nb, p=p)
-				self.current_battery = int(sum(np.array(nb)*np.array(p)))
+				self.current_battery = int(round(sum(np.array(nb)*np.array(p))))
 				self.current_charging = 1
 
 			
@@ -77,7 +77,7 @@ class RuleBasedControl:
 					p.append(prob)
 
 				# self.current_battery = np.random.choice(nb, p=p)
-				self.current_battery = int(sum(np.array(nb)*np.array(p)))
+				self.current_battery = int(round(sum(np.array(nb)*np.array(p))))
 				self.current_charging = 0
 
 			else:
@@ -92,12 +92,12 @@ class RuleBasedControl:
 
 				if self.current_battery != 99 or self.current_battery != 100:
 					# self.current_battery = np.random.choice(nb, p=p)-1
-					self.current_battery = int(sum(np.array(nb)*np.array(p)))-1
+					self.current_battery = int(round(sum(np.array(nb)*np.array(p))))-1
  
 
 				else:
 					# self.current_battery = np.random.choice(nb, p=p)
-					self.current_battery = int(sum(np.array(nb)*np.array(p)))
+					self.current_battery = int(round(sum(np.array(nb)*np.array(p))))
 
 				self.current_charging = 1
 

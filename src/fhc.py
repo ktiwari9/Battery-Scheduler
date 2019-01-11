@@ -136,7 +136,7 @@ class FiniteHorizonControl:
                             next_b.append(int(b))
                         # current_state = np.random.choice(nx_s, p=np.array(prob))
                         
-                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                         try:
                             current_state_ind = next_b.index(current_battery)
                         except ValueError:
@@ -159,7 +159,7 @@ class FiniteHorizonControl:
                         
                         # current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                         try:
                             current_state_ind = next_b.index(current_battery)
                         except ValueError:
@@ -179,7 +179,7 @@ class FiniteHorizonControl:
                         
                         # current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                        current_battery = int(sum(np.array(next_b)*np.array(prob)))
+                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
                         try:
                             current_state_ind = next_b.index(current_battery)
                         except ValueError:
@@ -238,6 +238,6 @@ class FiniteHorizonControl:
 
 
 if __name__ == '__main__':
-    fhc = FiniteHorizonControl(40, 1)
+    fhc = FiniteHorizonControl(70, 1)
     fhc.simulate()
-    fhc.get_plan('fhc_oct202122_40b')
+    fhc.get_plan('fhc_oct202122_100b')
