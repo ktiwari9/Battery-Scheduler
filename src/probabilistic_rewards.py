@@ -33,10 +33,11 @@ class uncertain_rewards:
         self.tasks['end_day'] = self.tasks['end_time'].apply(lambda x: x.date())
         # all_days = self.tasks['start_day'].sort_values()
         # print all_days.unique()
-        self.test_days = [date(2017, 10, 20), date(2017, 10, 21), date(2017, 10, 22)]
+        self.test_days = [date(2017, 8, 8), date(2017, 8, 9), date(2017, 8, 10), date(2017, 8, 11)]
         self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
         self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
-        
+        self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].apply(lambda x:x.month) == 9)]
+
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
         X_wz = np.array([x for x in X if x[0] != 0])
