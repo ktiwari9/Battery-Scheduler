@@ -13,14 +13,14 @@ def read_file(fname):
 	actual_reward_present = False
 	with open (filename, 'r') as f:
 		for line in f:
-			x = line.split(' ')
+			x = line[:-1].split(' ')
 			if 'actual_reward' in x:
 				ind = x.index('actual_reward')
 				actual_reward_present = True
 			break
 		for line in f:
 			if 'battery' not in line:
-				el = line.split(' ')
+				el = line[:-1].split(' ')
 				battery.append(float(el[1].strip()))
 				obtained_rewards.append(float(el[4].strip()))
 				actions.append(el[3].strip())
@@ -30,7 +30,6 @@ def read_file(fname):
 	return battery, actions, obtained_rewards, actual_rewards
 
 def get_battery_statistics(battery):
-	print battery
 	battery_mean = np.mean(battery)
 	battery_std = np.std(battery)
 	battery_min = min(battery)
@@ -76,7 +75,7 @@ def get_continuous_action_time(actions):
 
 if __name__ == '__main__':
 	# Set TOTAL_INT at the beginning of file
-	fnames = ['fhc_aug1118_70b_1', 'fhc_aug1118_70b_2', 'fhc_aug1118_70b_3']
+	fnames = ['fhc_aug891011_40b_1', 'fhc_aug891011_40b_2', 'fhc_aug891011_40b_3']
 	
 	b_total = []
 	overall_totals_obt = []
@@ -88,7 +87,7 @@ if __name__ == '__main__':
 
 	for fname in fnames:		
 		battery, actions, obtained_rewards, actual_rewards = read_file(fname)
-		b_total.append(battery)
+		b_total.extend(battery)
 		battery_mean, battery_std, battery_max, battery_min = get_battery_statistics(battery)
 		print fname
 		print 'Battery Stats:'

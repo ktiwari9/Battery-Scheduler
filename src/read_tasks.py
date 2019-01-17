@@ -75,10 +75,7 @@ class getTasks:
                 #     new_priority = priority%1001
                 # else:
                 #     new_priority = priority
-                if end_datetime.date() > start_datetime.date():
-                    plus_one = True 
-                else:
-                    plus_one = False
+
                 self.unique_tasks.update({task_id : (priority, start_datetime, end_datetime)})
     
 if __name__ == '__main__':

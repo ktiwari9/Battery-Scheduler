@@ -4,6 +4,7 @@ from datetime import datetime, time, date
 import pandas as pd
 from io import open
 import codecs
+import math
 import yaml
 import os
 
@@ -71,7 +72,7 @@ class BatteryModel:
             battery_data.sort_index(inplace=True)
             battery_data.drop_duplicates(subset='time', keep='last', inplace=True)
             battery_data.set_index(pd.DatetimeIndex(battery_data.index), drop=False, inplace=True, verify_integrity=True)
-            battery_data = battery_data.resample('1T').pad()
+            battery_data = battery_data.resample('1T').mean()
             battery_charge = battery_data[battery_data['is_charging'] == True]
             battery_discharge = battery_data[battery_data['is_charging'] == False]
             if not battery_discharge.empty:
@@ -85,11 +86,19 @@ class BatteryModel:
         else:
             model = self.discharge_model
         for i in range(0,df.shape[0]-31):
-            if (df.index[i+30] - df.index[i]) == pd.Timedelta(minutes=30):
-                if df[i+30] not in model[df[i]]:
-                    model[df[i]].update({df[i+30]:1})
+            if (df.index[i+30] - df.index[i]) == pd.Timedelta(minutes=30) and not math.isnan(df[i]) and not math.isnan(df[i+30]):
+                current_b = int(round(df[i]))
+                next_b = int(round(df[i+30]))
+                if charging and next_b == current_b:
+                    next_b += 1
+                elif charging and next_b < current_b:
+                    next_b = current_b+1
+                if next_b > 100:
+                    next_b = 100
+                if next_b not in model[current_b]:
+                    model[current_b].update({next_b:1})
                 else:
-                   model[df[i]][df[i+30]] += 1
+                    model[current_b][next_b] += 1
     
     def get_battery_model(self, paths):
         ################ SPECIFY PATHS OF MODELS #######################
@@ -123,5 +132,5 @@ if __name__ == '__main__':
     ################ SPECIFY PATHS OF DATA #######################
     paths = ['/media/milan/DATA/data_project/battery_data/betty', '/media/milan/DATA/battery_logs/real_battery']
     bm = BatteryModel(paths)
-    # print (bm.charge_model)
-    # print (bm.discharge_model)
+    print (bm.charge_model)
+    print (bm.discharge_model)
