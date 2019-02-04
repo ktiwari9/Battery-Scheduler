@@ -75,7 +75,7 @@ def get_continuous_action_time(actions):
 
 if __name__ == '__main__':
 	# Set TOTAL_INT at the beginning of file
-	fnames = ['fhc_aug891011_40b_1', 'fhc_aug891011_40b_2', 'fhc_aug891011_40b_3']
+	fnames = ['fhc_oct123_40b_1', 'fhc_oct123_40b_2', 'fhc_oct123_40b_3']
 	
 	b_total = []
 	overall_totals_obt = []
@@ -90,6 +90,9 @@ if __name__ == '__main__':
 		b_total.extend(battery)
 		battery_mean, battery_std, battery_max, battery_min = get_battery_statistics(battery)
 		print fname
+		for i in range(len(obtained_rewards)/48):
+			print 'Day ', i+1, ': ', sum(obtained_rewards[i*48:(i+1)*48])  
+		print 'Total across ', len(obtained_rewards)/48, ' days: ', sum(obtained_rewards)
 		print 'Battery Stats:'
 		print battery_mean, 'b_mean' 
 		print battery_std, 'b_std'

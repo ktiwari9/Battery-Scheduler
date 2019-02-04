@@ -8,6 +8,7 @@ import yaml
 import sys
 import os
 
+
 def get_battery_model():
     ################ SPECIFY PATHS OF MODELS #######################
     path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
@@ -134,14 +135,14 @@ class FiniteHorizonControl:
                             t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
                             prob.append(self.charge_model[int(cb)][int(b)])
                             next_b.append(int(b))
-                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
                         
-                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                        try:
-                            current_state_ind = next_b.index(current_battery)
-                        except ValueError:
-                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                        current_state = nx_s[current_state_ind]
+                        # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                        # try:
+                        #     current_state_ind = next_b.index(current_battery)
+                        # except ValueError:
+                        #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        # current_state = nx_s[current_state_ind]
                         
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(0)
@@ -157,14 +158,14 @@ class FiniteHorizonControl:
                             else:
                                 prob.append(self.charge_model[int(cb)][int(b)+1])
                         
-                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                        try:
-                            current_state_ind = next_b.index(current_battery)
-                        except ValueError:
-                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                        current_state = nx_s[current_state_ind]
+                        # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                        # try:
+                        #     current_state_ind = next_b.index(current_battery)
+                        # except ValueError:
+                        #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        # current_state = nx_s[current_state_ind]
 
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(0)
@@ -177,14 +178,14 @@ class FiniteHorizonControl:
                             prob.append(self.discharge_model[int(cb)][int(b)])
                             next_b.append(int(b))
                         
-                        # current_state = np.random.choice(nx_s, p=np.array(prob))
+                        current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                        current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                        try:
-                            current_state_ind = next_b.index(current_battery)
-                        except ValueError:
-                            current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                        current_state = nx_s[current_state_ind]
+                        # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                        # try:
+                        #     current_state_ind = next_b.index(current_battery)
+                        # except ValueError:
+                        #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                        # current_state = nx_s[current_state_ind]
 
                         req_a = actions[nx_s.index(current_state)]
                         self.obtained_rewards.append(self.actual_reward[self.no_int*day+i])
@@ -218,7 +219,7 @@ class FiniteHorizonControl:
                     if abs(1.0- prob30) < min_prob_diff:
                         min_prob_diff = abs(1.0- prob30)
                         f_no = str(int(el[0][:-1])-1)
-
+        
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
             print 'Reading from model_t'+f_no+'.adv'
@@ -238,6 +239,50 @@ class FiniteHorizonControl:
 
 
 if __name__ == '__main__':
-    fhc = FiniteHorizonControl(70, 1)
+    np.random.seed(0)
+    fhc = FiniteHorizonControl(40, 1)
     fhc.simulate()
-    fhc.get_plan('fhc_oct202122_100b')
+    fhc.get_plan('fhc_oct123_40b_1')
+
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(40, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_40b_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(40, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_40b_3')
+
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_70b_1')
+
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_70b_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_70b_3')
+
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(100, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_100b_1')
+
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(100, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_100b_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(100, 1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_oct123_100b_3')
+
+
+

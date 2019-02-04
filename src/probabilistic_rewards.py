@@ -33,20 +33,22 @@ class uncertain_rewards:
         self.tasks['end_day'] = self.tasks['end_time'].apply(lambda x: x.date())
         # all_days = self.tasks['start_day'].sort_values()
         # print all_days.unique()
-        self.test_days = [date(2017, 8, 8), date(2017, 8, 9), date(2017, 8, 10), date(2017, 8, 11)]
+        self.test_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
+        # remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3), date(2017, 10, 4), date(2017, 10, 5)]
         self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
         self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
-        self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].apply(lambda x:x.month) == 9)]
+        # self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
+        self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].apply(lambda x:x.month) == 9) ]#| (self.tasks['start_day'].apply(lambda x:x.month).isin(remove_days))]
 
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
         X_wz = np.array([x for x in X if x[0] != 0])
-        dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
+        self.dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
         
-        rews_as_states = dpgmm.predict(X) 
+        rews_as_states = self.dpgmm.predict(X) 
         for e,el in enumerate(list(X)):
             if el == [0]:
-                rews_as_states[e] = len(dpgmm.means_)
+                rews_as_states[e] = len(self.dpgmm.means_)
 
         mean_dict = dict()
         for e,s in enumerate(rews_as_states):
@@ -55,9 +57,12 @@ class uncertain_rewards:
             else:
                 mean_dict[s].append(X[e][0])
 
-        reward_states = np.zeros((dpgmm.means_.shape[0]+1))
+        reward_states = np.zeros((self.dpgmm.means_.shape[0]+1))
         for state, vals in mean_dict.items():
             reward_states[int(state)] = np.mean(vals)
+
+        # print reward_states, 'manual mean'
+        # print self.dpgmm.means_, 'gmm means'
  
         rews_as_states = rews_as_states.reshape(len(self.rewards_day),self.no_int)
         return rews_as_states, reward_states

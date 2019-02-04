@@ -8,6 +8,7 @@ import yaml
 import sys
 import os
 
+
 def get_battery_model():
     ################ SPECIFY PATHS OF MODELS #######################
     path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
@@ -41,7 +42,7 @@ class RecedingHorizonControl:
         self.exp_reward = []
         self.no_int = ur.no_int 
         self.no_days = len(ur.test_days)
-        self.horizon = 48 ## in terms of intervals 
+        self.horizon = 36 ## in terms of intervals 
         self.no_simulations = 1
         for z in range(self.no_int*self.no_days):
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
@@ -73,6 +74,7 @@ class RecedingHorizonControl:
      
     def simulate(self):
         print 'Simulating...'
+        print self.horizon
         for k in range(self.no_days*self.no_int):
             print k, '----------------------------------------------------------------------------------'
             self.pp = self.obtain_prism_model(k)
@@ -122,14 +124,14 @@ class RecedingHorizonControl:
                         prob.append(self.charge_model[int(cb)][int(b)])
                         next_b.append(int(b))
 
-                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+                    current_state = np.random.choice(nx_s, p=np.array(prob))
 
-                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                    try:
-                        current_state_ind = next_b.index(current_battery)
-                    except ValueError:
-                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                    current_state = nx_s[current_state_ind]
+                    # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                    # try:
+                    #     current_state_ind = next_b.index(current_battery)
+                    # except ValueError:
+                    #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    # current_state = nx_s[current_state_ind]
                     
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(0)
@@ -145,14 +147,14 @@ class RecedingHorizonControl:
                         else:
                             prob.append(self.charge_model[int(cb)][int(b)+1])
                     
-                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+                    current_state = np.random.choice(nx_s, p=np.array(prob))
                     
-                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                    try:
-                        current_state_ind = next_b.index(current_battery)
-                    except ValueError:
-                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                    current_state = nx_s[current_state_ind]
+                    # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                    # try:
+                    #     current_state_ind = next_b.index(current_battery)
+                    # except ValueError:
+                    #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    # current_state = nx_s[current_state_ind]
 
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(0)
@@ -165,14 +167,14 @@ class RecedingHorizonControl:
                         prob.append(self.discharge_model[int(cb)][int(b)])
                         next_b.append(int(b))
 
-                    # current_state = np.random.choice(nx_s, p=np.array(prob))
+                    current_state = np.random.choice(nx_s, p=np.array(prob))
                     
-                    current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
-                    try:
-                        current_state_ind = next_b.index(current_battery)
-                    except ValueError:
-                        current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
-                    current_state = nx_s[current_state_ind]
+                    # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
+                    # try:
+                    #     current_state_ind = next_b.index(current_battery)
+                    # except ValueError:
+                    #     current_state_ind, closest_nb = min(enumerate(next_b), key=lambda x: abs(x[1]-current_battery))
+                    # current_state = nx_s[current_state_ind]
 
                     req_a = actions[nx_s.index(current_state)]
                     self.obtained_rewards.append(self.actual_reward[i])
@@ -229,6 +231,44 @@ class RecedingHorizonControl:
 
 
 if __name__ == '__main__':
+    # rhc = RecedingHorizonControl(70, 1)
+    # rhc.simulate()
+    # rhc.get_plan('rhc12_oct123_70b_1')
+
+    ################# Multiple files
+    np.random.seed(0)
     rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 24
     rhc.simulate()
-    rhc.get_plan('rhc_oct202122_100b')
+    rhc.get_plan('rhc24_oct123_100b_1')
+
+    np.random.seed(1)
+    rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 24
+    rhc.simulate()
+    rhc.get_plan('rhc24_oct123_100b_2')
+
+    np.random.seed(2)
+    rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 24
+    rhc.simulate()
+    rhc.get_plan('rhc24_oct123_100b_3')
+
+    np.random.seed(0)
+    rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 12
+    rhc.simulate()
+    rhc.get_plan('rhc12_oct123_100b_1')
+
+    np.random.seed(1)
+    rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 12
+    rhc.simulate()
+    rhc.get_plan('rhc12_oct123_100b_2')
+
+    np.random.seed(2)
+    rhc = RecedingHorizonControl(100, 1)
+    rhc.horizon = 12
+    rhc.simulate()
+    rhc.get_plan('rhc12_oct123_100b_3')
+
