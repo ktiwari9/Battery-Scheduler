@@ -53,7 +53,7 @@ class RuleBasedControl:
 			self.battery.append(self.current_battery)
 			self.charging.append(self.current_charging)
 
-			if i%48 >= 44 or i%48 < 16:
+			if (i%48 >= 8 and i%48 < 16) or (i%48 >= 24 and i%48 < 32) or (i%48 >= 40 and i%48 < 48):
 				if self.current_charging == 1:
 					self.action.append('stay_charging')
 					self.obtained_reward.append(0)
@@ -150,112 +150,112 @@ if __name__ == '__main__':
 	no_int = 48
 
 	np.random.seed(0)
-	f_name = 'rbc2_oct123_40b_1'
-	rbc2 = RuleBasedControl(40,1)
+	f_name = 'rbc3_oct123_40b_1'
+	rbc3 = RuleBasedControl(40,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 
 	np.random.seed(1)
-	f_name = 'rbc2_oct123_40b_2'
-	rbc2 = RuleBasedControl(40,1)
+	f_name = 'rbc3_oct123_40b_2'
+	rbc3 = RuleBasedControl(40,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 
 	np.random.seed(2)
-	f_name = 'rbc2_oct123_40b_3'
-	rbc2 = RuleBasedControl(40,1)
+	f_name = 'rbc3_oct123_40b_3'
+	rbc3 = RuleBasedControl(40,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 
 	np.random.seed(0)
-	f_name = 'rbc2_oct123_70b_1'
-	rbc2 = RuleBasedControl(70,1)
+	f_name = 'rbc3_oct123_70b_1'
+	rbc3 = RuleBasedControl(70,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 	np.random.seed(1)
-	f_name = 'rbc2_oct123_70b_2'
-	rbc2 = RuleBasedControl(70,1)
+	f_name = 'rbc3_oct123_70b_2'
+	rbc3 = RuleBasedControl(70,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 	np.random.seed(2)
-	f_name = 'rbc2_oct123_70b_3'
-	rbc2 = RuleBasedControl(70,1)
+	f_name = 'rbc3_oct123_70b_3'
+	rbc3 = RuleBasedControl(70,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 	np.random.seed(0)
-	f_name = 'rbc2_oct123_100b_1'
-	rbc2 = RuleBasedControl(100,1)
+	f_name = 'rbc3_oct123_100b_1'
+	rbc3 = RuleBasedControl(100,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 	np.random.seed(1)
-	f_name = 'rbc2_oct123_100b_2'
-	rbc2 = RuleBasedControl(100,1)
+	f_name = 'rbc3_oct123_100b_2'
+	rbc3 = RuleBasedControl(100,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
 
 	np.random.seed(2)
-	f_name = 'rbc2_oct123_100b_3'
-	rbc2 = RuleBasedControl(100,1)
+	f_name = 'rbc3_oct123_100b_3'
+	rbc3 = RuleBasedControl(100,1)
 	
-	rbc2.simulate()
-	rbc2.get_plan(f_name)
-	rewards_obtained = rbc2.get_rewards_from_plan(f_name)
-	no_days = len(rbc2.test_rewards)/no_int
+	rbc3.simulate()
+	rbc3.get_plan(f_name)
+	rewards_obtained = rbc3.get_rewards_from_plan(f_name)
+	no_days = len(rbc3.test_rewards)/no_int
 	for i in range(no_days):
 		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
 	print 'Total : ', sum(rewards_obtained)
