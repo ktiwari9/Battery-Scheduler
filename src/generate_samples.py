@@ -6,8 +6,8 @@ import numpy as np
 
 class sample_generator:
     
-    def __init__(self, validation, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
-        ur = probabilistic_rewards.uncertain_rewards()
+    def __init__(self, validation, test_days, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
+        ur = probabilistic_rewards.uncertain_rewards(test_days)
         task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.time_int = 48
         self.int_duration = 1440/self.time_int
@@ -100,14 +100,15 @@ class sample_generator:
         
 
 if __name__ == '__main__':
-    sg = sample_generator(True)     
+    sg = sample_generator(True, [date(2017, 10, 2)])     
     rewards = sg.rewards
+    print (rewards)
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
     # exp_rewards = sg.exp_rewards
     #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/sample_rewards'
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):#, exp_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
+    # path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/sample_rewards'
+    # with open(path,'w') as f:
+    #     for r, c, a_r in zip(rewards, cl_id, act_rewards):#, exp_rewards):
+    #         f.write('{0} {1} {2} '.format(c, r, a_r))
+    #         f.write('\n')

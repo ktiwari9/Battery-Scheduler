@@ -21,7 +21,7 @@ def timing_wrapper(func):
 
 class uncertain_rewards:
     @timing_wrapper
-    def __init__(self):
+    def __init__(self, test_days):
         print 'Reading Tasks...'
         tasks_processor = read_tasks.getTasks()
         # t = read_task_wo_priorities.getTasks()
@@ -33,12 +33,25 @@ class uncertain_rewards:
         self.tasks['end_day'] = self.tasks['end_time'].apply(lambda x: x.date())
         # all_days = self.tasks['start_day'].sort_values()
         # print all_days.unique()
-        self.test_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
-        # remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3), date(2017, 10, 4), date(2017, 10, 5)]
-        self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
-        self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
-        # self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
-        self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].apply(lambda x:x.month) == 9) ]#| (self.tasks['start_day'].apply(lambda x:x.month).isin(remove_days))]
+        
+        remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
+
+        if test_days:
+            self.test_days = test_days #[date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
+            self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
+            self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
+            for day in test_days:
+                if day in remove_days or day.month == 9 or day.month == 8:
+                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8)]# | (self.tasks['start_day'].isin(remove_days))]
+
+                elif day not in remove_days or day.month == 11 or day.month == 12:
+                    self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
+                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 10) | (self.tasks['start_day'].apply(lambda x:x.month) == 11) | (self.tasks['start_day'].apply(lambda x:x.month) == 12)]
+
+                break
+        else:
+            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) ]#| (self.tasks['start_day'].isin(remove_days))]
+
 
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
@@ -126,3 +139,14 @@ if __name__ == '__main__':
     # print task_prob
     # print prob_m
     # print state_means
+
+    expected_rew = []
+    for row in prob_m:
+        expected_rew.append(sum(row*state_means))
+
+    x = np.arange(48)
+    for day in ur.rewards_day:
+        print day
+        plt.bar(x, ur.rewards_day[day])
+        plt.plot(x, expected_rew)
+        plt.show()

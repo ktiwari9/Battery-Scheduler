@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+
 import probabilistic_rewards
-import read_adversary
-import prism_model
+from datetime import date
+import bc_read_adversary
+import bcth_prism_model
+import generate_samples
 import numpy as np
 import subprocess
 import yaml
@@ -33,8 +36,8 @@ def get_battery_model():
 
 class FiniteHorizonControl:
     
-    def __init__(self, init_battery, init_charging):
-        ur = probabilistic_rewards.uncertain_rewards()
+    def __init__(self, init_battery, init_charging, test_days, pareto_point):
+        ur = probabilistic_rewards.uncertain_rewards(test_days)
         self.task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
         self.cl_id = []
@@ -46,10 +49,11 @@ class FiniteHorizonControl:
         self.no_simulations = 1
         for z in range(self.no_int*self.no_days):
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
+        self.req_pareto_point = pareto_point
    
         #######################SPECIFY LOCATION ######################
         self.main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
-        self.path_rew = self.main_path + '/data/sample_rewards'
+        self.path_rew = self.main_path + '/data/fhc_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
@@ -196,34 +200,68 @@ class FiniteHorizonControl:
 
 
     def obtain_prism_model(self):
-        pm = prism_model.PrismModel('model_t.prism', self.init_battery, self.init_charging, self.task_prob, self.clusters, self.prob, self.charge_model, self.discharge_model)
+        pm = bcth_prism_model.PrismModel('model_t.prism', self.init_battery, self.init_charging, self.task_prob, self.clusters, self.prob, self.charge_model, self.discharge_model)
         
         #######################SPECIFY LOCATION ######################
         ### running prism and saving output from prism
         with open(self.path_data+'result_fhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'model_prop.props -v -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'batterycost_model_prop.props -v -multimaxpoints 100 -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
+
+            process = subprocess.Popen('./prism '+ self.path_mod + 'bcth_model_t.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 100 -v -exportadv '+ self.path_mod+ 'bcth_model_t.adv -exportprodstates ' + self.path_mod +'bcth_model_t.sta -exporttarget '+self.path_mod+'bcth_model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+
         
         ### reading output from prism to find policy file
+        ### for bcth
         policy_file = []
         with open(self.path_data+'result_fhc', 'r') as f:
             line_list = f.readlines()
-            f_no = None
-            min_prob_diff = np.inf
+            f_no_list = []
+            pareto_points = []
+            init = 0
             for line in line_list:
                 if ': New point is (' in line:
                     el = line.split(' ')
-                    prob30 = float(el[4][1:-1])
-                    if abs(1.0- prob30) < min_prob_diff:
-                        min_prob_diff = abs(1.0- prob30)
-                        f_no = str(int(el[0][:-1])-1)
+                    if init == 0:
+                        init_no = int(el[0][:-1])
+                    cost40 = abs(float(el[4][1:-1]))
+                    pareto_points.append(cost40)
+                    f_no_list.append(str(int(el[0][:-1])-2))
+                    init +=1 
+        
+        pareto_points_sorted = sorted(pareto_points)
+
+        if f_no_list:
+            p_point = pareto_points_sorted[self.req_pareto_point]
+            f_ind = pareto_points.index(p_point)
+            f_no = f_no_list[f_ind]
+        else:
+            f_no = None 
+    
+        # ### for old fhc
+        # policy_file = []
+        # with open(self.path_data+'result_fhc', 'r') as f:
+        #     line_list = f.readlines()
+        #     f_no = None
+        #     min_prob_diff = np.inf
+        #     init = 0
+        #     for line in line_list:
+        #         if ': New point is (' in line:
+        #             el = line.split(' ')
+        #             prob30 = float(el[4][1:-1])
+        #             if init == 0:
+        #                 init_no = int(el[0][:-1])
+        #             if abs(1.0- prob30) < min_prob_diff:
+        #                 min_prob_diff = abs(1.0- prob30)
+        #                 f_no = str(int(el[0][:-1])-init_no+1)
+        #             init+=1
         
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
             print 'Reading from model_t'+f_no+'.adv'
-            pp = read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
+            pp = bc_read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
             return pp
         
         else:
@@ -232,27 +270,38 @@ class FiniteHorizonControl:
     
     def get_plan(self, fname):
         print 'Writing plan..'
-        with open(self.path_data + fname, 'w') as f:
+        with open(self.path_data + 'p'+ str(self.req_pareto_point)+ fname, 'w') as f:
             f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
 
 if __name__ == '__main__':
+    ############### Reward Days Set 1
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
+
     np.random.seed(0)
-    fhc = FiniteHorizonControl(40, 1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     fhc.simulate()
-    fhc.get_plan('fhc_oct123_40b_1')
+    fhc.get_plan('fhc_bcth_oct123_70b_1')
 
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(40, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_40b_2')
+    np.random.seed(1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(40, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_40b_3')
+    np.random.seed(2)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_3')
 
     # np.random.seed(0)
     # fhc = FiniteHorizonControl(70, 1)
@@ -283,6 +332,3 @@ if __name__ == '__main__':
     # fhc = FiniteHorizonControl(100, 1)
     # fhc.simulate()
     # fhc.get_plan('fhc_oct123_100b_3')
-
-
-

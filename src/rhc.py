@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 import probabilistic_rewards
-import read_adversary
-import prism_model
+from datetime import date
+import bc_read_adversary
+import bcth_prism_model
+import generate_samples
 import numpy as np
 import subprocess
 import yaml
@@ -32,8 +34,8 @@ def get_battery_model():
 
 class RecedingHorizonControl:
     
-    def __init__(self, init_battery, init_charging):
-        ur = probabilistic_rewards.uncertain_rewards()
+    def __init__(self, init_battery, init_charging, test_days, pareto_point):
+        ur = probabilistic_rewards.uncertain_rewards(test_days)
         self.task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
         self.cl_id = []
@@ -42,14 +44,15 @@ class RecedingHorizonControl:
         self.exp_reward = []
         self.no_int = ur.no_int 
         self.no_days = len(ur.test_days)
-        self.horizon = 36 ## in terms of intervals 
+        self.horizon = 48 ## in terms of intervals 
         self.no_simulations = 1
         for z in range(self.no_int*self.no_days):
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
+        self.req_pareto_point = pareto_point
    
         #######################SPECIFY LOCATION ######################
         self.main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
-        self.path_rew = self.main_path + '/data/sample_rewards'
+        self.path_rew = self.main_path + '/data/rhc_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
@@ -190,85 +193,98 @@ class RecedingHorizonControl:
             prob_c[k] = self.prob[(t+k)%self.no_int]
             prob_t[k] = self.task_prob[(t+k)%self.no_int]
         
-        pm = prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
+        pm = bcth_prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
        
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_rhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhc.prism '+ self.path_mod +'model_prop.props -v -exportadv '+ self.path_mod+ 'model_rhc.adv -exportprodstates ' + self.path_mod +'model_rhc.sta -exporttarget '+self.path_mod+'model_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhc.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 100 -v -exportadv '+ self.path_mod+ 'model_rhc.adv -exportprodstates ' + self.path_mod +'model_rhc.sta -exporttarget '+self.path_mod+'model_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
         
         ##reading output from prism to find policy file
+        ### for bcth
         policy_file = []
         with open(self.path_data+'result_rhc', 'r') as f:
             line_list = f.readlines()
-            f_no = None
-            min_prob_diff = np.inf
+            f_no_list = []
+            pareto_points = []
+            init = 0
             for line in line_list:
                 if ': New point is (' in line:
                     el = line.split(' ')
-                    prob30 = float(el[4][1:-1])
-                    if abs(1.0 - prob30) < min_prob_diff:
-                        f_no = str(int(el[0][:-1])-1)
-                        min_prob_diff = abs(1.0 - prob30) 
+                    if init == 0:
+                        init_no = int(el[0][:-1])
+                    cost40 = abs(float(el[4][1:-1]))
+                    pareto_points.append(cost40)
+                    f_no_list.append(str(int(el[0][:-1])-2))
+                    init +=1 
+        
+        pareto_points_sorted = sorted(pareto_points)
+
+        if f_no_list:
+            p_point = pareto_points_sorted[self.req_pareto_point]
+            f_ind = pareto_points.index(p_point)
+            f_no = f_no_list[f_ind]
+        else:
+            f_no = None 
+
+        ### for old rhc
+        # policy_file = []
+        # with open(self.path_data+'result_rhc', 'r') as f:
+        #     line_list = f.readlines()
+        #     f_no = None
+        #     min_prob_diff = np.inf
+        #     for line in line_list:
+        #         if ': New point is (' in line:
+        #             el = line.split(' ')
+        #             prob30 = float(el[4][1:-1])
+        #             if abs(1.0 - prob30) < min_prob_diff:
+        #                 f_no = str(int(el[0][:-1])-1)
+        #                 min_prob_diff = abs(1.0 - prob30) 
         
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
             print 'Reading from model_rhc'+f_no+'.adv'
-            pp = read_adversary.ParseAdversary(['model_rhc'+f_no+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
+            pp = bc_read_adversary.ParseAdversary(['model_rhc'+f_no+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
             return pp
         else:
             raise ValueError('Adversary Not Found !!!')
 
     def get_plan(self, fname):
         print 'Writing plan..'
-        with open(self.path_data + fname, 'w') as f:
+        with open(self.path_data +'p'+str(self.req_pareto_point)+ fname, 'w') as f:
             f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
 
 if __name__ == '__main__':
-    # rhc = RecedingHorizonControl(70, 1)
-    # rhc.simulate()
-    # rhc.get_plan('rhc12_oct123_70b_1')
-
-    ################# Multiple files
-    np.random.seed(0)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 24
-    rhc.simulate()
-    rhc.get_plan('rhc24_oct123_100b_1')
-
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 24
-    rhc.simulate()
-    rhc.get_plan('rhc24_oct123_100b_2')
-
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 24
-    rhc.simulate()
-    rhc.get_plan('rhc24_oct123_100b_3')
+     ############### Reward Days Set 1
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
 
     np.random.seed(0)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 12
+    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     rhc.simulate()
-    rhc.get_plan('rhc12_oct123_100b_1')
+    rhc.get_plan('rhc_bcth_oct123_70b_1')
 
     np.random.seed(1)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 12
+    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     rhc.simulate()
-    rhc.get_plan('rhc12_oct123_100b_2')
+    rhc.get_plan('rhc_bcth_oct123_70b_2')
 
     np.random.seed(2)
-    rhc = RecedingHorizonControl(100, 1)
-    rhc.horizon = 12
+    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     rhc.simulate()
-    rhc.get_plan('rhc12_oct123_100b_3')
+    rhc.get_plan('rhc_bcth_oct123_70b_3')
 
+    
