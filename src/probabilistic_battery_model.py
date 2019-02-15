@@ -15,13 +15,13 @@ class BatteryData:
             if ' ' != arr[0] and ' ' != arr[2] and ' ' != arr[4]:
                 self.epoch = round(float(arr[0]))
                 self.life = int(arr[2]) if arr[2] else 0
-                self.is_charging = arr[4].strip() == '1'
+                self.is_charging = float(arr[4].strip()) == 1
                 self.date_time = datetime.fromtimestamp(self.epoch)
         elif len(arr) == 10:
             if ' ' != arr[0] and ' ' != arr[6] and ' ' != arr[8]:   
                 self.epoch = int(int(arr[0])/1000000000)
                 self.life = int(arr[6]) if arr[6] else 0
-                self.is_charging = arr[8] == '1'
+                self.is_charging = float(arr[8].strip()) == 1
                 self.date_time = datetime.fromtimestamp(self.epoch)
        
 
@@ -73,6 +73,7 @@ class BatteryModel:
             battery_data.drop_duplicates(subset='time', keep='last', inplace=True)
             battery_data.set_index(pd.DatetimeIndex(battery_data.index), drop=False, inplace=True, verify_integrity=True)
             battery_data = battery_data.resample('1T').mean()
+            print (battery_data)
             battery_charge = battery_data[battery_data['is_charging'] == True]
             battery_discharge = battery_data[battery_data['is_charging'] == False]
             if not battery_discharge.empty:
