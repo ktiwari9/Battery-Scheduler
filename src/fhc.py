@@ -278,57 +278,57 @@ class FiniteHorizonControl:
 
 if __name__ == '__main__':
     ############### Reward Days Set 1
-    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
-    rewards = sg.rewards
-    cl_id = sg.cl_ids
-    act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
+    # sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    # rewards = sg.rewards
+    # cl_id = sg.cl_ids
+    # act_rewards = sg.act_rewards
+    # path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
+    # with open(path,'w') as f:
+    #     for r, c, a_r in zip(rewards, cl_id, act_rewards):
+    #         f.write('{0} {1} {2} '.format(c, r, a_r))
+    #         f.write('\n')
 
     np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_1')
 
     np.random.seed(1)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_2')
 
     np.random.seed(2)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_3')
 
-    # np.random.seed(0)
-    # fhc = FiniteHorizonControl(70, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_70b_1')
+    np.random.seed(0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_1')
 
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(70, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_70b_2')
+    np.random.seed(1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(70, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_70b_3')
+    np.random.seed(2)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_3')
 
-    # np.random.seed(0)
-    # fhc = FiniteHorizonControl(100, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_100b_1')
+    np.random.seed(0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_1')
 
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(100, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_100b_2')
+    np.random.seed(1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(100, 1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_oct123_100b_3')
+    np.random.seed(2)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    fhc.simulate()
+    fhc.get_plan('fhc_bcth_oct123_70b_3')
