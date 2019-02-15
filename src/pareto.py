@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+from datetime import date 
 import probabilistic_rewards
+import generate_samples
+import bc_read_adversary
 import read_adversary
+import bc_prism_model
 import prism_model
 import numpy as np
 import subprocess
@@ -33,8 +37,8 @@ def get_battery_model():
 
 class FiniteHorizonControl:
     
-    def __init__(self, init_battery, init_charging):
-        ur = probabilistic_rewards.uncertain_rewards()
+    def __init__(self, init_battery, init_charging, test_days, plan_id):
+        ur = probabilistic_rewards.uncertain_rewards(test_days)
         self.task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
         self.charge_model, self.discharge_model = get_battery_model()
         self.cl_id = []
@@ -71,15 +75,22 @@ class FiniteHorizonControl:
         self.battery = []
         self.charging = []
         self.time =[]
+        self.plan_id = plan_id
      
     def simulate(self, rand_int):
         for k in range(self.no_days):
             print 'Day: ', k 
             self.obtain_prism_model()
             if self.prob30_diff_list:
-                for x in range(len(self.prob30_diff_list)):
-                    f_ind = self.prob30_diff_list.index(self.prob30_diff_list_sorted[x])
+                for e,x in enumerate(self.prob30_diff_list_sorted):
+                    self.actions = []
+                    self.obtained_rewards = []
+                    self.battery = []
+                    self.charging = []
+                    self.time =[]
+                    f_ind = self.prob30_diff_list.index(x)
                     pareto_point = self.pareto_points[f_ind]
+                    print pareto_point, 'Pareto Point ------------------------------------------'
                     f_no = self.f_no_list[f_ind]
         
                     if f_no != None:
@@ -95,14 +106,14 @@ class FiniteHorizonControl:
                     tr_day = np.zeros((self.no_simulations))
                     for i in range(self.no_simulations):
                         final_state = self.simulate_day(k) 
-                        t, tp, o, e, b, ch, cl = self.pp.get_state(final_state) 
+                        t, _, _, _, b, ch, cl = self.pp.get_state(final_state) 
                         battery[i] = int(b)
                         # print battery[i]
                         charging[i] = int(ch)
                         # print charging[i]
                         tr_day[i] = np.sum(self.obtained_rewards[k*self.no_int:(k+1)*self.no_int])
 
-                    self.get_plan('pareto'+str(x)+'_oct1_100b_'+str(rand_int))
+                    self.get_plan('pareto'+str(e)+'_'+self.plan_id+'_70b_'+str(rand_int), pareto_point)
                         
                     self.init_battery = int(np.mean(battery))
                     self.init_charging = int(np.mean(charging))
@@ -232,14 +243,14 @@ class FiniteHorizonControl:
         with open(self.path_data+'result_fhc', 'r') as f:
             line_list = f.readlines()
             f_no = None
-            # min_prob_diff = np.inf
+            min_prob_diff = np.inf
             self.pareto_points = []
             self.prob30_diff_list = []
             self.f_no_list = []
             for line in line_list:
                 if ': New point is (' in line:
                     el = line.split(' ')
-                    prob30 = float(el[4][1:-1])
+                    prob30 = abs(float(el[4][1:-1]))
                     self.pareto_points.append(prob30)
                     self.prob30_diff_list.append(abs(1.0-prob30))
                     self.f_no_list.append(str(int(el[0][:-1])-1))
@@ -248,25 +259,90 @@ class FiniteHorizonControl:
         print self.prob30_diff_list
 
     
-    def get_plan(self, fname):
-        print 'Writing plan..'
+    def get_plan(self, fname, pareto_point):
+        print 'Writing plan to ', fname
         with open(self.path_data + fname, 'w') as f:
+            f.write('Pareto Point: {0}\n'.format(pareto_point))
             f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
             for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
 
 if __name__ == '__main__':
+    
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    # exp_rewards = sg.exp_rewards
+    #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/sample_rewards'
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/pareto_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):#, exp_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
+
     np.random.seed(0)
-    fhc = FiniteHorizonControl(100, 1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)], 'oct1')
     fhc.simulate(1)
-   
+
     np.random.seed(1)
-    fhc = FiniteHorizonControl(100, 1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)], 'oct1')
     fhc.simulate(2)
 
     np.random.seed(2)
-    fhc = FiniteHorizonControl(100, 1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)], 'oct1')
     fhc.simulate(3)
+
+    sg = generate_samples.sample_generator(True, [date(2017, 10,2)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    # exp_rewards = sg.exp_rewards
+    #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/sample_rewards'
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/pareto_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):#, exp_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
+
+    np.random.seed(0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 2)], 'oct2')
+    fhc.simulate(1)
+
+    np.random.seed(1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 2)], 'oct2')
+    fhc.simulate(2)
+
+    np.random.seed(2)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 2)], 'oct2')
+    # fhc.simulate(3)
+
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 3)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    # exp_rewards = sg.exp_rewards
+    #path = roslib.packages.get_pkg_dir('battery_scheduler') + '/data/sample_rewards'
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/pareto_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):#, exp_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
+
+    np.random.seed(0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 3)] , 'oct3')
+    fhc.simulate(1)
+
+    np.random.seed(1)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 3)] , 'oct3')
+    fhc.simulate(2)
+
+    np.random.seed(2)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 3)] , 'oct3')
+    fhc.simulate(3)
+
+
+            
    
    

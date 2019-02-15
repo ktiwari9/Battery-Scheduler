@@ -36,8 +36,8 @@ class RuleBasedControl:
         self.charge_model, self.discharge_model = get_battery_model() 
         ur = probabilistic_rewards.uncertain_rewards()
         self.task_prob, prob, clusters = ur.get_probabilistic_reward_model()
-        # self.threshold = np.mean(clusters)
-        self.threshold = 8000
+        self.threshold = np.mean(clusters)
+        # self.threshold = 8000
         
         self.test_rewards = []
         with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/sample_rewards', 'r') as f:

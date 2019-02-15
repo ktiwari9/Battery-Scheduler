@@ -72,7 +72,7 @@ class RecedingHorizonControl:
                 self.cl_id.append(int(float(x[0].strip())))
                 self.sample_reward.append(float(x[1].strip()))
                 self.actual_reward.append(float(x[2].strip()))
-                self.task_executed.append(float(x[3].strip()))
+                self.task_executed.append(int(float(x[3].strip())))
                 self.exp_reward.append(float(x[4].strip()))
 
         self.totalreward = np.zeros((self.no_days))
@@ -80,7 +80,6 @@ class RecedingHorizonControl:
         self.init_charging = init_charging
         self.actions = []
         self.obtained_rewards = []
-        self.executed = []
         self.battery = []
         self.charging = []
         self.time =[]
@@ -129,7 +128,7 @@ class RecedingHorizonControl:
                     if self.task_executed[i] == int(success):
                         current_state = s
 
-            else:
+            elif all(a == 'stay_charging' for a in actions) or all(a == 'go_charge' for a in actions) or all(a == 'gather_reward' for a in actions):
                 ct, ctp, co, ce, cexe, csuccess, cb, cch, ccl = self.pp.get_state(current_state)
                 self.charging.append(cch)
                 self.battery.append(cb)
@@ -196,10 +195,8 @@ class RecedingHorizonControl:
 
                     req_a = actions[nx_s.index(current_state)]
                     if int(csuccess) == 1:
-                        self.executed.append(1)
                         self.obtained_rewards.append(self.actual_reward[i])
                     else:
-                        self.executed.append(0)
                         self.obtained_rewards.append(0)
 
                 self.actions.append(req_a)
@@ -215,8 +212,8 @@ class RecedingHorizonControl:
         
         pm = cs_prism_model.PrismModel('model_cs_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
        
-        #######################SPECIFY LOCATION ######################
-        # running prism and saving output from prism
+        ######################SPECIFY LOCATION ######################
+        #### running prism and saving output from prism
         with open(self.path_data+'result_cs_rhc', 'w') as file:
             process = subprocess.Popen('./prism '+ self.path_mod + 'model_cs_rhc.prism '+ self.path_mod +'model_prop.props -v -exportadv '+ self.path_mod+ 'model_cs_rhc.adv -exportprodstates ' + self.path_mod +'model_cs_rhc.sta -exporttarget '+self.path_mod+'model_cs_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
@@ -236,7 +233,6 @@ class RecedingHorizonControl:
                     if abs(1.0 - prob30) < min_prob_diff:
                         f_no = str(int(el[0][:-1])-1)
                         min_prob_diff = abs(1.0 - prob30) 
-        
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
             print 'Reading from model_cs_rhc'+f_no+'.adv'
@@ -248,9 +244,10 @@ class RecedingHorizonControl:
     def get_plan(self, fname):
         print 'Writing plan..'
         with open(self.path_data + fname, 'w') as f:
-            f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
-            for t, b, ch, a, obr, exe, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.executed, self.sample_reward, self.actual_reward, self.exp_reward):
-                f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8}\n'.format(t, b, ch, a, obr, exe, mr, ar, er))
+            f.write('time battery charging action obtained_reward executed match_reward actual_reward exp_reward\n')
+            for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
+                print t, b, ch, a, obr, mr, ar, er
+                f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
 
 
 if __name__ == '__main__':

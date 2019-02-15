@@ -40,7 +40,8 @@ class ParseAdversary:
     def get_state(self, current_state):
         d = self.states[current_state]
         if d[0] == 1:
-            raise PolicyError('Policy took action that resulted in battery value below 30%')
+            # raise PolicyError('Policy took action that resulted in battery value below 30%')
+            print 'Policy took action that resulted in battery value below 30%'
         return d[1], d[2], d[3], d[4], d[5], d[6], d[7]
      
     def get_initial_state(self):
