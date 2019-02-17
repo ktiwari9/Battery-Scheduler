@@ -178,7 +178,7 @@ if __name__ == '__main__':
 		        prob30 = abs(float(el[4][1:-1]))
 		        pareto_points.append(prob30)
 
-	pareto_points_sorted = sorted(pareto_points, reverse=True)
+	pareto_points_sorted = sorted(pareto_points, reverse=True) ## reverse for old model with prob
 	print pareto_points_sorted			
 
 

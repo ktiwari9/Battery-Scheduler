@@ -127,7 +127,7 @@ class PrismModel:
             f.write('\nendrewards\n\n')
 
             f.write('rewards "batterycost"\n')
-            f.write('[gather_reward] (battery<47):1;\n')
+            f.write('[gather_reward] (battery<40):1;\n')
             f.write('[stay_charging] (battery<40):1;\n')
             f.write('[go_charge] (battery<40):1;\n')
             f.write('\nendrewards\n\n')

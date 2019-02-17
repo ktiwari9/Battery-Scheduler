@@ -63,7 +63,7 @@ e:[0..1] init 0;
 endmodule
 
 module battery_model
-battery:[0..100] init 46;
+battery:[0..100] init 43;
 [gather_reward] (battery=26) & (t>-1) -> 0.339285714286:(battery'=24) + 0.0892857142857:(battery'=20) + 0.107142857143:(battery'=21) + 0.0357142857143:(battery'=22) + 0.428571428571:(battery'=23);
 [gather_reward] (battery=27) & (t>-1) -> 0.421052631579:(battery'=24) + 0.333333333333:(battery'=25) + 0.105263157895:(battery'=21) + 0.0877192982456:(battery'=22) + 0.0526315789474:(battery'=23);
 [gather_reward] (battery=28) & (t>-1) -> 0.0545454545455:(battery'=24) + 0.454545454545:(battery'=25) + 0.309090909091:(battery'=26) + 0.0909090909091:(battery'=22) + 0.0909090909091:(battery'=23);
@@ -346,7 +346,7 @@ battery:[0..100] init 46;
 endmodule
 
 module charging_state
-charging:[0..1] init 1;
+charging:[0..1] init 0;
 [gather_reward] (charging=0) | (charging=1) -> (charging'=0);
 [stay_charging] (charging=1) -> (charging'=1);
 [go_charge] (charging=0) -> (charging'=1);
@@ -415,7 +415,7 @@ rewards "rew"
 endrewards
 
 rewards "batterycost"
-[gather_reward] (battery<47):1;
+[gather_reward] (battery<40):1;
 [stay_charging] (battery<40):1;
 [go_charge] (battery<40):1;
 

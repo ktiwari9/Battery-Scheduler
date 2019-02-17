@@ -24,7 +24,7 @@ class uncertain_rewards:
     def __init__(self, test_days):
         print 'Reading Tasks...'
         tasks_processor = read_tasks.getTasks()
-        # t = read_task_wo_priorities.getTasks()
+        # tasks_processor = read_task_wo_priorities.getTasks()
         self.tasks = tasks_processor.tasks_df
         self.time_int = 30 #minutes
         self.no_int = 1440/self.time_int
@@ -134,7 +134,7 @@ class uncertain_rewards:
 
 
 if __name__ == '__main__':
-    ur = uncertain_rewards()
+    ur = uncertain_rewards([])
     task_prob, prob_m, state_means = ur.get_probabilistic_reward_model()
     # print task_prob
     # print prob_m
@@ -146,7 +146,8 @@ if __name__ == '__main__':
 
     x = np.arange(48)
     for day in ur.rewards_day:
-        print day
-        plt.bar(x, ur.rewards_day[day])
-        plt.plot(x, expected_rew)
-        plt.show()
+        if day == date(2017, 9, 24) or day == date(2017, 9, 25) or day == date(2017, 9, 26) or date(2017, 10, 3) or day == date(2017, 10, 2) or date(2017, 10, 1) or day == date(2017, 8, 14) or date(2017, 8, 15) or day == date(2017, 8, 16)  or date(2017, 8, 20) or day == date(2017, 8, 22) or date(2017, 8, 23) or day == date(2017, 8, 17) or date(2017, 8, 18) or day == date(2017, 8, 19):
+            print day
+            plt.bar(x, ur.rewards_day[day])
+            plt.plot(x, expected_rew)
+            plt.show()
