@@ -205,13 +205,10 @@ class FiniteHorizonControl:
         #######################SPECIFY LOCATION ######################
         ### running prism and saving output from prism
         with open(self.path_data+'result_fhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'batterycost_model_prop.props -v -multimaxpoints 100 -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'batterycost_model_prop.props -v -multimaxpoints 500 -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
-
-            process = subprocess.Popen('./prism '+ self.path_mod + 'bcth_model_t.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 100 -v -exportadv '+ self.path_mod+ 'bcth_model_t.adv -exportprodstates ' + self.path_mod +'bcth_model_t.sta -exporttarget '+self.path_mod+'bcth_model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
-
         
         ### reading output from prism to find policy file
         ### for bcth
@@ -278,57 +275,57 @@ class FiniteHorizonControl:
 
 if __name__ == '__main__':
     ############### Reward Days Set 1
-    # sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
-    # rewards = sg.rewards
-    # cl_id = sg.cl_ids
-    # act_rewards = sg.act_rewards
-    # path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
-    # with open(path,'w') as f:
-    #     for r, c, a_r in zip(rewards, cl_id, act_rewards):
-    #         f.write('{0} {1} {2} '.format(c, r, a_r))
-    #         f.write('\n')
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
 
     np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_1')
 
     np.random.seed(1)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_2')
 
     np.random.seed(2)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 10)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct123_70b_3')
 
-    np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_1')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_1')
 
-    np.random.seed(1)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_2')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    np.random.seed(2)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_3')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_3')
 
-    np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_1')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_1')
 
-    np.random.seed(1)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_2')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    np.random.seed(2)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_3')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_3')
