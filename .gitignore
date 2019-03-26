@@ -2,3 +2,4 @@
 *.adv
 *.txt
 data/*
+models/*
