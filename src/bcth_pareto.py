@@ -3,7 +3,6 @@ from datetime import date
 import probabilistic_rewards
 import generate_samples
 import bc_read_adversary
-import bc_prism_model
 import bcth_prism_model
 import numpy as np
 import subprocess

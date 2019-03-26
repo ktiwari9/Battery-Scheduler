@@ -257,6 +257,7 @@ class FiniteHorizonControl:
         
         if f_no != None:
             #######################SPECIFY LOCATION AS BEFORE ######################
+            f_no = 'pre2'
             print 'Reading from model_t'+f_no+'.adv'
             pp = bc_read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
             return pp
@@ -275,7 +276,7 @@ class FiniteHorizonControl:
 
 if __name__ == '__main__':
     ############### Reward Days Set 1
-    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1)])#, date(2017, 10, 2), date(2017, 10, 3)])     
     rewards = sg.rewards
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
@@ -286,19 +287,19 @@ if __name__ == '__main__':
             f.write('\n')
 
     np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)],0)#, date(2017, 10, 2), date(2017, 10, 3)], 0)
     fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_1')
+    fhc.get_plan('fhc_bcth_oct1_70b_1')
 
-    np.random.seed(1)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_2')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_2')
 
-    np.random.seed(2)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
-    fhc.simulate()
-    fhc.get_plan('fhc_bcth_oct123_70b_3')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_bcth_oct123_70b_3')
 
     # np.random.seed(0)
     # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)

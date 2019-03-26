@@ -79,7 +79,7 @@ if __name__ == '__main__':
 	# This will give csv file with all necessary values for plotting different kinds of stats for one particular form of control.
 
 	# Set TOTAL_INT at the beginning of file
-	fsets = [['rbc4_oct123_40b_1', 'rbc4_oct123_40b_2', 'rbc4_oct123_40b_3'], ['rbc4_oct123_70b_1', 'rbc4_oct123_70b_2', 'rbc4_oct123_70b_3'], ['rbc4_oct123_100b_1', 'rbc4_oct123_100b_2', 'rbc4_oct123_100b_3']] ## Can include sets of different days, different initial states.
+	fsets = [['p10rhct_bcth_oct123_70b_1', 'p10rhct_bcth_oct123_70b_2', 'p10rhct_bcth_oct123_70b_3'], ['p10rhct_bcth_sep242526_70b_1', 'p10rhct_bcth_sep242526_70b_2', 'p10rhct_bcth_sep242526_70b_3'], ['p10rhct_bcth_aug141516_70b_1', 'p10rhct_bcth_aug141516_70b_2', 'p10rhct_bcth_aug141516_70b_3'], ['p10rhct_bcth_aug202223_70b_1', 'p10rhct_bcth_aug202223_70b_2', 'p10rhct_bcth_aug202223_70b_3']] ## Can include sets of different days, different initial states.
 
 	sets_percent_rew = []
 	sets_percent_hours = []
@@ -126,6 +126,7 @@ if __name__ == '__main__':
 			print total_obtained, total_rew
 			print hours_worked, hours_work_available, 'total_hours_worked'
 			ints_under_th = [1 for x in battery if x < THRESHOLD]
+			no_days = len(obtained_rewards)/TOTAL_INT
 			if ints_under_th:
 				percentage_under_th.append((float(sum(ints_under_th))*100)/(no_days*48))
 			else:
@@ -140,12 +141,21 @@ if __name__ == '__main__':
 			print avg_cont_work, 'work cont'
 			print '-------------------------------------------------------------------'
 
-		print 'OVERALL STATS:'
+			sets_end_battery.append(b_end)
+			sets_percent_rew.append(total_obtained)
+			sets_percent_hours.append((hours_worked/hours_work_available)*100)
+			if ints_under_th:
+				sets_percent_uth.append((float(sum(ints_under_th))*100)/(no_days*48))
+			else:
+				sets_percent_uth.append(0)
+			sets_cont_work.append(avg_cont_work)
+			sets_cont_charge.append(avg_cont_charge)
+
+		print 'OVERALL STATS:' ### TO BE EDITED 
 
 		print 'Battery Stats:'
 		battery_mean, battery_std, battery_max, battery_min, b_end = get_battery_statistics(b_total)
 		sets_battery.extend(b_total)
-		sets_end_battery.append(b_end)
 
 		print battery_mean, 'b_mean' 
 		print battery_std, 'b_std'
@@ -162,9 +172,9 @@ if __name__ == '__main__':
 			total_rew = None
 		hours_worked = np.mean(overall_hours_worked)
 		hours_work_available = np.mean(overall_hours_available)
-		sets_percent_rew.append(total_obtained)
-		sets_percent_hours.append((hours_worked/hours_work_available)*100)
-		sets_percent_uth.append(np.mean(percentage_under_th))
+		# sets_percent_rew.extend(total_obtained)
+		# sets_percent_hours.append((hours_worked/hours_work_available)*100)
+		# sets_percent_uth.append(np.mean(percentage_under_th))
 		
 		print total_obtained, total_rew
 		print hours_worked, hours_work_available, 'total_hours_worked'
@@ -173,14 +183,14 @@ if __name__ == '__main__':
 		
 		avg_cont_work = np.mean(overall_cont_work)
 		avg_cont_charge = np.mean(overall_cont_charge)
-		sets_cont_work.append(avg_cont_work)
-		sets_cont_charge.append(avg_cont_charge)
+		# sets_cont_work.append(avg_cont_work)
+		# sets_cont_charge.append(avg_cont_charge)
 		print 'Cont Time Stats'
 		print avg_cont_charge, 'charge cont'
 		print avg_cont_work, 'work cont'
 		print '-------------------------------------------------------------------'
 
-	df_b = pd.DataFrame(data = [[sets_battery]], columns=['battery_life'])
-	df_b.to_csv('/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbc4_battery_csv', header=True, index=True)
+	df_b = pd.DataFrame(data = list(zip(np.arange(len(sets_battery)), sets_battery)), columns=['nums', 'battery_life'])
+	df_b.to_csv('/home/milan/workspace/strands_ws/src/battery_scheduler/data/csv_files/p10rhct_bcth_battery_csv.csv', header=False, index=False)
 	df = pd.DataFrame(data = list(zip(sets_end_battery, sets_percent_rew, sets_percent_hours, sets_percent_uth, sets_cont_charge, sets_cont_work)), columns=['end_battery', 'percent_rew', 'percent_hours', 'percent_under_th', 'cont_charge_hrs', 'cont_work_hrs'])
-	df.to_csv('/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbc4_csv', header=True, index=True)  ## - change file name according to control, one file name for one control
+	df.to_csv('/home/milan/workspace/strands_ws/src/battery_scheduler/data/csv_files/p10rhct_bcth_csv.csv', header=True, index=True)  ## - change file name according to control, one file name for one control
