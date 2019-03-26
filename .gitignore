@@ -3,3 +3,4 @@
 *.txt
 data/*
 models/*
+battery_data/*
