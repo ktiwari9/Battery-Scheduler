@@ -1,5 +1,16 @@
 # Battery Scheduler for Autonomous Mobile Robots
 
+# Prerequisits
+1. MongoDB, 'message_store' database with collection of 'task_events'.
+2. PRISM - https://github.com/bfalacerda/prism
+3. Clone of this repository with the files in the folder models. 
+
+# Modifications
+1. The 'path' variables have to be modified in the following files and are indicated by ##SPECIFY LOCATION## wherever possible.
+2. PRISM path should be modified.
+  
+
+
 Once the data is set up, and the paths have been specified. 1. generate sample rewards 2. Run testing_wo_rhc, with no_days set to 1 for single day policies. Places that require modification in path will be indicated in as many places as possible with #######SPECIFY LOCATION#######
 
 Rewards
