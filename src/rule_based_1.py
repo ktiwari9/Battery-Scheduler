@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
 from datetime import date
-import generate_task_samples as generate_samples
-# import generate_samples
+# import generate_task_samples as generate_samples
+import generate_samples
 import numpy as np
+import roslib
 import yaml
 import os
 
 
 def get_battery_model():
-    ################ SPECIFY PATHS OF MODELS #######################
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+    path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
         with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
             charge_model = yaml.load(f_charge)
@@ -38,7 +38,7 @@ class RuleBasedControl:
 		self.charge_model, self.discharge_model = get_battery_model()
 		
 		self.test_rewards = []
-		with open('/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbct1_sample_rewards', 'r') as f:
+		with open(roslib.packages.get_pkg_dir('battery_scheduler')+'data/rbc_sample_rewards', 'r') as f:
 			for line in f:
 				self.test_rewards.append(float(line.split(' ')[2].strip()))
 
@@ -108,7 +108,7 @@ class RuleBasedControl:
 
 	def get_plan(self, fname):
 		print 'Writing plan..'
-		file_name = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/' + fname
+		file_name = roslib.packages.get_pkg_dir('battery_scheduler')+'/data/' + fname
 		with open(file_name, 'w') as f:
 			f.write('time battery charging action obtained_reward actual_reward\n')
 			for t, b, ch, a, obr, ar in zip(self.time, self.battery, self.charging, self.action, self.obtained_reward, self.test_rewards):
@@ -116,7 +116,7 @@ class RuleBasedControl:
 
 	def get_rewards_from_plan(self, fname):
 		print 'Reading Plan...'
-		file_name = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/' + fname
+		file_name = roslib.packages.get_pkg_dir('battery_scheduler')+'/data/' + fname
 		rewards_obtained = []
 		with open(file_name, 'r') as f:
 			for line in f:
@@ -134,179 +134,14 @@ if __name__ == '__main__':
 	rewards = sg.rewards
 	cl_id = sg.cl_ids
 	act_rewards = sg.act_rewards
-	path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbct1_sample_rewards'
+	path = roslib.packages.get_pkg_dir('battery_scheduler')+'/data/rbc_sample_rewards'
 	with open(path,'w') as f:
 	    for r, c, a_r in zip(rewards, cl_id, act_rewards):
 	        f.write('{0} {1} {2} '.format(c, r, a_r))
 	        f.write('\n')
 
 	np.random.seed(0)
-	f_name = 'rbct_oct123_70b_1'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-
-	np.random.seed(1)
-	f_name = 'rbct_oct123_70b_2'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-
-	np.random.seed(2)
-	f_name = 'rbct_oct123_70b_3'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-
-	sg = generate_samples.sample_generator(True, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)])     
-	rewards = sg.rewards
-	cl_id = sg.cl_ids
-	act_rewards = sg.act_rewards
-	path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbct1_sample_rewards'
-	with open(path,'w') as f:
-	    for r, c, a_r in zip(rewards, cl_id, act_rewards):
-	        f.write('{0} {1} {2} '.format(c, r, a_r))
-	        f.write('\n')
-
-	np.random.seed(0)
-	f_name = 'rbct_sep242526_70b_1'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(1)
-	f_name = 'rbct_sep242526_70b_2'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(2)
-	f_name = 'rbct_sep242526_70b_3'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	sg = generate_samples.sample_generator(True, [date(2017, 8, 15), date(2017, 8, 15), date(2017, 8, 16)])     
-	rewards = sg.rewards
-	cl_id = sg.cl_ids
-	act_rewards = sg.act_rewards
-	path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbct1_sample_rewards'
-	with open(path,'w') as f:
-	    for r, c, a_r in zip(rewards, cl_id, act_rewards):
-	        f.write('{0} {1} {2} '.format(c, r, a_r))
-	        f.write('\n')
-
-	np.random.seed(0)
-	f_name = 'rbct_aug141516_70b_1'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(1)
-	f_name = 'rbct_aug141516_70b_2'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(2)
-	f_name = 'rbct_aug141516_70b_3'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	sg = generate_samples.sample_generator(True, [date(2017, 8, 20), date(2017, 8, 22), date(2017, 8, 23)])     
-	rewards = sg.rewards
-	cl_id = sg.cl_ids
-	act_rewards = sg.act_rewards
-	path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rbct1_sample_rewards'
-	with open(path,'w') as f:
-	    for r, c, a_r in zip(rewards, cl_id, act_rewards):
-	        f.write('{0} {1} {2} '.format(c, r, a_r))
-	        f.write('\n')
-
-	np.random.seed(0)
-	f_name = 'rbct_aug202223_70b_1'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(1)
-	f_name = 'rbct_aug202223_70b_2'
-	rbct = RuleBasedControl(70,1)
-
-	rbct.simulate()
-	rbct.get_plan(f_name)
-	rewards_obtained = rbct.get_rewards_from_plan(f_name)
-	no_days = len(rbct.test_rewards)/no_int
-	for i in range(no_days):
-		print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
-	print 'Total : ', sum(rewards_obtained)
-
-	np.random.seed(2)
-	f_name = 'rbct_aug202223_70b_3'
+	f_name = 'rbc_oct123_70b_1'
 	rbct = RuleBasedControl(70,1)
 
 	rbct.simulate()
