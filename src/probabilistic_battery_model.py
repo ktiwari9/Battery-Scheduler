@@ -103,7 +103,7 @@ class BatteryModel:
     
     def get_battery_model(self, paths):
         ################ SPECIFY PATHS OF MODELS #######################
-        path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+        path = roslib.packages.get_pkg_dir('battery_scheduler')
         if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
             with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
                 self.charge_model = yaml.load(f_charge)

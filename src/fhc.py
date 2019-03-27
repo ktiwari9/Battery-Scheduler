@@ -7,14 +7,14 @@ import bcth_prism_model
 import generate_samples
 import numpy as np
 import subprocess
+import roslib
 import yaml
 import sys
 import os
 
 
 def get_battery_model():
-    ################ SPECIFY PATHS OF MODELS #######################
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+    path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
         with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
             charge_model = yaml.load(f_charge)
@@ -51,8 +51,7 @@ class FiniteHorizonControl:
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
         self.req_pareto_point = pareto_point
    
-        #######################SPECIFY LOCATION ######################
-        self.main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+        self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
         self.path_rew = self.main_path + '/data/fhc_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
@@ -236,28 +235,9 @@ class FiniteHorizonControl:
             f_no = f_no_list[f_ind]
         else:
             f_no = None 
-    
-        # ### for old fhc
-        # policy_file = []
-        # with open(self.path_data+'result_fhc', 'r') as f:
-        #     line_list = f.readlines()
-        #     f_no = None
-        #     min_prob_diff = np.inf
-        #     init = 0
-        #     for line in line_list:
-        #         if ': New point is (' in line:
-        #             el = line.split(' ')
-        #             prob30 = float(el[4][1:-1])
-        #             if init == 0:
-        #                 init_no = int(el[0][:-1])
-        #             if abs(1.0- prob30) < min_prob_diff:
-        #                 min_prob_diff = abs(1.0- prob30)
-        #                 f_no = str(int(el[0][:-1])-init_no+1)
-        #             init+=1
         
         if f_no != None:
-            #######################SPECIFY LOCATION AS BEFORE ######################
-            f_no = 'pre2'
+            # f_no = 'pre2'
             print 'Reading from model_t'+f_no+'.adv'
             pp = bc_read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
             return pp
@@ -276,57 +256,20 @@ class FiniteHorizonControl:
 
 if __name__ == '__main__':
     ############### Reward Days Set 1
-    sg = generate_samples.sample_generator(True, [date(2017, 10, 1)])#, date(2017, 10, 2), date(2017, 10, 3)])     
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 1)])
+
     rewards = sg.rewards
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/fhc_sample_rewards'
+    main_path = roslib.packages.get_pkg_dir('battery_scheduler')
+    path = main_path+'/data/fhc_sample_rewards'
     with open(path,'w') as f:
         for r, c, a_r in zip(rewards, cl_id, act_rewards):
             f.write('{0} {1} {2} '.format(c, r, a_r))
             f.write('\n')
 
     np.random.seed(0)
-    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)],0)#, date(2017, 10, 2), date(2017, 10, 3)], 0)
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1)],0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
     fhc.simulate()
     fhc.get_plan('fhc_bcth_oct1_70b_1')
 
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_2')
-
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_3')
-
-    # np.random.seed(0)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_1')
-
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_2')
-
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_3')
-
-    # np.random.seed(0)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_1')
-
-    # np.random.seed(1)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_2')
-
-    # np.random.seed(2)
-    # fhc = FiniteHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], -1)
-    # fhc.simulate()
-    # fhc.get_plan('fhc_bcth_oct123_70b_3')

@@ -6,14 +6,15 @@ import bcth_prism_model
 import generate_samples
 import numpy as np
 import subprocess
+import roslib
 import yaml
 import sys
 import os
 
 
 def get_battery_model():
-    ################ SPECIFY PATHS OF MODELS #######################
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+    # path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+    path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
         with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
             charge_model = yaml.load(f_charge)
@@ -50,9 +51,8 @@ class RecedingHorizonControl:
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
         self.req_pareto_point = pareto_point
    
-        #######################SPECIFY LOCATION ######################
-        self.main_path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
-        self.path_rew = self.main_path + '/data/rhc2_sample_rewards'
+        self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
+        self.path_rew = self.main_path + '/data/rhc_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
@@ -192,12 +192,12 @@ class RecedingHorizonControl:
             prob_c[k] = self.prob[(t+k)%self.no_int]
             prob_t[k] = self.task_prob[(t+k)%self.no_int]
         
-        pm = bcth_prism_model.PrismModel('model2_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
+        pm = bcth_prism_model.PrismModel('model_rhc.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
        
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
-        with open(self.path_data+'result_rhc2', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model2_rhc.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 500 -v -exportadv '+ self.path_mod+ 'model2_rhc.adv -exportprodstates ' + self.path_mod +'model2_rhc.sta -exporttarget '+self.path_mod+'model2_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+        with open(self.path_data+'result_rhc', 'w') as file:
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhc.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 500 -v -exportadv '+ self.path_mod+ 'model_rhc.adv -exportprodstates ' + self.path_mod +'model_rhc.sta -exporttarget '+self.path_mod+'model_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
@@ -205,7 +205,7 @@ class RecedingHorizonControl:
         ##reading output from prism to find policy file
         ### for bcth
         policy_file = []
-        with open(self.path_data+'result_rhc2', 'r') as f:
+        with open(self.path_data+'result_rhc', 'r') as f:
             line_list = f.readlines()
             f_no_list = []
             pareto_points = []
@@ -228,26 +228,11 @@ class RecedingHorizonControl:
             f_no = f_no_list[f_ind]
         else:
             f_no = None 
-
-        ### for old rhc
-        # policy_file = []
-        # with open(self.path_data+'result_rhc', 'r') as f:
-        #     line_list = f.readlines()
-        #     f_no = None
-        #     min_prob_diff = np.inf
-        #     for line in line_list:
-        #         if ': New point is (' in line:
-        #             el = line.split(' ')
-        #             prob30 = float(el[4][1:-1])
-        #             if abs(1.0 - prob30) < min_prob_diff:
-        #                 f_no = str(int(el[0][:-1])-1)
-        #                 min_prob_diff = abs(1.0 - prob30) 
         
         if f_no != None:
-            #######################SPECIFY LOCATION AS BEFORE ######################
             # f_no = 'pre1'
-            print 'Reading from model2_rhc'+f_no+'.adv'
-            pp = bc_read_adversary.ParseAdversary(['model2_rhc'+f_no+'.adv', 'model2_rhc.sta', 'model2_rhc.lab'])
+            print 'Reading from model_rhc'+f_no+'.adv'
+            pp = bc_read_adversary.ParseAdversary(['model_rhc'+f_no+'.adv', 'model_rhc.sta', 'model_rhc.lab'])
             return pp
         else:
             raise ValueError('Adversary Not Found !!!')
@@ -262,120 +247,19 @@ class RecedingHorizonControl:
 
 
 if __name__ == '__main__':
-     ############### Reward Days Set 1
+    ############### Reward Days Set 1
     sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
     rewards = sg.rewards
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc2_sample_rewards'
+    main_path = roslib.packages.get_pkg_dir('battery_scheduler')
+    path = main_path+'/data/rhc_sample_rewards'
     with open(path,'w') as f:
         for r, c, a_r in zip(rewards, cl_id, act_rewards):
             f.write('{0} {1} {2} '.format(c, r, a_r))
             f.write('\n')
 
     np.random.seed(0)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
+    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 0) ## init_battery, init_charging, test_days, pareto point (0 - mincost)
     rhc.simulate()
     rhc.get_plan('rhc_bcth_oct123_70b_1')
-
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_oct123_70b_2')
-
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_oct123_70b_3')
-
-    sg = generate_samples.sample_generator(True, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)])     
-    rewards = sg.rewards
-    cl_id = sg.cl_ids
-    act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc2_sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
-
-    np.random.seed(0)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug141516_70b_1')
-
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug141516_70b_2')
-
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug141516_70b_3')
-
-    # np.random.seed(0)
-    # rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], -1)
-    # rhc.simulate()
-    # rhc.get_plan('rhc_bcth_sep242526_70b_1')
-
-    # np.random.seed(1)
-    # rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], -1)
-    # rhc.simulate()
-    # rhc.get_plan('rhc_bcth_sep242526_70b_2')
-
-    # np.random.seed(2)
-    # rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 14), date(2017, 8, 15), date(2017, 8, 16)], -1)
-    # rhc.simulate()
-    # rhc.get_plan('rhc_bcth_sep242526_70b_3')
-
-    sg = generate_samples.sample_generator(True, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)])     
-    rewards = sg.rewards
-    cl_id = sg.cl_ids
-    act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc2_sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
-
-    np.random.seed(0)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_sep242526_70b_1')
-
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_sep242526_70b_2')
-
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_sep242526_70b_3')
-
-    sg = generate_samples.sample_generator(True, [date(2017, 8, 20), date(2017, 8, 22), date(2017, 8, 23)])     
-    rewards = sg.rewards
-    cl_id = sg.cl_ids
-    act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc2_sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
-
-    np.random.seed(0)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 20), date(2017, 8, 22), date(2017, 8, 23)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug202223_70b_1')
-
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 20), date(2017, 8, 22), date(2017, 8, 23)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug202223_70b_2')
-
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [date(2017, 8, 20), date(2017, 8, 22), date(2017, 8, 23)], 30)
-    rhc.simulate()
-    rhc.get_plan('rhc_bcth_aug202223_70b_3')
-
-    

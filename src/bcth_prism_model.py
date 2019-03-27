@@ -3,6 +3,7 @@
 import probabilistic_rewards
 import numpy as np
 import subprocess
+import roslib
 import yaml
 import os
 
@@ -20,8 +21,7 @@ class PrismModel:
         self.write_prism_file(filename, init_b, init_ch) 
         
     def write_prism_file(self, filename, init_b, init_ch):
-        #######################SPECIFY LOCATION ######################       
-        path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/' + filename 
+        path = roslib.packages.get_pkg_dir('battery_scheduler')+'/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')
             f.write('module time_model\n')
@@ -133,8 +133,7 @@ class PrismModel:
             f.write('\nendrewards\n\n')
 
 def get_battery_model():
-    ################ SPECIFY PATHS OF MODELS #######################
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
+    path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
         with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
             charge_model = yaml.load(f_charge)

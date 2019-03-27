@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-
+import roslib
 
 class PolicyError(Exception):
     pass
@@ -8,8 +8,8 @@ class PolicyError(Exception):
 
 class ParseAdversary:
     def __init__(self, filenames):
-        #######################SPECIFY LOCATION ######################
-        path = '/home/milan/workspace/strands_ws/src/battery_scheduler/models/'
+        main_path = roslib.packages.get_pkg_dir('battery_scheduler')
+        path = main_path+'/models/'
         for name in filenames:
             if name[-4:] == '.lab':
                 with open(path+name, 'r') as label_file:
