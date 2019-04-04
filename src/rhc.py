@@ -74,6 +74,7 @@ class RecedingHorizonControl:
         self.battery = []
         self.charging = []
         self.time =[]
+        self.pareto_point = []
      
     def simulate(self):
         print 'Simulating...'
@@ -197,7 +198,7 @@ class RecedingHorizonControl:
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_rhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhc.prism '+ self.path_mod +'batterycost_model_prop.props -multimaxpoints 500 -v -exportadv '+ self.path_mod+ 'model_rhc.adv -exportprodstates ' + self.path_mod +'model_rhc.sta -exporttarget '+self.path_mod+'model_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhc.prism '+ self.path_mod +'batterycost_model_prop.props -paretoepsilon 0.1 -v -exportadv '+ self.path_mod+ 'model_rhc.adv -exportprodstates ' + self.path_mod +'model_rhc.sta -exporttarget '+self.path_mod+'model_rhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
@@ -220,10 +221,10 @@ class RecedingHorizonControl:
                     f_no_list.append(str(int(el[0][:-1])-2))
                     init +=1 
         
-        pareto_points_sorted = sorted(pareto_points)
-
         if f_no_list:
-            p_point = pareto_points_sorted[self.req_pareto_point]
+            approx_p_point = max(pareto_points)*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
+            p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
+            self.pareto_point.append(p_point)
             f_ind = pareto_points.index(p_point)
             f_no = f_no_list[f_ind]
         else:
@@ -241,9 +242,9 @@ class RecedingHorizonControl:
         print 'Writing plan..'
         with open(self.path_data +'p'+str(self.req_pareto_point)+ fname, 'w') as f:
         # with open(self.path_data +'pre1'+ fname, 'w') as f:
-            f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward\n')
-            for t, b, ch, a, obr, mr, ar, er in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward):
-                f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, er))
+            f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward pareto\n')
+            for t, b, ch, a, obr, mr, ar, er, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward, self.pareto_point):
+                f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8}\n'.format(t, b, ch, a, obr, mr, ar, er, pp))
 
 
 if __name__ == '__main__':
