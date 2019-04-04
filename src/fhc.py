@@ -213,12 +213,20 @@ class FiniteHorizonControl:
         ### reading output from prism to find policy file
         ### for bcth
         policy_file = []
+        pre1_point = None
+        pre2_point = None
         with open(self.path_data+'result_fhct', 'r') as f:
             line_list = f.readlines()
             f_no_list = []
             pareto_points = []
             init = 0
-            for line in line_list:
+            for e, line in enumerate(line_list):
+                if 'pre1.adv' in line:
+                    pre1_point = abs(float(line_list[e+1].split(',')[0].split('(')[1].strip()))
+
+                if 'pre2.adv' in line:
+                    pre2_point = abs(float(line_list[e+1].split(',')[0].split('(')[1].strip())) 
+
                 if ': New point is (' in line:
                     el = line.split(' ')
                     if init == 0:
@@ -227,18 +235,20 @@ class FiniteHorizonControl:
                     pareto_points.append(cost40)
                     f_no_list.append(str(int(el[0][:-1])-2))
                     init +=1 
-        
-        if f_no_list:
-            approx_p_point = max(pareto_points)*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
-            p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
-            self.pareto_point.extend(self.no_int*[p_point])
-            f_ind = pareto_points.index(p_point)
-            f_no = f_no_list[f_ind]
+
+        if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
+            f_no = self.req_pareto_point
         else:
-            f_no = None 
+            if f_no_list:
+                approx_p_point = max(pareto_points)*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
+                p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
+                self.pareto_point.extend(self.no_int*[p_point])
+                f_ind = pareto_points.index(p_point)
+                f_no = f_no_list[f_ind]
+            else:
+                f_no = None 
         
         if f_no != None:
-            # f_no = 'pre1'
             print 'Reading from model_t'+f_no+'.adv'
             pp = bc_read_adversary.ParseAdversary(['model_t'+f_no+'.adv', 'model_t.sta', 'model_t.lab'])
             return pp
@@ -249,8 +259,11 @@ class FiniteHorizonControl:
     
     def get_plan(self, fname):
         print 'Writing plan..'
-        with open(self.path_data + 'p'+ str(self.req_pareto_point)+ fname, 'w') as f:
-        # with open(self.path_data + 'pre1'+ fname, 'w') as f:
+        if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
+            plan_path = self.path_data + 'pre1'+ fname
+        else:
+            plan_path = self.path_data + 'p'+ str(self.req_pareto_point)+ fname
+        with open(plan_path, 'w') as f:
             f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward pareto\n')
             for t, b, ch, a, obr, mr, ar, er, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward, self.pareto_point):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8}\n'.format(t, b, ch, a, obr, mr, ar, er, pp))
