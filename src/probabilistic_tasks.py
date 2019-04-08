@@ -32,28 +32,21 @@ class uncertain_rewards:
         # all_days = self.tasks['start_day'].sort_values()
         # print all_days.unique()
         
-        remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
-
+        ## for task models
         if test_days:
-            self.test_days = test_days #[date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
+            self.test_days = test_days
             self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
             self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
-            for day in test_days:
-                if day in remove_days or day.month == 9 or day.month == 8:
-                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8)]# | (self.tasks['start_day'].isin(remove_days))]
-
-                elif day not in remove_days or day.month == 11 or day.month == 12:
-                    self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
-                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 10) | (self.tasks['start_day'].apply(lambda x:x.month) == 11) | (self.tasks['start_day'].apply(lambda x:x.month) == 12)]
-
-                break
+            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.year) == 2017)]
+            # self.tasks = self.tasks[self.tasks['start_day'].isin(self.test_days)] - for sanity check
         else:
-            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) ]#| (self.tasks['start_day'].isin(remove_days))]
+            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.year) == 2017)]
 
 
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
         X_wz = np.array([x for x in X if x[0] != 0])
+        print (X_wz)
         self.dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
         
         rews_as_states = self.dpgmm.predict(X) 
@@ -72,8 +65,8 @@ class uncertain_rewards:
         for state, vals in mean_dict.items():
             reward_states[int(state)] = np.mean(vals)
 
-        # print reward_states, 'manual mean'
-        # print self.dpgmm.means_, 'gmm means'
+        print reward_states, 'manual mean'
+        print self.dpgmm.means_, 'gmm means'
  
         rews_as_states = rews_as_states.reshape(len(self.rewards_day),self.no_int)
         return rews_as_states, reward_states
@@ -86,7 +79,7 @@ class uncertain_rewards:
             start_int = datetime.combine(day,time(0,0))
             for i in range(self.no_int):
                 end_int = start_int + timedelta(minutes=self.time_int)
-                rew_sum_day[i] = self.tasks[(self.tasks['start_time'] < end_int) & (self.tasks['end_time'] > start_int)]['priority'].sum()
+                rew_sum_day[i] = tasks[(tasks['start_time'] < end_int) & (tasks['end_time'] > start_int)]['priority'].sum()
                 start_int = end_int
             if day not in self.rewards_day:
                 self.rewards_day.update({ day : rew_sum_day})
@@ -128,6 +121,9 @@ class uncertain_rewards:
                     prob_m[i][states.index(s)] = st_c[j]
 
         state_means = [round(reward_states[int(s)]) for s in states if s != z_l]
+        print (task_prob)
+        print (prob_m)
+        print (state_means)
         return task_prob, prob_m, state_means
 
 
@@ -144,6 +140,7 @@ if __name__ == '__main__':
 
     x = np.arange(48)
     for day in ur.rewards_day:
+        # if day == date(2017, 10, 1) or day == date(2017, 11, 24): 
         print day
         plt.bar(x, ur.rewards_day[day])
         plt.plot(x, expected_rew)

@@ -34,6 +34,7 @@ class uncertain_rewards:
         # all_days = self.tasks['start_day'].sort_values()
         # print all_days.unique()
         
+        ## for reward models 
         remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
 
         if test_days:
@@ -88,7 +89,7 @@ class uncertain_rewards:
             start_int = datetime.combine(day,time(0,0))
             for i in range(self.no_int):
                 end_int = start_int + timedelta(minutes=self.time_int)
-                rew_sum_day[i] = self.tasks[(self.tasks['start_time'] < end_int) & (self.tasks['end_time'] > start_int)]['priority'].sum()
+                rew_sum_day[i] = tasks[(tasks['start_time'] < end_int) & (tasks['end_time'] > start_int)]['priority'].sum()
                 start_int = end_int
             if day not in self.rewards_day:
                 self.rewards_day.update({ day : rew_sum_day})
@@ -136,9 +137,9 @@ class uncertain_rewards:
 if __name__ == '__main__':
     ur = uncertain_rewards([])
     task_prob, prob_m, state_means = ur.get_probabilistic_reward_model()
-    # print task_prob
-    # print prob_m
-    # print state_means
+    print task_prob
+    print prob_m
+    print state_means
 
     expected_rew = []
     for row in prob_m:
@@ -146,7 +147,7 @@ if __name__ == '__main__':
 
     x = np.arange(48)
     for day in ur.rewards_day:
-        if day == date(2017, 9, 24) or day == date(2017, 9, 25) or day == date(2017, 9, 26) or date(2017, 10, 3) or day == date(2017, 10, 2) or date(2017, 10, 1) or day == date(2017, 8, 14) or date(2017, 8, 15) or day == date(2017, 8, 16)  or date(2017, 8, 20) or day == date(2017, 8, 22) or date(2017, 8, 23) or day == date(2017, 8, 17) or date(2017, 8, 18) or day == date(2017, 8, 19):
+        if day == date(2017, 8, 14) or day == date(2017, 8, 15) or day == date(2017, 8, 16) or date(2017, 8,20) == day or date(2017, 8, 22) == day or day == date(2017, 8, 23):
             print day
             plt.bar(x, ur.rewards_day[day])
             plt.plot(x, expected_rew)
