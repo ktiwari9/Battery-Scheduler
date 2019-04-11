@@ -32,6 +32,11 @@ class getTasks:
         start_times = [self.unique_tasks[task_id][1] for task_id in task_ids]
         end_times = [self.unique_tasks[task_id][2] for task_id in task_ids]
         self.tasks_df = pd.DataFrame(data=zip(task_ids, priorities, start_times, end_times), columns=['task_id', 'priority', 'start_time', 'end_time'])
+        min_priority = self.tasks_df['priority'].min()
+        print min_priority
+        max_priority = self.tasks_df['priority'].max()
+        print max_priority
+        self.tasks_df['priority'] = self.tasks_df['priority'].apply(lambda x: (float(x - min_priority)/(max_priority - min_priority))*500+10)
         
     def _get_unique_tasks(self, collection_indicator=None):
         for task in self.tasks:
@@ -68,7 +73,7 @@ class getTasks:
                     
             if node != 'ChargingPoint1' and action != 'cpm_action'and action != 'un-named_action' and priority != 0:
                 # if priority > 50 and priority < 5000:
-                #     new_priority = priority%11
+                #     new_priority = priority/11
                 # elif priority >= 5000 and priority < 50000:
                 #     new_priority = priority%101
                 # elif priority >= 50000:
