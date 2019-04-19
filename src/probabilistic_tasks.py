@@ -97,7 +97,7 @@ class uncertain_rewards:
         to_be_removed = []
         for day in self.rewards_day:
             u_el, u_c = np.unique(self.rewards_day[day], return_counts=True)
-            if u_el[0] == 0 and u_c[0] > 24:
+            if u_el[0] == 0 and u_c[0] > 20:
                 to_be_removed.append(day)
 
         for day in to_be_removed:
