@@ -61,7 +61,7 @@ class RuleBasedControl:
             self.battery.append(self.current_battery)
             self.charging.append(self.current_charging)     
             
-            if (self.current_battery > 30 and self.current_battery < 70 and self.current_charging == 1) or (self.current_charging ==1 and r == 0):
+            if (self.current_battery > 25 and self.current_battery < 70 and self.current_charging == 1) or (self.current_charging ==1 and r == 0):
                 self.action.append('stay_charging')
                 self.obtained_reward.append(0)
                 nb = []
@@ -74,7 +74,7 @@ class RuleBasedControl:
                 # self.current_battery = int(round(sum(np.array(nb)*np.array(p))))
                 self.current_charging = 1
             
-            elif self.current_battery > 30 and r > self.threshold:
+            elif self.current_battery > 25 and r > self.threshold:
                 self.action.append('gather_reward')
                 self.obtained_reward.append(r)
                 nb = []
@@ -128,7 +128,7 @@ class RuleBasedControl:
 if __name__ == '__main__':
     no_int = 48
 
-    sg = generate_samples.sample_generator(True, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])     
+    sg = generate_samples.sample_generator(True, [date(2017, 11, 10), date(2017, 10, 19), date(2017, 9, 28)])     
     rewards = sg.rewards
     cl_id = sg.cl_ids
     act_rewards = sg.act_rewards
@@ -139,8 +139,32 @@ if __name__ == '__main__':
             f.write('\n')
 
     np.random.seed(0)
-    f_name = 'rbc4_oct123_70b_1'
-    rbc4 = RuleBasedControl(70,1, [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)])
+    f_name = 'rbc4_10111910289_70b_1'
+    rbc4 = RuleBasedControl(70,1, [date(2017, 11, 10), date(2017, 10, 19), date(2017, 9, 28)])
+
+    rbc4.simulate()
+    rbc4.get_plan(f_name)
+    rewards_obtained = rbc4.get_rewards_from_plan(f_name)
+    no_days = len(rbc4.test_rewards)/no_int
+    for i in range(no_days):
+        print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
+    print 'Total : ', sum(rewards_obtained)
+
+    np.random.seed(1)
+    f_name = 'rbc4_10111910289_70b_2'
+    rbc4 = RuleBasedControl(70,1, [date(2017, 11, 10), date(2017, 10, 19), date(2017, 9, 28)])
+
+    rbc4.simulate()
+    rbc4.get_plan(f_name)
+    rewards_obtained = rbc4.get_rewards_from_plan(f_name)
+    no_days = len(rbc4.test_rewards)/no_int
+    for i in range(no_days):
+        print 'Day ', i+1, ' : ', sum(rewards_obtained[i*no_int:(i+1)*no_int]) 
+    print 'Total : ', sum(rewards_obtained)
+
+    np.random.seed(2)
+    f_name = 'rbc4_10111910289_70b_3'
+    rbc4 = RuleBasedControl(70,1, [date(2017, 11, 10), date(2017, 10, 19), date(2017, 9, 28)])
 
     rbc4.simulate()
     rbc4.get_plan(f_name)
