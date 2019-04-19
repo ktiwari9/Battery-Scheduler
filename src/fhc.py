@@ -1,10 +1,13 @@
 #! /usr/bin/env python
 
 import probabilistic_tasks as probabilistic_rewards
+# import discrete_task_model as probabilistic_rewards
+# import probabilistic_rewards
 from datetime import date
 import bc_read_adversary
 import bcth_prism_model
 import generate_task_samples as generate_samples
+# import generate_samples
 import numpy as np
 import subprocess
 import roslib
@@ -52,7 +55,7 @@ class FiniteHorizonControl:
         self.req_pareto_point = pareto_point
    
         self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
-        self.path_rew = self.main_path + '/data/fhct_sample_rewards'
+        self.path_rew = self.main_path + '/data/fhc_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
@@ -204,18 +207,18 @@ class FiniteHorizonControl:
         
         #######################SPECIFY LOCATION ######################
         ### running prism and saving output from prism
-        with open(self.path_data+'result_fhct', 'w') as file:
+        with open(self.path_data+'result_fhc', 'w') as file:
             process = subprocess.Popen('./prism '+ self.path_mod + 'model_t.prism '+ self.path_mod +'batterycost_model_prop.props -v -paretoepsilon 0.1 -exportadv '+ self.path_mod+ 'model_t.adv -exportprodstates ' + self.path_mod +'model_t.sta -exporttarget '+self.path_mod+'model_t.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
         
         ### reading output from prism to find policy file
-        ### for bcth
+        ### for dt
         policy_file = []
         pre1_point = None
         pre2_point = None
-        with open(self.path_data+'result_fhct', 'r') as f:
+        with open(self.path_data+'result_fhc', 'r') as f:
             line_list = f.readlines()
             f_no_list = []
             pareto_points = []
@@ -238,9 +241,17 @@ class FiniteHorizonControl:
 
         if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
             f_no = self.req_pareto_point
+            if self.req_pareto_point == 'pre1':
+                self.pareto_point.extend(self.no_int*[pre1_point])
+            elif self.req_pareto_point == 'pre2':
+                self.pareto_point.extend(self.no_int*[pre2_point])
+
         else:
             if f_no_list:
-                approx_p_point = max(pareto_points)*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
+                if self.req_pareto_point > 3:
+                    approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points))/3)*(float((self.req_pareto_point%3))/3)
+                else:
+                    approx_p_point = max(pareto_points)*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
                 p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
                 self.pareto_point.extend(self.no_int*[p_point])
                 f_ind = pareto_points.index(p_point)
@@ -258,11 +269,11 @@ class FiniteHorizonControl:
 
     
     def get_plan(self, fname):
-        print 'Writing plan..'
         if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
-            plan_path = self.path_data + 'pre1'+ fname
+            plan_path = self.path_data + self.req_pareto_point + fname
         else:
             plan_path = self.path_data + 'p'+ str(self.req_pareto_point)+ fname
+        print 'Writing plan to ', plan_path, ' ...'
         with open(plan_path, 'w') as f:
             f.write('time battery charging action obtained_reward match_reward actual_reward exp_reward pareto\n')
             for t, b, ch, a, obr, mr, ar, er, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.sample_reward, self.actual_reward, self.exp_reward, self.pareto_point):
@@ -270,75 +281,111 @@ class FiniteHorizonControl:
 
 
 if __name__ == '__main__':
-    ############### Reward Days Set 1
-    # sg = generate_samples.sample_generator(True, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)])
+    # ############### Reward Days Set 1
+    # sg = generate_samples.sample_generator(True, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)])
 
     # rewards = sg.rewards
     # cl_id = sg.cl_ids
     # act_rewards = sg.act_rewards
     # main_path = roslib.packages.get_pkg_dir('battery_scheduler')
-    # path = main_path+'/data/fhct_sample_rewards'
+    # path = main_path+'/data/fhc_sample_rewards'
     # with open(path,'w') as f:
     #     for r, c, a_r in zip(rewards, cl_id, act_rewards):
     #         f.write('{0} {1} {2} '.format(c, r, a_r))
     #         f.write('\n')
 
     np.random.seed(0)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)], 0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_1')
+    fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    fhc.simulate()
+    fhc.get_plan('fhc_ptest_1')
 
-    np.random.seed(1)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_2')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)], 0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
 
-    np.random.seed(2)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_3')
+    # # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
 
-    np.random.seed(0)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_1')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],0)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
 
-    np.random.seed(1)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_2')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
 
-    np.random.seed(2)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_3')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
 
-    np.random.seed(0)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_1')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],1)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
 
-    np.random.seed(1)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_2')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
 
-    np.random.seed(2)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_3')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
 
-    np.random.seed(0)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_1')
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],2)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
 
-    np.random.seed(1)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_2')
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
 
-    np.random.seed(2)
-    fhct = FiniteHorizonControl(70, 1, [date(2017, 9, 24), date(2017, 9, 25), date(2017, 9, 26)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    fhct.simulate()
-    fhct.get_plan('fhct_bcth_sanitycheck_3')
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],3)## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
+
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
+
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
+
+    # np.random.seed(0)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_1')
+
+    # np.random.seed(1)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_2')
+
+    # np.random.seed(2)
+    # fhc = FiniteHorizonControl(70, 1, [date(2017, 11, 10), date(2017, 10, 19),date(2017, 9, 28)],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # fhc.simulate()
+    # fhc.get_plan('fhc_dt_10111910289_3')
+
