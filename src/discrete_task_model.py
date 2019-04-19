@@ -65,6 +65,15 @@ class uncertain_rewards:
             current_tasks = self.tasks[self.tasks['start_day']==day]
             self.__update_rewards_day(current_tasks, day)
 
+        to_be_removed = []
+        for day in self.rewards_day:
+            u_el, u_c = np.unique(self.rewards_day[day], return_counts=True)
+            if u_el[0] == 0 and u_c[0] > 24:
+                to_be_removed.append(day)
+
+        for day in to_be_removed:
+            del self.rewards_day[day]
+
         X = np.array([rew for day,rew in self.rewards_day.items()]).T
         states = list(np.unique(X))
 

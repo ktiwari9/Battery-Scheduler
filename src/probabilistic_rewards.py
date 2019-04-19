@@ -43,15 +43,15 @@ class uncertain_rewards:
             self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
             for day in test_days:
                 if day in remove_days or day.month == 9 or day.month == 8:
-                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8)]# | (self.tasks['start_day'].isin(remove_days))]
+                    self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].isin(remove_days))]
 
-                elif day not in remove_days or day.month == 11 or day.month == 12:
+                elif day not in remove_days or day.month == 11 or day.month == 12 or day.month == 10:
                     self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
                     self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 10) | (self.tasks['start_day'].apply(lambda x:x.month) == 11) | (self.tasks['start_day'].apply(lambda x:x.month) == 12)]
 
                 break
         else:
-            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) ]#| (self.tasks['start_day'].isin(remove_days))]
+            self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].isin(remove_days))]
 
 
     def __cluster_rewards(self):
@@ -105,6 +105,15 @@ class uncertain_rewards:
             current_tasks = self.tasks[self.tasks['start_day']==day]
             self.__update_rewards_day(current_tasks, day)
 
+        to_be_removed = []
+        for day in self.rewards_day:
+            u_el, u_c = np.unique(self.rewards_day[day], return_counts=True)
+            if u_el[0] == 0 and u_c[0] > 24:
+                to_be_removed.append(day)
+
+        for day in to_be_removed:
+            del self.rewards_day[day]
+
         rewards, reward_states = self.__cluster_rewards()
         states = list(np.unique(rewards))
         z_l = np.max(states)
@@ -147,7 +156,9 @@ if __name__ == '__main__':
 
     x = np.arange(48)
     for day in ur.rewards_day:
-        if day == date(2017, 8, 14) or day == date(2017, 8, 15) or day == date(2017, 8, 16) or date(2017, 8,20) == day or date(2017, 8, 22) == day or day == date(2017, 8, 23):
+        # if day == date(2017, 8, 14) or day == date(2017, 8, 15) or day == date(2017, 8, 16) or date(2017, 8,20) == day or date(2017, 8, 22) == day or day == date(2017, 8, 23):
+        if day == date(2017, 10, 1) or day == date(2017, 9, 24) or day == date(2017, 9, 25) or day == date(2017, 9, 26) or day == date(2017, 10, 27) or day == date(2017, 10, 29) or day == date(2017, 10, 31) or day == date(2017, 10, 2) or day == date(2017, 10, 3) or day == date(2017, 11, 12) or day == date(2017, 8, 31) or day == date(2017, 8, 14) or day == date(2017, 8, 15) or day == date(2017, 9, 4) or day == date(2017, 11, 10) or day == date(2017, 10, 19) or day == date(2017, 9, 28) or day == date(2017, 10, 21) or day == date(2017, 10, 22) or day == date(2017, 10, 23) or day == date(2017, 10, 10) or day == date(2017, 11, 29) or day == date(2017, 12, 13) or day == date(2017, 8, 8) or day == date(2017, 8, 10) or day == date(2017, 11, 24) or day == date(2017, 12, 19) or day == date(2017, 10, 18) or day == date(2017, 9, 20): 
+        
             print day
             plt.bar(x, ur.rewards_day[day])
             plt.plot(x, expected_rew)

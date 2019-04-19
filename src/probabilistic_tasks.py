@@ -46,7 +46,6 @@ class uncertain_rewards:
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
         X_wz = np.array([x for x in X if x[0] != 0])
-        print (X_wz)
         self.dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
         
         rews_as_states = self.dpgmm.predict(X) 
@@ -65,8 +64,8 @@ class uncertain_rewards:
         for state, vals in mean_dict.items():
             reward_states[int(state)] = np.mean(vals)
 
-        print reward_states, 'manual mean'
-        print self.dpgmm.means_, 'gmm means'
+        # print reward_states, 'manual mean'
+        # print self.dpgmm.means_, 'gmm means'
  
         rews_as_states = rews_as_states.reshape(len(self.rewards_day),self.no_int)
         return rews_as_states, reward_states
@@ -95,6 +94,15 @@ class uncertain_rewards:
             current_tasks = self.tasks[self.tasks['start_day']==day]
             self.__update_rewards_day(current_tasks, day)
 
+        to_be_removed = []
+        for day in self.rewards_day:
+            u_el, u_c = np.unique(self.rewards_day[day], return_counts=True)
+            if u_el[0] == 0 and u_c[0] > 24:
+                to_be_removed.append(day)
+
+        for day in to_be_removed:
+            del self.rewards_day[day]
+
         rewards, reward_states = self.__cluster_rewards()
         states = list(np.unique(rewards))
         z_l = np.max(states)
@@ -121,9 +129,9 @@ class uncertain_rewards:
                     prob_m[i][states.index(s)] = st_c[j]
 
         state_means = [round(reward_states[int(s)]) for s in states if s != z_l]
-        print (task_prob)
-        print (prob_m)
-        print (state_means)
+        # print (task_prob)
+        # print (prob_m)
+        # print (state_means)
         return task_prob, prob_m, state_means
 
 
@@ -140,7 +148,7 @@ if __name__ == '__main__':
 
     x = np.arange(48)
     for day in ur.rewards_day:
-        # if day == date(2017, 10, 1) or day == date(2017, 11, 24): 
+        # if day == date(2017, 10, 1) or day == date(2017, 9, 24) or day == date(2017, 9, 25) or day == date(2017, 9, 26) or day == date(2017, 10, 27) or day == date(2017, 10, 29) or day == date(2017, 10, 31) or day == date(2017, 10, 2) or day == date(2017, 10, 3) or day == date(2017, 11, 12) or day == date(2017, 8, 31) or day == date(2017, 8, 14) or day == date(2017, 8, 15) or day == date(2017, 9, 4) or day == date(2017, 11, 10) or day == date(2017, 10, 19) or day == date(2017, 9, 28) or day == date(2017, 10, 21) or day == date(2017, 10, 22) or day == date(2017, 10, 23) or day == date(2017, 10, 10) or day == date(2017, 11, 29) or day == date(2017, 12, 13) or day == date(2017, 8, 8) or day == date(2017, 8, 10) or day == date(2017, 11, 24) or day == date(2017, 12, 19) or day == date(2017, 10, 18) or day == date(2017, 9, 20): 
         print day
         plt.bar(x, ur.rewards_day[day])
         plt.plot(x, expected_rew)
