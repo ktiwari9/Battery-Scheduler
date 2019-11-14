@@ -29,6 +29,7 @@ class BatteryModel:
     def __init__(self, directory_paths):
         self.charge_model = None
         self.discharge_model = None 
+        self.time_interval = 30 # mins
         self.get_battery_model(directory_paths)
 
     def get_files(self, directories):
@@ -73,7 +74,7 @@ class BatteryModel:
             battery_data.drop_duplicates(subset='time', keep='last', inplace=True)
             battery_data.set_index(pd.DatetimeIndex(battery_data.index), drop=False, inplace=True, verify_integrity=True)
             battery_data = battery_data.resample('1T').mean()
-            print (battery_data)
+            # print (battery_data)
             battery_charge = battery_data[battery_data['is_charging'] == True]
             battery_discharge = battery_data[battery_data['is_charging'] == False]
             if not battery_discharge.empty:
@@ -86,10 +87,10 @@ class BatteryModel:
             model = self.charge_model
         else:
             model = self.discharge_model
-        for i in range(0,df.shape[0]-31):
-            if (df.index[i+30] - df.index[i]) == pd.Timedelta(minutes=30) and not math.isnan(df[i]) and not math.isnan(df[i+30]):
+        for i in range(0,df.shape[0]-self.time_interval-1):
+            if (df.index[i+self.time_interval] - df.index[i]) == pd.Timedelta(minutes=self.time_interval) and not math.isnan(df[i]) and not math.isnan(df[i+self.time_interval]):
                 current_b = int(round(df[i]))
-                next_b = int(round(df[i+30]))
+                next_b = int(round(df[i+self.time_interval]))
                 if charging and next_b == current_b:
                     next_b += 1
                 elif charging and next_b < current_b:
@@ -103,7 +104,8 @@ class BatteryModel:
     
     def get_battery_model(self, paths):
         ################ SPECIFY PATHS OF MODELS #######################
-        path = roslib.packages.get_pkg_dir('battery_scheduler')
+        # path = roslib.packages.get_pkg_dir('battery_scheduler')
+        path = '~/workspace/strands_ws/src/battery_scheduler'
         if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
             with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
                 self.charge_model = yaml.load(f_charge)
@@ -131,7 +133,7 @@ class BatteryModel:
 
 if __name__ == '__main__':
     ################ SPECIFY PATHS OF DATA #######################
-    paths = ['/media/milan/DATA/data_project/battery_data/betty', '/media/milan/DATA/battery_logs/real_battery']
+    paths = ['/media/milan/DATA1/data_project/battery_data/betty', '/media/milan/DATA1/battery_logs/real_battery']
     bm = BatteryModel(paths)
     print (bm.charge_model)
     print (bm.discharge_model)
