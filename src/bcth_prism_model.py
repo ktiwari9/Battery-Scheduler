@@ -9,7 +9,7 @@ import os
 
 class PrismModel:
     
-    def __init__(self,filename, init_b, init_ch, task_prob, clusters, prob, charge_model, discharge_model):
+    def __init__(self,filename, horizon, init_b, init_ch, task_prob, clusters, prob, charge_model, discharge_model):
         # initial values that make model. from_t set to zero
         self.task_prob = task_prob
         self.clusters = clusters
@@ -17,7 +17,7 @@ class PrismModel:
         self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.charge_model = charge_model
         self.discharge_model = discharge_model
-        self.time_int = self.prob.shape[0]
+        self.time_int = horizon  ## horizon
         self.write_prism_file(filename, init_b, init_ch) 
         
     def write_prism_file(self, filename, init_b, init_ch):
@@ -148,4 +148,9 @@ if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards([])
     task_prob, prob, clusters = ur.get_probabilistic_reward_model()
     charge_model, discharge_model = get_battery_model()
-    mm = PrismModel('bcth_model_test.prism', 70, 1, task_prob, clusters, prob, charge_model, discharge_model)
+    horizons = [12, 24, 36]
+    batteries = [70, 100, 30, 50, 60, 80, 30, 100, 70, 50]
+    charging_state = [1,1,1,1,1,0,0,0,0,0]
+    for h in horizons:
+        for e,b in enumerate(batteries):
+            mm = PrismModel('bcth_model'+str(h)+'_'+str(e+1)+'.prism', h, b, charging_state[e], task_prob, clusters, prob, charge_model, discharge_model)

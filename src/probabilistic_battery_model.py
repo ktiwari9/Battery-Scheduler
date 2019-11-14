@@ -105,7 +105,7 @@ class BatteryModel:
     def get_battery_model(self, paths):
         ################ SPECIFY PATHS OF MODELS #######################
         # path = roslib.packages.get_pkg_dir('battery_scheduler')
-        path = '~/workspace/strands_ws/src/battery_scheduler'
+        path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
         if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
             with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
                 self.charge_model = yaml.load(f_charge)
@@ -121,12 +121,12 @@ class BatteryModel:
                     model.update({ i : dict()})
             self.discharge_model[100] = self.discharge_model[99]
 
-            files = self.get_files(paths)
-            self.extract_data(files)
+            # files = self.get_files(paths)
+            # self.extract_data(files)
 
-            with open(path+'/models/battery_discharge_model.yaml', 'w') as f_discharge:
+            with open(path+'/models/battery_discharge_model_test.yaml', 'w') as f_discharge:
                 yaml.dump(self.discharge_model, f_discharge)
-            with open(path+ '/models/battery_charge_model.yaml', 'w') as f_charge:
+            with open(path+ '/models/battery_charge_model_test.yaml', 'w') as f_charge:
                 yaml.dump(self.charge_model, f_charge)
             print ('Battery Models Created at: '+path+'/models/battery_discharge_model.yaml'+ ', '+ path+'/models/battery_charge_model.yaml')
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import discrete_task_model as probabilistic_rewards
+import probabilistic_tasks as probabilistic_rewards
 import generate_task_samples as generate_samples
 from datetime import date
 import bc_read_adversary
@@ -194,12 +194,12 @@ class RecedingHorizonControl:
             prob_c[k] = self.prob[(t+k)%self.no_int]
             prob_t[k] = self.task_prob[(t+k)%self.no_int]
         
-        pm = bcth_prism_model.PrismModel('model_rhct.prism', self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
+        pm = bcth_prism_model.PrismModel('model_rhct.prism', self.horizon, self.init_battery, self.init_charging, prob_t, self.clusters, prob_c, self.charge_model, self.discharge_model)
        
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_rhct', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhct.prism '+ self.path_mod +'batterycost_model_prop.props -paretoepsilon 0.5 -v -exportadv '+ self.path_mod+ 'model_rhct.adv -exportprodstates ' + self.path_mod +'model_rhct.sta -exporttarget '+self.path_mod+'model_rhct.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model_rhct.prism '+ self.path_mod +'batterycost_model_prop.props -paretoepsilon 0.1 -v -exportadv '+ self.path_mod+ 'model_rhct.adv -exportprodstates ' + self.path_mod +'model_rhct.sta -exporttarget '+self.path_mod+'model_rhct.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
@@ -238,10 +238,13 @@ class RecedingHorizonControl:
                 self.pareto_point.append(pre2_point)
         else:
             if f_no_list:
-                if self.req_pareto_point > 3:
+                if self.req_pareto_point > 3 and self.req_pareto_point < 6:
                     approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points))/3)*(float((self.req_pareto_point%3))/3)
+                elif self.req_pareto_point == 6:
+                    sorted_pareto_points = sorted(pareto_points)
+                    approx_p_point = sorted_pareto_points[1]
                 else:
-                    approx_p_point = min(pareto_points)+ (max(pareto_points)-min(pareto_points))*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
+                   approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points)))*(float(self.req_pareto_point)/3)
                 p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
                 self.pareto_point.append(p_point)
                 f_ind = pareto_points.index(p_point)
@@ -285,103 +288,105 @@ class RecedingHorizonControl:
 
 if __name__ == '__main__':
 
-    # sg = generate_samples.sample_generator(True, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )])     
-    # rewards = sg.rewards
-    # cl_id = sg.cl_ids
-    # act_rewards = sg.act_rewards
-    # path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhct_sample_rewards'
-    # with open(path,'w') as f:
-    #     for r, c, a_r in zip(rewards, cl_id, act_rewards):
-    #         f.write('{0} {1} {2} '.format(c, r, a_r))
-    #         f.write('\n')
-
-    np.random.seed(0)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 0)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_1')
-
-    np.random.seed(1)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 0)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_2')
-
-    np.random.seed(2)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 0)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_3')
-
-    np.random.seed(0)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 1)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_1')
-
-    np.random.seed(1)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 1)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_2')
-
-    np.random.seed(2)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 1)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_3')
-
-    np.random.seed(0)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 2)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_1')
-
-    np.random.seed(1)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 2)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_2')
-
-    np.random.seed(2)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 2)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_3')
-
-    np.random.seed(0)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 3)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_1')
-
-    np.random.seed(1)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 3)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_2')
-
-    np.random.seed(2)
-    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )], 3)
-    rhct.simulate()
-    rhct.get_plan('rhct_dt_211022102310_3')
+    sg = generate_samples.sample_generator(True, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)])     
+    rewards = sg.rewards
+    cl_id = sg.cl_ids
+    act_rewards = sg.act_rewards
+    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhct_sample_rewards'
+    with open(path,'w') as f:
+        for r, c, a_r in zip(rewards, cl_id, act_rewards):
+            f.write('{0} {1} {2} '.format(c, r, a_r))
+            f.write('\n')
 
 
     # np.random.seed(0)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 0)
     # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_1')
-
-    # np.random.seed(1)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_2')
-
-    # np.random.seed(2)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre1')## init_battery, init_charging, test_days, pareto point (0 - mincost)
-    # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_3')
+    # rhct.get_plan('rhct_bcth_2103101211_1')
 
     # np.random.seed(0)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 1)
     # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_1')
+    # rhct.get_plan('rhct_bcth_2103101211_1')
+
+    # np.random.seed(0)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 2)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_1')
+
+    # np.random.seed(0)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 3)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_1')
+
+    np.random.seed(0)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 4)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_1')
+
+    np.random.seed(0)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 6)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_1')
+
+    
+    # np.random.seed(1)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 0)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_2')
 
     # np.random.seed(1)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 1)
     # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_2')
+    # rhct.get_plan('rhct_bcth_2103101211_2')
+
+    # np.random.seed(1)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 2)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_2')
+
+    # np.random.seed(1)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 3)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_2')
+
+    np.random.seed(1)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 4)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_2')
+
+    np.random.seed(1)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 6)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_2')
+
+   
+    # np.random.seed(2)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 0)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_3')
 
     # np.random.seed(2)
-    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 21), date(2017, 10, 23), date(2017, 10, 22 )],'pre2')## init_battery, init_charging, test_days, pareto point (0 - mincost)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 1)
     # rhct.simulate()
-    # rhct.get_plan('rhct_dt_211022102310_3')
+    # rhct.get_plan('rhct_bcth_2103101211_3')
+
+    # np.random.seed(2)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 2)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_3')
+
+    # np.random.seed(2)
+    # rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 3)
+    # rhct.simulate()
+    # rhct.get_plan('rhct_bcth_2103101211_3')
+
+    np.random.seed(2)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 4)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_3')
+
+    np.random.seed(2)
+    rhct = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 6)
+    rhct.simulate()
+    rhct.get_plan('rhct_bcth_2103101211_3')
