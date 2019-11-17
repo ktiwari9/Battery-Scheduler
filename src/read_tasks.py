@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pandas as pd 
+import numpy as np
 import datetime
 import pymongo
 import random
@@ -21,6 +22,7 @@ class getTasks:
         # no_tasks = client.betty.task_events_unique.find(None).count() 
         rospy.loginfo("Connection established, %d tasks being analysed" %no_tasks)
         self.unique_tasks = dict()
+        self.durations = []
         self._get_unique_tasks()
         #self.tasks = client.bob.task_events.find(None)
         #no_tasks = client.bob.task_events.find(None).count() 
@@ -33,9 +35,7 @@ class getTasks:
         end_times = [self.unique_tasks[task_id][2] for task_id in task_ids]
         self.tasks_df = pd.DataFrame(data=zip(task_ids, priorities, start_times, end_times), columns=['task_id', 'priority', 'start_time', 'end_time'])
         min_priority = self.tasks_df['priority'].min()
-        print min_priority
         max_priority = self.tasks_df['priority'].max()
-        print max_priority
         self.tasks_df['priority'] = self.tasks_df['priority'].apply(lambda x: (float(x - min_priority)/(max_priority - min_priority))*500+10)
         
     def _get_unique_tasks(self, collection_indicator=None):
@@ -81,8 +81,16 @@ class getTasks:
                 # else:
                 #     new_priority = priority
 
+                # if task_id not in self.unique_tasks:
+                #     d = end_datetime - start_datetime
+                #     self.durations.append(d.total_seconds())
+
                 self.unique_tasks.update({task_id : (priority, start_datetime, end_datetime)})
+                
     
 if __name__ == '__main__':
     gt = getTasks()
     # print (gt.unique_tasks)
+    # print np.mean(gt.durations)
+    # print min(gt.durations)
+    # print max(gt.durations)

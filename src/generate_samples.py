@@ -9,8 +9,8 @@ class sample_generator:
     def __init__(self, validation, test_days, sampling_type=None):  ## sampling_type can be 'prob' or 'max' 
         ur = probabilistic_rewards.uncertain_rewards(test_days)
         task_prob, self.prob, self.clusters = ur.get_probabilistic_reward_model()
-        self.time_int = 48
-        self.int_duration = 1440/self.time_int
+        self.time_int = ur.no_int
+        self.int_duration = ur.time_int
         if validation == True:
             self.test_days = ur.test_days
             self.test_tasks = ur.test_tasks
