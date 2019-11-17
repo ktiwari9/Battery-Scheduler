@@ -91,10 +91,10 @@ class BatteryModel:
             if (df.index[i+self.time_interval] - df.index[i]) == pd.Timedelta(minutes=self.time_interval) and not math.isnan(df[i]) and not math.isnan(df[i+self.time_interval]):
                 current_b = int(round(df[i]))
                 next_b = int(round(df[i+self.time_interval]))
-                if charging and next_b == current_b:
-                    next_b += 1
-                elif charging and next_b < current_b:
-                    next_b = current_b+1
+                if charging and next_b < current_b:
+                    next_b = current_b
+                if not charging and next_b > current_b:
+                    next_b = current_b
                 if next_b > 100:
                     next_b = 100
                 if next_b not in model[current_b]:
@@ -121,12 +121,12 @@ class BatteryModel:
                     model.update({ i : dict()})
             self.discharge_model[100] = self.discharge_model[99]
 
-            # files = self.get_files(paths)
-            # self.extract_data(files)
+            files = self.get_files(paths)
+            self.extract_data(files)
 
-            with open(path+'/models/battery_discharge_model_test.yaml', 'w') as f_discharge:
+            with open(path+'/models/battery_discharge_model.yaml', 'w') as f_discharge:
                 yaml.dump(self.discharge_model, f_discharge)
-            with open(path+ '/models/battery_charge_model_test.yaml', 'w') as f_charge:
+            with open(path+ '/models/battery_charge_model.yaml', 'w') as f_charge:
                 yaml.dump(self.charge_model, f_charge)
             print ('Battery Models Created at: '+path+'/models/battery_discharge_model.yaml'+ ', '+ path+'/models/battery_charge_model.yaml')
 

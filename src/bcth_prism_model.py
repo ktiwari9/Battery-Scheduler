@@ -4,6 +4,7 @@ import probabilistic_rewards
 import numpy as np
 import subprocess
 import roslib
+import copy
 import yaml
 import os
 
@@ -17,7 +18,7 @@ class PrismModel:
         self.actions = ['gather_reward', 'go_charge', 'stay_charging']
         self.charge_model = charge_model
         self.discharge_model = discharge_model
-        self.time_int = horizon  ## horizon
+        self.time_int = horizon  ## horizon in number of intervals 
         self.write_prism_file(filename, init_b, init_ch) 
         
     def write_prism_file(self, filename, init_b, init_ch):
@@ -69,7 +70,14 @@ class PrismModel:
                             plus = plus +1
                         f.write(';\n')
                     else:
-                        bnext_dict = self.charge_model[b]
+                        bnext_dict = copy.deepcopy(self.charge_model[b])
+                        if b in bnext_dict:
+                            if b+1 in bnext_dict:
+                                bnext_dict[b+1] += bnext_dict[b]
+                            else:
+                                bnext_dict[b+1] = bnext[b]
+                            del bnext_dict[b]
+
                         total = np.sum(np.array(bnext_dict.values()))
                         f.write("[go_charge] (battery={0}) & (t>-1) -> ".format(b))
                         plus = 0
@@ -134,23 +142,18 @@ class PrismModel:
 
 def get_battery_model():
     path = roslib.packages.get_pkg_dir('battery_scheduler')
-    if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
-        with open (path+'/models/battery_charge_model.yaml', 'r') as f_charge:
+    if os.path.isfile(path+'/models/battery_charge_modelm.yaml') and os.path.isfile(path+'/models/battery_discharge_modelm.yaml'):
+        with open (path+'/models/battery_charge_modelm.yaml', 'r') as f_charge:
             charge_model = yaml.load(f_charge)
-        with open (path+'/models/battery_discharge_model.yaml', 'r') as f_discharge:
+        with open (path+'/models/battery_discharge_modelm.yaml', 'r') as f_discharge:
             discharge_model = yaml.load(f_discharge)
-        print ('Battery Models Found at: ' +path+'/models/battery_discharge_model.yaml'+', '+ path+'/models/battery_charge_model.yaml' )
+        print ('Battery Models Found at: ' +path+'/models/battery_discharge_modelm.yaml'+', '+ path+'/models/battery_charge_modelm.yaml' )
         return charge_model, discharge_model
     else:
-        raise ValueError('No models found. First create battery model with probabilistic_battery_model.py')
+        raise ValueError('No models found. First create battery model with probabilistic_battery_modelm.py')
                
 if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards([])
     task_prob, prob, clusters = ur.get_probabilistic_reward_model()
     charge_model, discharge_model = get_battery_model()
-    horizons = [12, 24, 36]
-    batteries = [70, 100, 30, 50, 60, 80, 30, 100, 70, 50]
-    charging_state = [1,1,1,1,1,0,0,0,0,0]
-    for h in horizons:
-        for e,b in enumerate(batteries):
-            mm = PrismModel('bcth_model'+str(h)+'_'+str(e+1)+'.prism', h, b, charging_state[e], task_prob, clusters, prob, charge_model, discharge_model)
+    mm = PrismModel('bcth_model.prism', 48, 70, 1, task_prob, clusters, prob, charge_model, discharge_model)
