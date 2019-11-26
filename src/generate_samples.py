@@ -89,14 +89,19 @@ class sample_generator:
         return rewards, cl_ids, act_rewards #, exp_rewards
 
     def closest_cluster(self, reward):
-        minimum = float('inf')
-        for e,cl in enumerate(self.clusters):
-            diff = abs(reward - cl) 
-            if diff  < minimum:
-                cl_id = e
-                cl_reward = cl
-                minimum = diff
-        return cl_reward, int(cl_id)
+        if reward != 0:
+            minimum = float('inf')
+            for e,cl in enumerate(self.clusters):
+                diff = abs(reward - cl) 
+                if diff  < minimum:
+                    cl_id = e
+                    cl_reward = cl
+                    minimum = diff
+                
+            return cl_reward, int(cl_id)
+
+        else:
+            return 0, None
         
 
 if __name__ == '__main__':

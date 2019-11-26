@@ -10,7 +10,7 @@ import os
 
 class PrismModel:
     
-    def __init__(self,filename, horizon, init_b, init_ch, task_prob, clusters, prob, charge_model, discharge_model):
+    def __init__(self,filename, horizon, init_b, init_ch, init_clid, task_prob, clusters, prob, charge_model, discharge_model):
         # initial values that make model. from_t set to zero
         self.task_prob = task_prob
         self.clusters = clusters
@@ -19,17 +19,17 @@ class PrismModel:
         self.charge_model = charge_model
         self.discharge_model = discharge_model
         self.time_int = horizon  ## horizon in number of intervals 
-        self.write_prism_file(filename, init_b, init_ch) 
+        self.write_prism_file(filename, init_b, init_ch, init_clid) 
         
-    def write_prism_file(self, filename, init_b, init_ch):
+    def write_prism_file(self, filename, init_b, init_ch, init_clid):
         path = roslib.packages.get_pkg_dir('battery_scheduler')+'/models/' + filename 
         with open(path, 'w') as f:
             f.write('mdp\n\n')
             f.write('module time_model\n')
             f.write('t:[0..{0}] init 0;\n'.format(self.time_int))
-            f.write('task_present:[0..1] init 0;\n')
-            f.write('o:[0..1] init 0;\n')
-            f.write('e:[0..1] init 0;\n')
+            f.write('task_present:[0..1] init {0};\n'.format(1 if init_clid != None else 0))
+            f.write('o:[0..1] init 1;\n')
+            f.write('e:[0..1] init {0};\n'.format(1 if init_clid != None else 0))
             for i in range(self.time_int):
                 f.write("[observe] (t={0}) & (o=0) & (e=0) -> {1}:(task_present'=1) & (o'=1) + {2}:(task_present'=0) & (o'=1);\n".format(i, self.task_prob[i][1], self.task_prob[i][0]))
             f.write("[evaluate] (t<{0}) & (o=1) & (task_present=1) & (e=0) -> (e'=1);\n".format(self.time_int))
@@ -115,18 +115,19 @@ class PrismModel:
 
 
             f.write('module cluster_evolution\n\n')
-            f.write('cl:[0..{0}] init 0;\n'.format(len(self.clusters)))
+            f.write('cl:[0..{0}] init {1};\n'.format(len(self.clusters), init_clid if init_clid != None else 0))
             for t in range(self.time_int):
-                f.write('[evaluate] (task_present=1) & (t={0}) -> '.format(t))
-                plus = 0
-                for cl in range(len(self.clusters)):
-                    p = self.prob[t][cl]
-                    if p != 0:
-                        if plus != 0:
-                            f.write(' + ')
-                        f.write("{0}:(cl'={1})".format(p, cl))
-                        plus+=1
-                f.write(';\n')
+                if not all([p == 0 for p in self.prob[t]]):
+                    f.write('[evaluate] (task_present=1) & (t={0}) -> '.format(t))
+                    plus = 0
+                    for cl in range(len(self.clusters)):
+                        p = self.prob[t][cl]
+                        if p != 0:
+                            if plus != 0:
+                                f.write(' + ')
+                            f.write("{0}:(cl'={1})".format(p, cl))
+                            plus+=1
+                    f.write(';\n')
             f.write('endmodule\n\n')
 
             f.write('rewards "rew"\n')
@@ -156,4 +157,4 @@ if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards([])
     task_prob, prob, clusters = ur.get_probabilistic_reward_model()
     charge_model, discharge_model = get_battery_model()
-    mm = PrismModel('bcth_model.prism', 48, 70, 1, task_prob, clusters, prob, charge_model, discharge_model)
+    mm = PrismModel('bcth_model.prism', 48, 70, 1, 1, task_prob, clusters, prob, charge_model, discharge_model)
