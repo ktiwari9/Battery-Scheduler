@@ -48,7 +48,7 @@ def get_simbattery_model(time_passed, charging):  # time_int in minutes
     return model
 
 
-class TaskBasedRBC2:  # Rule - charge only when battery goes below 40
+class TaskBasedRBC2:  # Rule - charge only when battery goes below 25
 	def __init__(self, init_battery, init_charging, test_days):
 		
 		self.samples = taskbased_sample_generator.SampleGenerator(test_days).samples

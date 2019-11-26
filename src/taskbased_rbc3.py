@@ -49,7 +49,7 @@ def get_simbattery_model(time_passed, charging):  # time_int in minutes
     return model
 
 
-class TaskBasedRBC3:  # Rule - charge only when battery goes below 40
+class TaskBasedRBC3:  # Rule - charge only when avilable rewards exceed a threshold
     def __init__(self, init_battery, init_charging, threshold, test_days):
         
         self.samples = taskbased_sample_generator.SampleGenerator(test_days).samples
