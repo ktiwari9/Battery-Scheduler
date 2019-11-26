@@ -10,8 +10,17 @@ import time
 
 #### reading in only the unique tasks, ignoring the task events
 
+def timing_wrapper(func):
+    def wrapper(*args,**kwargs):
+        t = datetime.datetime.now()
+        result = func(*args,**kwargs)
+        t1 = datetime.datetime.now()
+        print func, ' took time:', t1-t
+        return result
+    return wrapper
+
 class getTasks:
-    
+    @timing_wrapper
     def __init__(self):
         ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))

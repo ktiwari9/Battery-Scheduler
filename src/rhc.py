@@ -6,6 +6,7 @@ import bcth_prism_model
 import generate_samples
 import numpy as np
 import subprocess
+import pymongo
 import roslib
 import yaml
 import sys
@@ -52,19 +53,13 @@ class RecedingHorizonControl:
         self.req_pareto_point = pareto_point
    
         self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
-        self.path_rew = self.main_path + '/data/rhc2_sample_rewards'
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
-        if not os.path.isfile(self.path_rew):
-            raise ValueError('Sample Rewards Not Generated. Generate rewards with generate_samples.py')
-
-        with open(self.path_rew,'r') as f:
-            for line in f:
-                x = line.split(' ')
-                self.cl_id.append(int(float(x[0].strip())))
-                self.sample_reward.append(float(x[1].strip()))
-                self.actual_reward.append(float(x[2].strip()))
+        sg = generate_samples.sample_generator(True, test_days)     
+        self.cl_id = sg.cl_ids
+        self.sample_reward = sg.rewards
+        self.actual_reward = sg.act_rewards
 
         self.totalreward = np.zeros((self.no_days))
         self.init_battery = init_battery
@@ -274,18 +269,7 @@ class RecedingHorizonControl:
 
 
 if __name__ == '__main__':
-    ############## Reward Days Set 1
-    sg = generate_samples.sample_generator(True, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)])     
-    rewards = sg.rewards
-    cl_id = sg.cl_ids
-    act_rewards = sg.act_rewards
-    path = '/home/milan/workspace/strands_ws/src/battery_scheduler/data/rhc2_sample_rewards'
-    with open(path,'w') as f:
-        for r, c, a_r in zip(rewards, cl_id, act_rewards):
-            f.write('{0} {1} {2} '.format(c, r, a_r))
-            f.write('\n')
-
-
+   
     # np.random.seed(0)
     # rhc = RecedingHorizonControl(70, 1, [date(2017, 10, 2), date(2017, 10, 3), date(2017, 11, 12)], 0)
     # rhc.simulate()
