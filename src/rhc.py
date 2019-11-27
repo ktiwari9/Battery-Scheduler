@@ -62,7 +62,7 @@ class RecedingHorizonControl:
             if np.isnan(clid):
                 cl = None
             else:
-                cl = clid
+                cl = int(clid)
             self.cl_id.append(cl)
         self.sample_reward = sg.rewards
         self.actual_reward = sg.act_rewards

@@ -2,7 +2,7 @@
 
 import probabilistic_tasks as probabilistic_rewards
 import generate_task_samples as generate_samples
-from datetime import date
+from datetime import date, datetime
 import bc_read_adversary
 import bcth_prism_model
 import numpy as np
@@ -62,7 +62,7 @@ class RecedingHorizonControl:
             if np.isnan(clid):
                 cl = None
             else:
-                cl = clid
+                cl = int(clid)
             self.cl_id.append(cl)
         self.sample_reward = sg.rewards
         self.actual_reward = sg.act_rewards
@@ -290,35 +290,35 @@ class RecedingHorizonControl:
 
 if __name__ == '__main__':
 
-     rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    rhc.get_plan('rhc_711811911_1')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
+    rhct.get_plan('rhct_711811911_1')
 
     np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    rhc.get_plan('rhc_711811911_2')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
+    rhct.get_plan('rhct_711811911_2')
 
     np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    rhc.get_plan('rhc_711811911_3')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
+    rhct.get_plan('rhct_711811911_3')
 
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_1')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
+    rhct.get_plan('rhct_101111111211_1')
 
     np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_2')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
+    rhct.get_plan('rhct_101111111211_2')
 
     np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_3')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
+    rhct.get_plan('rhct_101111111211_3')
 
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_1')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
+    rhct.get_plan('rhct_131114111511_1')
 
     np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_2')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
+    rhct.get_plan('rhct_131114111511_2')
 
     np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_3')
+    rhct = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
+    rhct.get_plan('rhct_131114111511_3')
