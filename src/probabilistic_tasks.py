@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import rospy
 import numpy as np
 import pandas as pd
+import pymongo
 import read_task_wo_priorities
 import matplotlib.pyplot as plt
 from sklearn.mixture import BayesianGaussianMixture
@@ -35,25 +37,26 @@ def read_all_tasks(test=[]):
     # tasks_processor = read_tasks_wo_priorities.getTasks()
     # tasks_df = tasks_processor.tasks_df
 
-    tasks_df['start_day'] = tasks_df['start'].apply(lambda x: x.date())
-    tasks_df['end_day'] = tasks_df['end'].apply(lambda x: x.date())
+    tasks_df['start_day'] = tasks_df['start_time'].apply(lambda x: x.date())
+    tasks_df['end_day'] = tasks_df['end_time'].apply(lambda x: x.date())
 
     test_days = [day.date() for day in test]
     if test_days:
+        test_tasks = tasks_df[tasks_df['start_day'].isin(test_days)]
         tasks_df = tasks_df[~tasks_df['start_day'].isin(test_days)]
     
-    return tasks_df
+    return tasks_df, test_tasks
 
 
 class uncertain_rewards:
     @timing_wrapper
     def __init__(self, test_days):
         print 'Reading Tasks...'
-        tasks_processor = read_task_wo_priorities.getTasks()
-        self.tasks = tasks_processor.tasks_df
+        self.tasks, self.test_tasks = read_all_tasks(test_days)
         self.time_int = 30 #minutes
         self.no_int = 1440/self.time_int
         self.rewards_day  = dict()
+        self.test_days = test_days
         
         # ## for task models
         # if test_days:

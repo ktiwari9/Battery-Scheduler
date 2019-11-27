@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import probabilistic_rewards
-from datetime import date
+from datetime import datetime, date
 import bc_read_adversary
 import bcth_prism_model
 import generate_samples
@@ -56,8 +56,14 @@ class RecedingHorizonControl:
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
     
-        sg = generate_samples.sample_generator(True, test_days)     
-        self.cl_id = sg.cl_ids
+        sg = generate_samples.sample_generator(True, test_days) 
+        self.cl_id = []
+        for clid in sg.cl_ids:
+            if np.isnan(clid):
+                cl = None
+            else:
+                cl = clid
+            self.cl_id.append(cl)
         self.sample_reward = sg.rewards
         self.actual_reward = sg.act_rewards
 
