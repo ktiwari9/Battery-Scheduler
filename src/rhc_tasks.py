@@ -249,7 +249,10 @@ class RecedingHorizonControl:
                     approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points))/3)*(float((self.req_pareto_point%3))/3)
                 elif self.req_pareto_point == 6:
                     sorted_pareto_points = sorted(pareto_points)
-                    approx_p_point = sorted_pareto_points[1]
+                    if len(sorted_pareto_points) > 1:
+                        approx_p_point = sorted_pareto_points[1]
+                    else:
+                        approx_p_point =  sorted_pareto_points[0]
                 else:
                    approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points)))*(float(self.req_pareto_point)/3)
                 p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
