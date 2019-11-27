@@ -126,7 +126,7 @@ class RecedingHorizonControl:
                     prob = []
                     next_b = []
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)         
                         prob.append(self.charge_model[int(cb)][int(b)])
                         next_b.append(int(b))
 
@@ -146,13 +146,10 @@ class RecedingHorizonControl:
                     prob = []
                     next_b = []
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)
-                        next_b.append(int(b)) 
-                        if int(cb) == 100 or int(cb) == 99:                 
-                            prob.append(self.charge_model[int(cb)][int(b)])
-                        else:
-                            prob.append(self.charge_model[int(cb)][int(b)+1])
-                    
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)         
+                        prob.append(self.charge_model[int(cb)][int(b)])
+                        next_b.append(int(b))
+    
                     current_state = np.random.choice(nx_s, p=np.array(prob))
                     
                     # current_battery = int(round(sum(np.array(next_b)*np.array(prob))))
@@ -169,7 +166,7 @@ class RecedingHorizonControl:
                     prob = []
                     next_b = []
                     for s in nx_s:
-                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)                  
+                        t, tp, o, e, b, ch, cl = self.pp.get_state(s)     
                         prob.append(self.discharge_model[int(cb)][int(b)])
                         next_b.append(int(b))
 
