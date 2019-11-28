@@ -276,7 +276,11 @@ class TaskBasedRHC:
                     approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points))/3)*(float((self.req_pareto_point%3))/3)
                 elif self.req_pareto_point == 6:
                     sorted_pareto_points = sorted(pareto_points)
-                    approx_p_point = sorted_pareto_points[1]
+                    if len(sorted_pareto_points) > 1:
+                        approx_p_point = sorted_pareto_points[1]
+                    else:
+                        approx_p_point = sorted_pareto_points[0]
+
                 else:
                    approx_p_point = min(pareto_points) + ((max(pareto_points)-min(pareto_points)))*(float(self.req_pareto_point)/3) ## 3 -> no. of pareto points being considered
                 p_point = min(pareto_points, key=lambda x: abs(x-approx_p_point))
@@ -301,44 +305,44 @@ class TaskBasedRHC:
             plan_path = self.path_data + 'p'+ str(self.req_pareto_point)+ fname
         print 'Writing plan to ', plan_path, ' ...'
         with open(plan_path, 'w') as f:
-            f.write('time battery charging action obtained_reward match_reward actual_reward pareto\n')
+            f.write('day time battery charging action obtained_reward match_reward actual_reward pareto\n')
             for t, b, ch, a, obr, mr, ar, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.matched_rewards, self.available_rewards, self.pareto_point):
                 f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, pp))
 
 
 if __name__ == '__main__':
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
     tbrhc.get_plan('tbrhc_711811911_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
     tbrhc.get_plan('tbrhc_711811911_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
     tbrhc.get_plan('tbrhc_711811911_3')
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
     tbrhc.get_plan('tbrhc_101111111211_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
     tbrhc.get_plan('tbrhc_101111111211_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
     tbrhc.get_plan('tbrhc_101111111211_3')
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
     tbrhc.get_plan('tbrhc_131114111511_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
     tbrhc.get_plan('tbrhc_131114111511_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)],  1)
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
     tbrhc.get_plan('tbrhc_131114111511_3')
 
 
