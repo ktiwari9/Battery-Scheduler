@@ -228,12 +228,12 @@ class TaskBasedRHC:
     
 
     def obtain_prism_model(self, probt, probr, clusters, init_battery, init_charging, init_clid):      
-        pm = bcth_prism_model.PrismModel('model_tbrhc.prism', self.horizon, init_battery, init_charging, init_clid, probt, clusters, probr, self.charge_model, self.discharge_model)
+        pm = bcth_prism_model.PrismModel('model2_tbrhc.prism', self.horizon, init_battery, init_charging, init_clid, probt, clusters, probr, self.charge_model, self.discharge_model)
        
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
-        with open(self.path_data+'result_tbrhc', 'w') as file:
-            process = subprocess.Popen('./prism '+ self.path_mod + 'model_tbrhc.prism '+ self.path_mod +'batterycost_model_prop.props -paretoepsilon 0.1 -v -exportadv '+ self.path_mod+ 'model_tbrhc.adv -exportprodstates ' + self.path_mod +'model_tbrhc.sta -exporttarget '+self.path_mod+'model_tbrhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
+        with open(self.path_data+'result2_tbrhc', 'w') as file:
+            process = subprocess.Popen('./prism '+ self.path_mod + 'model2_tbrhc.prism '+ self.path_mod +'batterycost_model_prop.props -paretoepsilon 0.1 -v -exportadv '+ self.path_mod+ 'model2_tbrhc.adv -exportprodstates ' + self.path_mod +'model2_tbrhc.sta -exporttarget '+self.path_mod+'model2_tbrhc.lab',cwd='/home/milan/prism/prism/bin', shell=True, stdout=subprocess.PIPE)
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
@@ -243,7 +243,7 @@ class TaskBasedRHC:
         policy_file = []
         pre1_point = None
         pre2_point = None
-        with open(self.path_data+'result_tbrhc', 'r') as f:
+        with open(self.path_data+'result2_tbrhc', 'r') as f:
             line_list = f.readlines()
             f_no_list = []
             pareto_points = []
@@ -291,8 +291,8 @@ class TaskBasedRHC:
                 f_no = None 
         
         if f_no != None:
-            print 'Reading from model_tbrhc'+f_no+'.adv'
-            pp = bc_read_adversary.ParseAdversary(['model_tbrhc'+f_no+'.adv', 'model_tbrhc.sta', 'model_tbrhc.lab'])
+            print 'Reading from model2_tbrhc'+f_no+'.adv'
+            pp = bc_read_adversary.ParseAdversary(['model2_tbrhc'+f_no+'.adv', 'model2_tbrhc.sta', 'model2_tbrhc.lab'])
             return pp
         else:
             raise ValueError('Adversary Not Found !!!')
@@ -312,38 +312,38 @@ class TaskBasedRHC:
 
 if __name__ == '__main__':
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
-    tbrhc.get_plan('tbrhc_711811911_1')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 6)
+    tbrhc.get_plan('tbrhc_30831819_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
-    tbrhc.get_plan('tbrhc_711811911_2')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 6)
+    tbrhc.get_plan('tbrhc_30831819_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 5)
-    tbrhc.get_plan('tbrhc_711811911_3')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 6)
+    tbrhc.get_plan('tbrhc_30831819_3')
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
-    tbrhc.get_plan('tbrhc_101111111211_1')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 6)
+    tbrhc.get_plan('tbrhc_169179189_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
-    tbrhc.get_plan('tbrhc_101111111211_2')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 6)
+    tbrhc.get_plan('tbrhc_169179189_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 5)
-    tbrhc.get_plan('tbrhc_101111111211_3')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 6)
+    tbrhc.get_plan('tbrhc_169179189_3')
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
-    tbrhc.get_plan('tbrhc_131114111511_1')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 6)
+    tbrhc.get_plan('tbrhc_110210310_1')
 
     np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
-    tbrhc.get_plan('tbrhc_131114111511_2')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 6)
+    tbrhc.get_plan('tbrhc_110210310_2')
 
     np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 5)
-    tbrhc.get_plan('tbrhc_131114111511_3')
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 6)
+    tbrhc.get_plan('tbrhc_110210310_3')
 
 
 
