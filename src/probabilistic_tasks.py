@@ -44,6 +44,9 @@ def read_all_tasks(test=[]):
     if test_days:
         test_tasks = tasks_df[tasks_df['start_day'].isin(test_days)]
         tasks_df = tasks_df[~tasks_df['start_day'].isin(test_days)]
+
+    else:
+        test_tasks = None
     
     return tasks_df, test_tasks
 

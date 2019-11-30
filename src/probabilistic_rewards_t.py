@@ -10,24 +10,25 @@ import rospy
 
 def read_all_tasks(test=[]): 
     ### read new data -  random adder tasks nov 2019
-    client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
-    tasks = client.message_store.random_adder_tasks_nov2019.find(None)
-    start = []
-    end = []
-    priority = []
-    for task in tasks:
-        start.append(datetime.fromtimestamp(task['start_after']['secs']))
-        end.append(datetime.fromtimestamp(task['end_before']['secs']))
-        priority.append(task['priority'])
+    # client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
+    # tasks = client.message_store.random_adder_tasks_nov2019.find(None)
+    # start = []
+    # end = []
+    # priority = []
+    # for task in tasks:
+    #     start.append(datetime.fromtimestamp(task['start_after']['secs']))
+    #     end.append(datetime.fromtimestamp(task['end_before']['secs']))
+    #     priority.append(task['priority'])
+    #     # priority.append(1)
     
-    tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start', 'end', 'priority'])
+    # tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
 
     ### read old data
-    # tasks_processor = read_tasks.getTasks()
-    # tasks_df = tasks_processor.tasks_df
+    tasks_processor = read_tasks.getTasks()
+    tasks_df = tasks_processor.tasks_df
 
-    tasks_df['start_day'] = tasks_df['start'].apply(lambda x: x.date())
-    tasks_df['end_day'] = tasks_df['end'].apply(lambda x: x.date())
+    tasks_df['start_day'] = tasks_df['start_time'].apply(lambda x: x.date())
+    tasks_df['end_day'] = tasks_df['end_time'].apply(lambda x: x.date())
 
     test_days = [day.date() for day in test]
     if test_days:
@@ -79,7 +80,7 @@ class ProbabilisticRewards:
             start_day = start_int.date()
             for i in range(self.no_int):
                 end_int = start_int + timedelta(minutes=self.int_duration)
-                rew_sum_day[i] = tasks[(tasks['start'] < end_int) & (tasks['end'] > start_int)]['priority'].sum()
+                rew_sum_day[i] = tasks[(tasks['start_time'] < end_int) & (tasks['end_time'] > start_int)]['priority'].sum()
                 start_int = end_int
             if start_day not in self.rewards_day:
                 self.rewards_day.update({ start_day : rew_sum_day})
@@ -94,7 +95,7 @@ class ProbabilisticRewards:
         for day in days:
             model_start = datetime.combine(day, ts)
             model_end = model_start + timedelta(days=1)
-            current_tasks = self.tasks_df[(self.tasks_df['start']>=model_start) & (self.tasks_df['start']< model_end)]
+            current_tasks = self.tasks_df[(self.tasks_df['start_time']>=model_start) & (self.tasks_df['start_time']< model_end)]
             if not current_tasks.empty:
                 self.__update_rewards_day(current_tasks, model_start)
 

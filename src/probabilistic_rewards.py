@@ -44,6 +44,8 @@ def read_all_tasks(test=[]):
     if test_days:
         test_tasks = tasks_df[tasks_df['start_day'].isin(test_days)]
         tasks_df = tasks_df[~tasks_df['start_day'].isin(test_days)]
+    else:
+        test_tasks = None
     
     return tasks_df, test_tasks
 
@@ -56,26 +58,6 @@ class uncertain_rewards:
         self.no_int = 1440/self.time_int
         self.rewards_day  = dict()
         self.test_days = test_days
-               
-        ## for reward models 
-        # remove_days = [date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
-
-        # if test_days:
-        #     self.test_days = test_days #[date(2017, 10, 1), date(2017, 10, 2), date(2017, 10, 3)]
-        #     self.test_tasks =  self.tasks[self.tasks['start_day'].isin(self.test_days)]
-        #     self.tasks = self.tasks[~self.tasks['start_day'].isin(self.test_days)]
-        #     for day in test_days:
-        #         if day in remove_days or day.month == 9 or day.month == 8:
-        #             self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].isin(remove_days))]
-
-        #         elif day not in remove_days or day.month == 11 or day.month == 12 or day.month == 10:
-        #             self.tasks = self.tasks[~self.tasks['start_day'].isin(remove_days)]
-        #             self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 10) | (self.tasks['start_day'].apply(lambda x:x.month) == 11) | (self.tasks['start_day'].apply(lambda x:x.month) == 12)]
-
-        #         break
-        # else:
-        #     self.tasks = self.tasks[(self.tasks['start_day'].apply(lambda x:x.month) == 9) | (self.tasks['start_day'].apply(lambda x:x.month) == 8) | (self.tasks['start_day'].isin(remove_days))]
-
 
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
