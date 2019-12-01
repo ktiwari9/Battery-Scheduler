@@ -36,12 +36,17 @@ class SampleGenerator:
                     sample_end.append(end)
                     sample_priority.append(priority)
                     unique_tasks.append(task_id)
+                
             
         self.samples = pd.DataFrame(data=zip(sample_start,sample_end,sample_priority), columns=['start', 'end', 'priority'])
+        
+        ### old data
+        min_priority = self.samples['priority'].min()
+        max_priority = self.samples['priority'].max()
+        self.samples['priority'] = self.samples['priority'].apply(lambda x: (float(x - min_priority)/(max_priority - min_priority))*500+10)
 
-   
 
 if __name__ == "__main__":
-    test_days = [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)]
+    test_days = [datetime(2017, 8,30), datetime(2017,8,31), datetime(2017,9,1)]
     SampleGenerator (test_days)
     
