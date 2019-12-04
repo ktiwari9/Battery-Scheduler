@@ -24,9 +24,7 @@ class getTasks:
     def __init__(self):
         ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
-        start_t = (datetime(2017,8,23)-datetime(1970,1,1)).total_seconds()
-        end_t = (datetime(2017,10,4)-datetime(1970,1,1)).total_seconds()
-        self.tasks = client.message_store.task_events.find({"task.start_after.secs": {'$gte':start_t}, "task.end_before.secs":{'$lt':end_t}})
+        self.tasks = client.message_store.task_events.find(None)
         self.unique_tasks = []
         self.sample_array = []
         self._get_unique_tasks()
@@ -37,16 +35,17 @@ class getTasks:
         self.tasks_df['priority'] = self.tasks_df['priority'].apply(lambda x: (float(x - min_priority)/(max_priority - min_priority))*500+10)
         
     def _get_unique_tasks(self):
+        start_t = datetime(2017,8,23)
+        end_t = datetime(2017,10,4)
         for task in self.tasks:
-            if task['task']['task_id'] not in self.unique_tasks:
-                s = rospy.Time(task['task']['start_after']['secs'],task['task']['start_after']['nsecs'])  
-                start_datetime = datetime.fromtimestamp(rospy.Time.to_sec(s))
-                        
-                e = rospy.Time(task['task']['end_before']['secs'],task['task']['end_before']['nsecs'])
-                end_datetime = datetime.fromtimestamp(rospy.Time.to_sec(e))
-                            
-                task_id = str(task['task']['task_id']) 
-                
+            
+            task_id = str(task['task']['task_id']) 
+            s = rospy.Time(task['task']['start_after']['secs'],task['task']['start_after']['nsecs'])  
+            start_datetime = datetime.fromtimestamp(rospy.Time.to_sec(s))
+            e = rospy.Time(task['task']['end_before']['secs'],task['task']['end_before']['nsecs'])
+            end_datetime = datetime.fromtimestamp(rospy.Time.to_sec(e))
+            
+            if task_id not in self.unique_tasks and start_datetime >= start_t and end_datetime < end_t :          
                 priority = int(task['task']['priority'])
                         
                 if 'action' in task['task'].keys():
