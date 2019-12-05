@@ -25,10 +25,9 @@ class getTasks:
         ############### SPECIFY ACCESS ##############################
         client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
         self.tasks = client.message_store.task_events.find(None)
-        self.unique_tasks = []
-        self.sample_array = []
+        self.unique_tasks = dict()
         self._get_unique_tasks()
-        self.sample_array.sort(key= lambda x:x[1])
+        self.sample_array = [val for val in self.unique_tasks.values()]
         self.tasks_df = pd.DataFrame(data=self.sample_array, columns=['priority', 'start_time', 'end_time'])
         min_priority = self.tasks_df['priority'].min()
         max_priority = self.tasks_df['priority'].max()
@@ -45,7 +44,7 @@ class getTasks:
             e = rospy.Time(task['task']['end_before']['secs'],task['task']['end_before']['nsecs'])
             end_datetime = datetime.fromtimestamp(rospy.Time.to_sec(e))
             
-            if task_id not in self.unique_tasks and start_datetime >= start_t and end_datetime < end_t :          
+            if start_datetime >= start_t and start_datetime < end_t :          
                 priority = int(task['task']['priority'])
                         
                 if 'action' in task['task'].keys():
@@ -63,8 +62,7 @@ class getTasks:
                     node = task['task']['start_node_id']
                         
                 if node != 'ChargingPoint1' and action != 'cpm_action'and action != 'un-named_action' and priority != 0:
-                    self.unique_tasks.append(task_id)
-                    self.sample_array.append((priority, start_datetime, end_datetime))
+                    self.unique_tasks.update({task_id:(priority, start_datetime, end_datetime)})
                 
     
 if __name__ == '__main__':
