@@ -9,6 +9,7 @@ import numpy as np
 import subprocess
 import roslib
 import yaml
+import copy
 import sys
 import os
 
@@ -22,7 +23,7 @@ def timing_wrapper(func):
     return wrapper
 
 
-def get_battery_model():
+def get_battery_model():  ## for prism models, creates gocharge models in file
     # path = '/home/milan/workspace/strands_ws/src/battery_scheduler'
     path = roslib.packages.get_pkg_dir('battery_scheduler')
     if os.path.isfile(path+'/models/battery_charge_model.yaml') and os.path.isfile(path+'/models/battery_discharge_model.yaml'):
@@ -43,9 +44,9 @@ def get_battery_model():
         raise ValueError('No models found. First create battery model with probabilistic_battery_model.py')
 
 @timing_wrapper
-def get_simbattery_model(time_passed, charging):  # time_int in minutes
+def get_simbattery_model(time_passed, charging, action):  # time_int in minutes
     path = roslib.packages.get_pkg_dir('battery_scheduler')
-    
+    # time_passed = 3*time_passed
     if bool(charging):
         if os.path.isfile(path+'/models/'+str(time_passed)+'battery_charge_model.yaml'):
             with open (path+'/models/'+str(time_passed)+'battery_charge_model.yaml', 'r') as f_charge:
@@ -62,6 +63,28 @@ def get_simbattery_model(time_passed, charging):  # time_int in minutes
             subprocess.call('./probabilistic_simbattery_model.py '+ str(time_passed)+' '+str(charging),shell=True, cwd=path+'/src')
             with open (path+'/models/'+str(time_passed)+'battery_discharge_model.yaml', 'r') as f_discharge:
                 model = yaml.load(f_discharge)
+
+    if action == 'go_charge':
+        gocharge_model = dict ()
+        for b, bdict in model.items():
+            g_bdict = dict()
+            if b == 99 or b == 100:
+                g_bdict = copy.deepcopy(bdict)
+            else:
+                for bn, count in bdict.items():
+                    gbn = int(round(0.99*bn))
+                    if gbn > b:
+                        if gbn in g_bdict:
+                            g_bdict[gbn] += count
+                        else:
+                            g_bdict.update({gbn : count})
+                    else:
+                        if bn in g_bdict:
+                            g_bdict[bn] += count
+                        else:
+                            g_bdict.update({bn : count})
+            gocharge_model.update({b:g_bdict})
+        model = copy.deepcopy(gocharge_model)
     
     for b in model:
         bnext_dict = model[b]
@@ -82,7 +105,7 @@ class TaskBasedRHC:
         self.no_int = self.pr.no_int 
         self.int_duration = self.pr.int_duration
         self.no_days = len(test_days)
-        self.horizon_hours = 24
+        self.horizon_hours = 48
         self.horizon = horizon_hours*(60/self.int_duration) ## horizon in intervals
         self.req_pareto_point = pareto_point
         print "Generating Sample Tasks"
@@ -134,23 +157,29 @@ class TaskBasedRHC:
             return 0, None, current_tasks
         
     @timing_wrapper
-    def get_current_battery(self, prev_battery, prev_charging, current_ts, charging_started, discharging_started):
+    def get_current_battery(self, prev_battery, prev_charging, current_ts, charging_started, discharging_started, action):
         if bool(prev_charging):
             time_passed = int(round((current_ts - charging_started).total_seconds()/60))
         else:
             time_passed = int(round((current_ts - discharging_started).total_seconds()/60))
             
-        model = get_simbattery_model(time_passed, prev_charging)
-  
-        predict_b = []
-        for j in range(3):
-            nb = []
-            prob = []
-            for b,p in model[prev_battery].items():
-                nb.append(b)
-                prob.append(p)
-            predict_b.append(np.random.choice(nb, p=prob))
-        return int(np.mean(predict_b))
+        model = get_simbattery_model(time_passed, prev_charging, action)
+        
+        if model[prev_battery]: 
+            predict_b = []
+            for j in range(3):
+                nb = []
+                prob = []
+                for b,p in model[prev_battery].items():
+                    nb.append(b)
+                    prob.append(p)
+                predict_b.append(np.random.choice(nb, p=prob))
+            return int(np.mean(predict_b))
+        else:   
+            if bool(prev_charging):
+                return 100
+            else:
+                return 0
             
     @timing_wrapper
     def simulate(self, init_battery, init_charging):
@@ -180,26 +209,37 @@ class TaskBasedRHC:
                     obtained_rew = self.get_obtained_rew(task_end + timedelta(minutes=5), discharging_from, charging)
                     self.obtained_rewards.append(obtained_rew)
                     
-                    battery = self.get_current_battery(battery, charging, task_end + timedelta(minutes=5), charging_from, discharging_from)
+                    battery = self.get_current_battery(battery, charging, task_end + timedelta(minutes=5), charging_from, discharging_from, action)
+
+                    ## Adding nil task where reward seen is 0.
+                    pmodel = self.obtain_prism_model(probt, probm, rews, battery, charging, None)
+
+                    action = self.get_policy_action(pmodel)
                     
                     self.time.append(task_end + timedelta(minutes=5))
                     self.battery.append(battery)
                     self.charging.append(charging)
-                    action = 'go_charge'
                     self.actions.append(action)
                     self.available_rewards.append(0)
-                    self.matched_rewards.append(0)
-                    charging = 1
-                    charging_from = task_end + timedelta(minutes=5)
-                    
+
+                    if action == 'stay_charging' or action == 'go_charge':
+                        charging = 1
+                        charging_from = task_end + timedelta(minutes=5)
+                        self.matched_rewards.append(0)
+                    elif action == 'gather_reward':
+                        charging = 0
+                        discharging_from = task_end + timedelta(minutes=5)
+                        self.matched_rewards.append(0)
+
                     self.obtained_rewards.append(0)
                     
-                    battery = self.get_current_battery(battery, charging, ts, charging_from, discharging_from)
+                    battery = self.get_current_battery(battery, charging, ts, charging_from, discharging_from, action)
+                    
                 else:
                     obtained_rew = self.get_obtained_rew(ts, discharging_from, charging)
                     self.obtained_rewards.append(obtained_rew)                
                     
-                    battery = self.get_current_battery(battery, charging, ts, charging_from, discharging_from)
+                    battery = self.get_current_battery(battery, charging, ts, charging_from, discharging_from, action)
 
             pmodel = self.obtain_prism_model(probt, probm, rews, battery, charging, clid)
 
@@ -320,44 +360,69 @@ class TaskBasedRHC:
 
 if __name__ == '__main__':
 
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
-    tbrhc.get_plan('tbrhc_30831819_1')
-
-    np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
-    tbrhc.get_plan('tbrhc_30831819_2')
-
-    np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
-    tbrhc.get_plan('tbrhc_30831819_3')
-
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
-    tbrhc.get_plan('tbrhc_169179189_1')
-
-    np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
-    tbrhc.get_plan('tbrhc_169179189_2')
-
-    np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
-    tbrhc.get_plan('tbrhc_169179189_3')
-
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
-    tbrhc.get_plan('tbrhc_110210310_1')
-
-    np.random.seed(1)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
-    tbrhc.get_plan('tbrhc_110210310_2')
-
-    np.random.seed(2)
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
-    tbrhc.get_plan('tbrhc_110210310_3')
-
-
-
-
-
-
     
+    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,11), datetime(2019,11,12)], 0)
+    tbrhc.get_plan('tbrhctest_11111211_1')
 
-       
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
+    # tbrhc.get_plan('tbrhc_30831819_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
+    # tbrhc.get_plan('tbrhc_30831819_3')
+
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)], 0)
+    # tbrhc.get_plan('tbrhc_394959_1')
+
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)], 0)
+    # tbrhc.get_plan('tbrhc_394959_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)], 0)
+    # tbrhc.get_plan('tbrhc_394959_3')
+
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
+    # tbrhc.get_plan('tbrhc_169179189_1')
+
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
+    # tbrhc.get_plan('tbrhc_169179189_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)], 0)
+    # tbrhc.get_plan('tbrhc_169179189_3')
+
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)], 0)
+    # tbrhc.get_plan('tbrhc_209219229_1')
+
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)], 0)
+    # tbrhc.get_plan('tbrhc_209219229_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)], 0)
+    # tbrhc.get_plan('tbrhc_209219229_3')
+
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)], 0)
+    # tbrhc.get_plan('tbrhc_249259269_1')
+
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)], 0)
+    # tbrhc.get_plan('tbrhc_249259269_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)], 0)
+    # tbrhc.get_plan('tbrhc_249259269_3')
+     
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
+    # tbrhc.get_plan('tbrhc_110210310_1')
+
+    # np.random.seed(1)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
+    # tbrhc.get_plan('tbrhc_110210310_2')
+
+    # np.random.seed(2)
+    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)], 0)
+    # tbrhc.get_plan('tbrhc_110210310_3')
