@@ -26,7 +26,18 @@ class BatteryModel:
         directory_paths = ['/media/milan/DATA1/data_project/battery_data/betty', '/media/milan/DATA1/battery_logs/real_battery']
         self.time_interval = time_interval ## minutes
         self.is_charging = is_charging
-        self.get_battery_model(directory_paths)
+        if time_interval > 600: ## If time > 10 hrs default to max, min battery 
+            if is_charging:
+                self.charge_model = dict()
+                for i in range(101):
+                    self.charge_model.update({i: {100 : 1}})
+            else:
+                self.discharge_model = dict()
+                for i in range(101):
+                    self.charge_model.update({i: {0 : 1}})
+
+        else:
+            self.get_battery_model(directory_paths)
 
     def get_files(self, directories):
         to_process = []
@@ -82,6 +93,7 @@ class BatteryModel:
             for i in range (101):
                 model.update({ i : dict()})
         self.discharge_model[100] = self.discharge_model[99]
+        self.charge_model[0]  = self.charge_model[1]
 
         filesets = self.get_files(directories)
         self.extract_data(filesets)
