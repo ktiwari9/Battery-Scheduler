@@ -31,31 +31,25 @@ def get_battery_model():
                 for bn in bnext_dict:
                     bnext_dict[bn] = float(bnext_dict[bn])/total
         
-        gocharge_model = dict()
-        for i in range (101):
-            gocharge_model.update({ i : dict()})
-        
-        for b in gocharge_model:
-            if b == 100 or b == 99:
-                bnext_dict = charge_model[b]
-                total = np.sum(np.array(bnext_dict.values()))
-                for bn in bnext_dict:
-                    bnext_dict[bn] = float(bnext_dict[bn])/total
-                gocharge_model[b] = copy.deepcopy(bnext_dict)
+        gocharge_model = dict ()
+        for b, bdict in charge_model.items():
+            g_bdict = dict()
+            if b == 99 or b == 100:
+                g_bdict = copy.deepcopy(bdict)
             else:
-                bnext_dict = copy.deepcopy(charge_model[b])
-                if b in bnext_dict:
-                    if b+1 in bnext_dict:
-                        bnext_dict[b+1] += bnext_dict[b]
+                for bn, count in bdict.items():
+                    gbn = round(0.99*bn)
+                    if gbn > b:
+                        if gbn in g_bdict:
+                            g_bdict[gbn] += count
+                        else:
+                            g_bdict.update({gbn : count})
                     else:
-                        bnext_dict[b+1] = bnext[b]
-                    del bnext_dict[b]
-                total = np.sum(np.array(bnext_dict.values()))
-                
-                bnext_dict_new = dict()
-                for bnext, val in bnext_dict.items():
-                    bnext_dict_new.update({int(bnext-1):float(val)/float(total)})
-                gocharge_model[b] = bnext_dict_new
+                        if bn in g_bdict:
+                            g_bdict[bn] += count
+                        else:
+                            g_bdict.update({bn : count})
+            gocharge_model.update({b:g_bdict})
 
         return charge_model, discharge_model, gocharge_model
     else:
@@ -78,6 +72,7 @@ class RecedingHorizonControl:
         self.no_simulations = 1
         for z in range(self.no_int*self.no_days):
             self.exp_reward.append(sum(self.prob[z%self.no_int]*self.clusters))
+            print self.prob[z%self.no_int], self.clusters, sum(self.prob[z%self.no_int]*self.clusters)
         self.req_pareto_point = pareto_point
    
         self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
@@ -105,7 +100,7 @@ class RecedingHorizonControl:
         self.time =[]
         self.pareto_point = []
 
-        self.simulate()
+        # self.simulate()
      
     def simulate(self):
         print 'Simulating...'
@@ -284,37 +279,71 @@ class RecedingHorizonControl:
 
 if __name__ == '__main__':
    
-    # rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    # rhc.get_plan('rhc_711811911_1')
+    np.random.seed(0)
+    rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,2)], 0)
+    rhc.get_plan('rhctest_210_1')
 
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    rhc.get_plan('rhc_711811911_2')
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,10), datetime(2017,10,11), datetime(2017,10,12)], 3)
+    # rhc.get_plan('rhc_101011101210_2')
 
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,7), datetime(2019,11,8), datetime(2019,11,9)], 0)
-    rhc.get_plan('rhc_711811911_3')
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,10), datetime(2017,10,11), datetime(2017,10,12)], 3)
+    # rhc.get_plan('rhc_101011101210_3')
+    
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,19), datetime(2017,10,20), datetime(2017,10,21)], 3)
+    # rhc.get_plan('rhc_191020102110_1')
 
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_1')
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,19), datetime(2017,10,20), datetime(2017,10,21)], 3)
+    # rhc.get_plan('rhc_191020102110_2')
 
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_2')
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,19), datetime(2017,10,20), datetime(2017,10,21)], 3)
+    # rhc.get_plan('rhc_191020102110_3')
 
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,10), datetime(2019,11,11), datetime(2019,11,12)], 0)
-    rhc.get_plan('rhc_101111111211_3')
+    # rhc = RecedingHorizonControl(70, 1,[datetime(2017,10,29), datetime(2017,10,30), datetime(2017,10,31)], 3)
+    # rhc.get_plan('rhc_291030103110_1')
 
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_1')
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,29), datetime(2017,10,30), datetime(2017,10,31)], 3)
+    # rhc.get_plan('rhc_291030103110_2')
 
-    np.random.seed(1)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_2')
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,10,29), datetime(2017,10,30), datetime(2017,10,31)], 3)
+    # rhc.get_plan('rhc_291030103110_3')
 
-    np.random.seed(2)
-    rhc = RecedingHorizonControl(70, 1, [datetime(2019,11,13), datetime(2019,11,14), datetime(2019,11,15)], 0)
-    rhc.get_plan('rhc_131114111511_3')
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,4), datetime(2017,11,5), datetime(2017,11,6)], 3)
+    # rhc.get_plan('rhc_411511611_1')
+
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,4), datetime(2017,11,5), datetime(2017,11,6)], 3)
+    # rhc.get_plan('rhc_411511611_2')
+
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,4), datetime(2017,11,5), datetime(2017,11,6)], 3)
+    # rhc.get_plan('rhc_411511611_3')
+
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,12), datetime(2017,11,13), datetime(2017,11,14)], 3)
+    # rhc.get_plan('rhc_121113111411_1')
+
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,12), datetime(2017,11,13), datetime(2017,11,14)], 3)
+    # rhc.get_plan('rhc_121113111411_2')
+
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,11,12), datetime(2017,11,13), datetime(2017,11,14)], 3)
+    # rhc.get_plan('rhc_121113111411_3')
+
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,12,1), datetime(2017,12,2), datetime(2017,12,3)], 3)
+    # rhc.get_plan('rhc_112212312_1')
+
+    # np.random.seed(1)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,12,1), datetime(2017,12,2), datetime(2017,12,3)], 3)
+    # rhc.get_plan('rhc_112212312_2')
+
+    # np.random.seed(2)
+    # rhc = RecedingHorizonControl(70, 1, [datetime(2017,12,1), datetime(2017,12,2), datetime(2017,12,3)], 3)
+    # rhc.get_plan('rhc_112212312_3')
    
    
