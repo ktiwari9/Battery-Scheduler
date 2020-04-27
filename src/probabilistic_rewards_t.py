@@ -1,31 +1,31 @@
 #! /usr/bin/env python
 
 from sklearn.mixture import BayesianGaussianMixture
+from sklearn.cluster import KMeans
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import read_tasks
+import read_tasks 
 import pymongo
 import rospy
 
 def read_all_tasks(test=[]): 
     ### read new data -  random adder tasks nov 2019
-    # client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
-    # tasks = client.message_store.random_adder_tasks_nov2019.find(None)
-    # start = []
-    # end = []
-    # priority = []
-    # for task in tasks:
-    #     start.append(datetime.fromtimestamp(task['start_after']['secs']))
-    #     end.append(datetime.fromtimestamp(task['end_before']['secs']))
-    #     priority.append(task['priority'])
-    #     # priority.append(1)
-    
-    # tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
+    client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
+    tasks = client.message_store.random_adder_tasks_nov2019.find(None)
+    start = []
+    end = []
+    priority = []
+    for task in tasks:
+        start.append(datetime.fromtimestamp(task['start_after']['secs']))
+        end.append(datetime.fromtimestamp(task['end_before']['secs']))
+        priority.append(task['priority'])
+        # priority.append(1)
+    tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
 
     ### read old data
-    tasks_processor = read_tasks.getTasks()
-    tasks_df = tasks_processor.tasks_df
+    # tasks_processor = read_tasks.getTasks()
+    # tasks_df = tasks_processor.tasks_df
 
     tasks_df['start_day'] = tasks_df['start_time'].apply(lambda x: x.date())
     tasks_df['end_day'] = tasks_df['end_time'].apply(lambda x: x.date())
@@ -38,20 +38,27 @@ def read_all_tasks(test=[]):
 
 class ProbabilisticRewards:
 
-    def __init__(self, test_days=[]):   ## should be in datetime objects
+    def __init__(self, test_days=[], no_clusters='auto'):   ## should be in datetime objects
         self.tasks_df = read_all_tasks(test=test_days)
         self.int_duration = 30 ## minutes 
         self.no_int = 1440/self.int_duration
+        self.no_clusters = no_clusters
 
     def __cluster_rewards(self):
         X = np.array([rew for day,rew in self.rewards_day.items()]).reshape(-1,1)
         X_wz = np.array([x for x in X if x[0] != 0])
-        self.dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
+        if self.no_clusters == 'auto':
+            self.dpgmm = BayesianGaussianMixture(n_components=10,max_iter= 700,covariance_type='spherical', random_state=0).fit(X_wz)
+        else:
+            self.dpgmm = KMeans(n_clusters=self.no_clusters).fit(X)
         
         rews_as_states = self.dpgmm.predict(X) 
         for e,el in enumerate(list(X)):
             if el == [0]:
-                rews_as_states[e] = len(self.dpgmm.means_)
+                if self.no_clusters == 'auto':
+                    rews_as_states[e] = len(self.dpgmm.means_)
+                else:
+                    rews_as_states[e] = len(self.dpgmm.cluster_centers_)
 
         mean_dict = dict()
         for e,s in enumerate(rews_as_states):
@@ -60,7 +67,11 @@ class ProbabilisticRewards:
             else:
                 mean_dict[s].append(X[e][0])
 
-        reward_states = np.zeros((self.dpgmm.means_.shape[0]+1))
+        if self.no_clusters == 'auto':
+            reward_states = np.zeros((self.dpgmm.means_.shape[0]+1))
+        else:
+            reward_states = np.zeros((self.dpgmm.cluster_centers_.shape[0]+1))
+            
         for state, vals in mean_dict.items():
             reward_states[int(state)] = np.mean(vals)
 
