@@ -10,22 +10,22 @@ import pymongo
 import rospy
 
 def read_all_tasks(test=[]): 
-    ### read new data -  random adder tasks nov 2019
-    client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
-    tasks = client.message_store.random_adder_tasks_nov2019.find(None)
-    start = []
-    end = []
-    priority = []
-    for task in tasks:
-        start.append(datetime.fromtimestamp(task['start_after']['secs']))
-        end.append(datetime.fromtimestamp(task['end_before']['secs']))
-        priority.append(task['priority'])
-        # priority.append(1)
-    tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
+    # ### read new data -  random adder tasks nov 2019
+    # client = pymongo.MongoClient(rospy.get_param("mongodb_host", "localhost"),rospy.get_param("mongodb_port", 62345))
+    # tasks = client.message_store.random_adder_tasks_nov2019.find(None)
+    # start = []
+    # end = []
+    # priority = []
+    # for task in tasks:
+    #     start.append(datetime.utcfromtimestamp(task['start_after']['secs'])+timedelta(hours=5,minutes=30))
+    #     end.append(datetime.utcfromtimestamp(task['end_before']['secs'])+timedelta(hours=5,minutes=30))
+    #     priority.append(task['priority'])
+    #     # priority.append(1)
+    # tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
 
     ### read old data
-    # tasks_processor = read_tasks.getTasks()
-    # tasks_df = tasks_processor.tasks_df
+    tasks_processor = read_tasks.getTasks()
+    tasks_df = tasks_processor.tasks_df
 
     tasks_df['start_day'] = tasks_df['start_time'].apply(lambda x: x.date())
     tasks_df['end_day'] = tasks_df['end_time'].apply(lambda x: x.date())
@@ -71,7 +71,7 @@ class ProbabilisticRewards:
             reward_states = np.zeros((self.dpgmm.means_.shape[0]+1))
         else:
             reward_states = np.zeros((self.dpgmm.cluster_centers_.shape[0]+1))
-            
+
         for state, vals in mean_dict.items():
             reward_states[int(state)] = np.mean(vals)
 

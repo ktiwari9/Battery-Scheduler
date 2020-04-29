@@ -17,13 +17,13 @@ class SampleGenerator:
         # unique_tasks = dict()
         
         # for start_t, end_t in self.test_ts:
-        #     tasks = client.message_store.task_events.find({"task.start_after.secs": {'$gte':start_t}, "task.end_before.secs":{'$lt':end_t}})
+        #     tasks = client.message_store.task_events.find({"task.start_after.secs": {'$gte':start_t, '$lt':end_t}})
 
         #     for task in tasks:
         #         event = task['task'] 
         #         task_id = task['task']['task_id']
-        #         start = datetime.fromtimestamp(event['start_after']['secs'])
-        #         end = datetime.fromtimestamp(event['end_before']['secs'])
+        #         start = datetime.utcfromtimestamp(event['start_after']['secs'])
+        #         end = datetime.utcfromtimestamp(event['end_before']['secs'])
         #         priority = event['priority']
         #         # priority = 1
             
@@ -65,9 +65,8 @@ class SampleGenerator:
             tasks = client.message_store.random_adder_tasks_nov2019.find({"start_after.secs": {'$gte':start_t, '$lt':end_t}}).sort("start_after.secs") 
 
             for event in tasks: 
-                start = datetime.fromtimestamp(event['start_after']['secs'])
-                end = datetime.fromtimestamp(event['end_before']['secs'])
-                print start, end
+                start = datetime.utcfromtimestamp(event['start_after']['secs']) + timedelta(hours=5,minutes=30)
+                end = datetime.utcfromtimestamp(event['end_before']['secs']) + + timedelta(hours=5,minutes=30)
                 priority = event['priority']
                 # priority = 1
                 sample_start.append(start)
@@ -78,7 +77,8 @@ class SampleGenerator:
         
 
 if __name__ == "__main__":
+    # test_days = [datetime(2017, 10, 1), datetime(2017, 10, 2), datetime(2017,10,3)]
     test_days = [datetime(2019, 11, 10), datetime(2019, 11, 11), datetime(2019,11,12)]
     sg = SampleGenerator (test_days)
-    # print sg.samples
+    print sg.samples
     

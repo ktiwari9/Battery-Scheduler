@@ -110,6 +110,7 @@ class TaskBasedRHC:
         self.req_pareto_point = pareto_point
         print "Generating Sample Tasks"
         self.samples = taskbased_sample_generator.SampleGenerator(test_days).samples
+        print self.samples
 
         self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
         self.path_mod = self.main_path + '/models/'
@@ -186,6 +187,8 @@ class TaskBasedRHC:
         print 'Simulating...'
         all_ts = (self.samples['start'].unique()).astype(datetime)/1000000000
         all_ts = [datetime.utcfromtimestamp(t) for t in all_ts]
+        all_ts.sort()
+        print all_ts
         unique_ts = []
         for e, t in enumerate(all_ts):
             if e == 0:
@@ -199,18 +202,16 @@ class TaskBasedRHC:
         charging = init_charging 
         initial_tasks =  self.samples[self.samples['start'] == unique_ts[0]]
         task_end = initial_tasks['end'].max()
-        for e, ts in enumerate(unique_ts[:10]):
+        for e, ts in enumerate(unique_ts):
             self.iter_tracker = []
             print "Task ", e+1, "/", len(unique_ts), "......."
             lr_t = datetime.now()
             probt, probm, rews = self.pr.get_rewards_model_at(ts)
             lr_t = datetime.now() - lr_t
-            print lr_t 
             self.iter_tracker.append(lr_t)
             cs_t = datetime.now()
             current_rew, clid, current_tasks = self.get_current_rew(ts, clusters=rews)
             cs_t = datetime.now() - cs_t
-            print cs_t
             self.iter_tracker.append(cs_t)
             if e!= 0:
                 if charging == 0 and task_end + timedelta(minutes=5) < ts:
@@ -291,7 +292,6 @@ class TaskBasedRHC:
         mf_t = datetime.now()
         pm = bcth_prism_model.PrismModel('model_tbrhc.prism', self.horizon, init_battery, init_charging, init_clid, probt, clusters, probr, self.charge_model, self.discharge_model)
         mf_t = datetime.now() - mf_t
-        print mf_t
         self.iter_tracker.append(mf_t)
         p_t = datetime.now()
         #######################SPECIFY LOCATION ######################
@@ -361,7 +361,6 @@ class TaskBasedRHC:
             print 'Reading from model_tbrhc'+f_no+'.adv'
             pp = bc_read_adversary.ParseAdversary(['model_tbrhc'+f_no+'.adv', 'model_tbrhc.sta', 'model_tbrhc.lab'])
             pr_t = datetime.now() - pr_t
-            print pr_t
             self.iter_tracker.append(pr_t)
             return pp
         else:
@@ -393,8 +392,8 @@ class TaskBasedRHC:
 
 if __name__ == '__main__':
 
-    # np.random.seed(1)
-    # tbrhc = TaskBasedRHC(6, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
+    np.random.seed(1)
+    tbrhc = TaskBasedRHC(6, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
     # tbrhc.get_plan('tbrhc_30831819_2')
 
     # np.random.seed(2)

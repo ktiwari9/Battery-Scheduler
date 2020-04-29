@@ -28,8 +28,8 @@ def read_all_tasks(test=[]):
     # end = []
     # priority = []
     # for task in tasks:
-    #     start.append(datetime.fromtimestamp(task['start_after']['secs']))
-    #     end.append(datetime.fromtimestamp(task['end_before']['secs']))
+    #     start.append(datetime.utcfromtimestamp(task['start_after']['secs'])+timedelta(hours=5,minutes=30))
+    #     end.append(datetime.utcfromtimestamp(task['end_before']['secs'])+timedelta(hours=5,minutes=30))
     #     priority.append(task['priority'])
     
     # tasks_df = pd.DataFrame(data = zip(start, end, priority), columns=['start_time', 'end_time', 'priority'])
