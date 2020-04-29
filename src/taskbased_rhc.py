@@ -97,11 +97,11 @@ def get_simbattery_model(time_passed, charging, action):  # time_int in minutes
 
 class TaskBasedRHC:
     @timing_wrapper
-    def __init__(self, horizon_hours, init_battery, init_charging, test_days, pareto_point):
+    def __init__(self, horizon_hours, init_battery, init_charging, test_days, pareto_point, no_clusters='auto'):
         print "Initialising Task Based RHC"
         self.charge_model, self.discharge_model = get_battery_model()
         print "Initialising Rewards Model"
-        self.pr = probabilistic_rewards_t.ProbabilisticRewards(test_days=test_days)
+        self.pr = probabilistic_rewards_t.ProbabilisticRewards(test_days=test_days, no_clusters=no_clusters)
         self.no_int = self.pr.no_int 
         self.int_duration = self.pr.int_duration
         self.no_days = len(test_days)
@@ -123,8 +123,8 @@ class TaskBasedRHC:
         self.battery = []
         self.charging = []
         self.time =[]
-        self.pareto_point = []
-        
+        self.pareto_point = []        
+        self.timing_tracker = []
         self.simulate(init_battery, init_charging)
 
     
@@ -199,11 +199,19 @@ class TaskBasedRHC:
         charging = init_charging 
         initial_tasks =  self.samples[self.samples['start'] == unique_ts[0]]
         task_end = initial_tasks['end'].max()
-        for e, ts in enumerate(unique_ts):
+        for e, ts in enumerate(unique_ts[:10]):
+            self.iter_tracker = []
             print "Task ", e+1, "/", len(unique_ts), "......."
+            lr_t = datetime.now()
             probt, probm, rews = self.pr.get_rewards_model_at(ts)
+            lr_t = datetime.now() - lr_t
+            print lr_t 
+            self.iter_tracker.append(lr_t)
+            cs_t = datetime.now()
             current_rew, clid, current_tasks = self.get_current_rew(ts, clusters=rews)
-
+            cs_t = datetime.now() - cs_t
+            print cs_t
+            self.iter_tracker.append(cs_t)
             if e!= 0:
                 if charging == 0 and task_end + timedelta(minutes=5) < ts:
                     obtained_rew = self.get_obtained_rew(task_end + timedelta(minutes=5), discharging_from, charging)
@@ -242,9 +250,11 @@ class TaskBasedRHC:
                     battery = self.get_current_battery(battery, charging, ts, charging_from, discharging_from, action)
 
             pmodel = self.obtain_prism_model(probt, probm, rews, battery, charging, clid)
-
+            e_t = datetime.now()
             action = self.get_policy_action(pmodel)
-            
+            e_t = datetime.now() - e_t
+            print e_t
+            self.iter_tracker.append(e_t)
             self.time.append(ts)
             self.battery.append(battery)
             self.charging.append(charging)
@@ -268,6 +278,8 @@ class TaskBasedRHC:
                 else:
                     self.obtained_rewards.append(current_tasks['priority'].sum())
 
+            self.timing_tracker.append(self.iter_tracker)
+
 
     def get_policy_action(self, pmodel):
         init_state = pmodel.initial_state
@@ -276,8 +288,12 @@ class TaskBasedRHC:
     
 
     def obtain_prism_model(self, probt, probr, clusters, init_battery, init_charging, init_clid):      
+        mf_t = datetime.now()
         pm = bcth_prism_model.PrismModel('model_tbrhc.prism', self.horizon, init_battery, init_charging, init_clid, probt, clusters, probr, self.charge_model, self.discharge_model)
-       
+        mf_t = datetime.now() - mf_t
+        print mf_t
+        self.iter_tracker.append(mf_t)
+        p_t = datetime.now()
         #######################SPECIFY LOCATION ######################
         # running prism and saving output from prism
         with open(self.path_data+'result_tbrhc', 'w') as file:
@@ -285,9 +301,12 @@ class TaskBasedRHC:
             for c in iter(lambda: process.stdout.read(1), ''):
                 sys.stdout.write(c)
                 file.write(c)
-        
+        p_t = datetime.now() - p_t
+        print "prism run time:" , p_t
+        self.iter_tracker.append(p_t)
         ##reading output from prism to find policy file
         ### for bcth
+        pr_t = datetime.now()
         policy_file = []
         pre1_point = None
         pre2_point = None
@@ -341,31 +360,41 @@ class TaskBasedRHC:
         if f_no != None:
             print 'Reading from model_tbrhc'+f_no+'.adv'
             pp = bc_read_adversary.ParseAdversary(['model_tbrhc'+f_no+'.adv', 'model_tbrhc.sta', 'model_tbrhc.lab'])
+            pr_t = datetime.now() - pr_t
+            print pr_t
+            self.iter_tracker.append(pr_t)
             return pp
         else:
             raise ValueError('Adversary Not Found !!!')
 
 
     def get_plan(self, fname):
-        if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
-            plan_path = self.path_data + self.req_pareto_point+ fname
-        else:
-            plan_path = self.path_data + 'p'+ str(self.req_pareto_point)+ fname
-        print 'Writing plan to ', plan_path, ' ...'
-        with open(plan_path, 'w') as f:
-            f.write('day time battery charging action obtained_reward match_reward actual_reward pareto\n')
-            for t, b, ch, a, obr, mr, ar, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.matched_rewards, self.available_rewards, self.pareto_point):
-                f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, pp))
+        # if 'pre1' == self.req_pareto_point or 'pre2' == self.req_pareto_point:
+        #     plan_path = self.path_data + self.req_pareto_point+ fname
+        # else:
+        #     plan_path = self.path_data + 'p'+ str(self.req_pareto_point)+ fname
+        # print 'Writing plan to ', plan_path, ' ...'
+        # with open(plan_path, 'w') as f:
+        #     f.write('day time battery charging action obtained_reward match_reward actual_reward pareto\n')
+        #     for t, b, ch, a, obr, mr, ar, pp in zip(self.time, self.battery, self.charging, self.actions, self.obtained_rewards, self.matched_rewards, self.available_rewards, self.pareto_point):
+        #         f.write('{0} {1} {2} {3} {4} {5} {6} {7}\n'.format(t, b, ch, a, obr, mr, ar, pp))
+
+        #### for printing time tracking plan
+        with open(self.path_data+fname, 'w') as f:
+            for it in self.timing_tracker:
+                for e,t in enumerate(it):
+                    if e != len(it)-1:
+                        f.write("{0}, ".format(t))
+                    else:
+                        f.write("{0}".format(t))
+                f.write("\n")
+
 
 
 if __name__ == '__main__':
 
-    
-    tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2019,11,11), datetime(2019,11,12)], 0)
-    tbrhc.get_plan('tbrhctest_11111211_1')
-
     # np.random.seed(1)
-    # tbrhc = TaskBasedRHC(24, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
+    # tbrhc = TaskBasedRHC(6, 70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)], 0)
     # tbrhc.get_plan('tbrhc_30831819_2')
 
     # np.random.seed(2)
