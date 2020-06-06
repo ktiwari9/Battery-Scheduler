@@ -397,7 +397,32 @@ if __name__ == '__main__':
     
     # np.random.seed(1)
     
-    available_days = [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)]
+    available_days = [datetime(2017,8,30), 
+    datetime(2017,8,31), 
+    datetime(2017,9,1), 
+    datetime(2017,9,3), 
+    datetime(2017,9,4), 
+    datetime(2017,9,5),
+    datetime(2017,9,16), 
+    datetime(2017,9,24), 
+    datetime(2017,9,25), 
+    datetime(2017,9,26), 
+    datetime(2017,10,1), 
+    datetime(2017,10,2), 
+    datetime(2017,10,3),
+    datetime(2017,10,10),
+    datetime(2017,10,11),
+    datetime(2017,10,12),
+    datetime(2017,10,19),
+    datetime(2017,10,20),
+    datetime(2017,10,21),
+    datetime(2017,10,29),
+    datetime(2017,10,30),
+    datetime(2017,10,31),
+    datetime(2017,11,4),
+    datetime(2017,11,12),
+    datetime(2017,11,13),
+    datetime(2017,11,14)]
 
     for e, day in enumerate(available_days):
         train_idx = e - WINDOW 
