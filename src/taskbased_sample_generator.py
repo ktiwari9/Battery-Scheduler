@@ -16,7 +16,7 @@ class SampleGenerator:
         
         unique_tasks = dict()
         
-        anchor_day = datetime(2020,1,1)
+        anchor_day = datetime(2020,1,1)  ## random
 
         for start_t, end_t in self.test_ts:
             tasks = client.message_store.task_events.find({"task.start_after.secs": {'$gte':start_t, '$lt':end_t}})
@@ -24,8 +24,15 @@ class SampleGenerator:
             for task in tasks:
                 event = task['task'] 
                 task_id = task['task']['task_id']
-                start = datetime.combine(anchor_day.date(),datetime.utcfromtimestamp(event['start_after']['secs']).time())
-                end = datetime.combine(anchor_day.date(),datetime.utcfromtimestamp(event['end_before']['secs']).time())
+                s = datetime.utcfromtimestamp(event['start_after']['secs'])
+                e = datetime.utcfromtimestamp(event['end_before']['secs'])
+                start = datetime.combine(anchor_day.date(),s.time())
+                if s.date() == e.date():
+                    end = datetime.combine(anchor_day.date(),e.time())
+                else:
+                    day_diff = e.day - s.day
+                    end = datetime.combine((anchor_day+timedelta(days=day_diff)).date(),e.time())
+                
                 priority = event['priority']
                 # priority = 1
             
