@@ -5,6 +5,7 @@ import taskbased_sample_generator
 import sw_probabilistic_rewards_t
 import bc_read_adversary
 import bcth_prism_model
+import pandas as pd
 import numpy as np
 import subprocess
 import roslib
@@ -16,6 +17,7 @@ import os
 CH_FACTOR = 1
 DCH_FACTOR = 1
 WINDOW = 10 ## using atleast 10 days for training
+anchor_day = datetime(2020,1,1)  ## should be same as that in sample generation
 
 def timing_wrapper(func):
     def wrapper(*args,**kwargs):
@@ -102,7 +104,7 @@ def get_simbattery_model(time_passed, charging, action):  # time_int in minutes
 
 class TaskBasedRHC:
     @timing_wrapper
-    def __init__(self, horizon_hours, init_battery, init_charging, train_days, test_days, pareto_point, no_clusters='auto'):
+    def __init__(self, horizon_hours, train_days, test_days, pareto_point, no_clusters='auto'):
         print "Initialising Task Based RHC"
         self.charge_model, self.discharge_model = get_battery_model()
         print "Initialising Rewards Model"
@@ -119,7 +121,7 @@ class TaskBasedRHC:
         self.main_path = roslib.packages.get_pkg_dir('battery_scheduler')
         self.path_mod = self.main_path + '/models/'
         self.path_data = self.main_path + '/data/'
-
+ 
         ## For tracking plan
         self.actions = []
         self.obtained_rewards = []
@@ -130,8 +132,7 @@ class TaskBasedRHC:
         self.time =[]
         self.pareto_point = []        
         self.timing_tracker = []
-        self.simulate(init_battery, init_charging)
-
+        
     
     def get_obtained_rew(self, ts, discharging_from, charging):
         if bool(charging):
@@ -187,7 +188,7 @@ class TaskBasedRHC:
                 return 0
             
     @timing_wrapper
-    def simulate(self, init_battery, init_charging):
+    def simulate(self, init_battery, init_charging, init_tasks):
         print 'Simulating...'
         all_ts = (self.samples['start'].unique()).astype(datetime)/1000000000
         all_ts = [datetime.utcfromtimestamp(t) for t in all_ts]
@@ -200,13 +201,19 @@ class TaskBasedRHC:
             else:
                 if t - all_ts[e-1] > timedelta(minutes=5): ## New task once every 5 mins - to reduce data points
                     unique_ts.append(t)
-
+        
+        # unique_ts = unique_ts[-3:]  ###REMOVE TESTING
+        
+        if not init_tasks.empty: 
+            self.samples = init_tasks.append(self.samples, ignore_index=True)
+        print self.samples
+        
         charging_from = discharging_from = unique_ts[0]
         battery = init_battery
         charging = init_charging 
         initial_tasks =  self.samples[self.samples['start'] == unique_ts[0]]
         task_end = initial_tasks['end'].max()
-        for e, ts in enumerate(unique_ts):
+        for e, ts in enumerate(unique_ts): ## this iterates only single day
             self.iter_tracker = []
             print "Task ", e+1, "/", len(unique_ts), "......."
             lr_t = datetime.now()
@@ -283,8 +290,13 @@ class TaskBasedRHC:
                     self.obtained_rewards.append(0)
                 else:
                     self.obtained_rewards.append(current_tasks['priority'].sum())
+                
+                next_datetime = datetime.combine((self.samples.iloc[0]['start']+timedelta(days=1)).date(), anchor_day.time())
+                tasks_remaining = current_tasks[current_tasks['end']> next_datetime]
 
             self.timing_tracker.append(self.iter_tracker)
+            
+        return charging, charging_from, discharging_from, battery, task_end, action, tasks_remaining 
 
 
     def get_policy_action(self, pmodel):
@@ -424,6 +436,10 @@ if __name__ == '__main__':
     datetime(2017,11,13),
     datetime(2017,11,14)]
 
+    init_charging = 1
+    init_battery = 100
+    init_tasks = pd.DataFrame()
+
     for e, day in enumerate(available_days):
         train_idx = e - WINDOW 
         if train_idx < 0:
@@ -432,8 +448,39 @@ if __name__ == '__main__':
         train_days = available_days[train_idx:e]
         test_days = [available_days[e]]
 
-        swtbrhc = TaskBasedRHC(24, 70, 1, train_days, test_days, 0)
+        swtbrhc = TaskBasedRHC(24, train_days, test_days, 0)
+        if e != 0:
+            first_event_ts = swtbrhc.samples.iloc[0]['start']
+            f_ts = datetime.combine((anchor_day + timedelta(days=1)).date(), first_event_ts.time())  ## adjust date for discontinuous days
+            if charging == 0 and task_end + timedelta(minutes=5) < f_ts:
+                battery = swtbrhc.get_current_battery(battery, charging, task_end + timedelta(minutes=5), charging_from, discharging_from, action)
+                swtbrhc.time.append(task_end + timedelta(minutes=5))
+                swtbrhc.battery.append(battery)
+                swtbrhc.charging.append(charging)
+                swtbrhc.actions.append('go_charge')
+                swtbrhc.available_rewards.append(0)
+                swtbrhc.matched_rewards.append(0)
+                swtbrhc.obtained_rewards.append(0)
+                
+                action = 'go_charge'
+                charging = 1
+                charging_from = task_end + timedelta(minutes=5) 
+
+            else:
+                if not tasks_remaining.empty: ## adjust datetime before init
+                    tasks_remaining['start'] = tasks_remaining['start'].apply(lambda x : x - timedelta(days=1))
+                    tasks_remaining['end'] = tasks_remaining['end'].apply(lambda x: x - timedelta(days=1))
+
+                else:
+                    tasks_remaining = pd.DataFrame()
+                    
+            init_tasks = tasks_remaining
+            init_battery = swtbrhc.get_current_battery(battery, charging, f_ts, charging_from, discharging_from, action)
+            init_charging = charging
+        
+        charging, charging_from, discharging_from, battery, task_end, action, tasks_remaining = swtbrhc.simulate(init_battery, init_charging, init_tasks)
         swtbrhc.get_plan('swtbrhc_'+str(test_days[0].day)+str(test_days[0].month)+'_1')
+        del swtbrhc
 
 
 
