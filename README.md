@@ -7,7 +7,7 @@
 
 ## Modifications
 1. PRISM path should be modified. Look for ##SPECIFY LOCATION##
-3. Choose any array of test dates, from the possible dates.
+3. Select initialisation paramaters
   
 ## Running the files
 1. Run roscore.
