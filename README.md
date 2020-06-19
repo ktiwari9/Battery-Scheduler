@@ -7,14 +7,16 @@
 
 ## Modifications
 1. PRISM path should be modified. Look for ##SPECIFY LOCATION##
-3. Choose any array of test dates, from the possible dates.
+3. Select initialisation paramaters
   
 ## Running the files
 1. Run roscore.
 2. Run mongodb store
 3. Run fhc.py for finite horizon control.
-4. Run rhc.py for receding horizon control.
-5. Run rule_based_\*.py for rule based controls.
+4. Run rhc.py for time based receding horizon control.
+5. Run taskbased_rhc.py for event based receding horizon control.
+5. Run taskbased_rbc*.py for rule based controls.
+6. Run swtbrhc.py for sliding window based training for RHC controller
 
 ### General Script Description
 While running these files, the following scripts are called:
