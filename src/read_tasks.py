@@ -34,12 +34,13 @@ class getTasks:
         self.tasks_df['priority'] = self.tasks_df['priority'].apply(lambda x: (float(x - min_priority)/(max_priority - min_priority))*500+10)
         
     def _get_unique_tasks(self):
+        ## Dataset 1
+        # start_t = datetime(2017,8,23)
+        # end_t = datetime(2017,10,4)
         ## Dataset 2
-        start_t = datetime(2017,8,23)
-        end_t = datetime(2017,10,4)
-        ## Dataset 3
-        # start_t = datetime(2017,10,4)
-        # end_t = datetime(2017,12,31)
+        start_t = datetime(2017,10,4)
+        end_t = datetime(2017,12,31)
+        
         for task in self.tasks:
             
             task_id = str(task['task']['task_id']) 

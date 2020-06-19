@@ -27,9 +27,16 @@ def read_all_tasks(test=[]):
     tasks_processor = read_tasks.getTasks()
     tasks_df = tasks_processor.tasks_df
 
+    ## common - run for both 
     tasks_df['start_day'] = tasks_df['start_time'].apply(lambda x: x.date())
     tasks_df['end_day'] = tasks_df['end_time'].apply(lambda x: x.date())
 
+    # ## Creating a partial dataset
+    # total_days = tasks_df['start_day'].unique().tolist()
+    # total_days.sort()
+    # partial_days = total_days[:int(round(0.75*len(total_days)))]
+    # tasks_df = tasks_df[tasks_df['start_day'].isin(partial_days)]
+    
     test_days = [day.date() for day in test]
     if test_days:
         tasks_df = tasks_df[~tasks_df['start_day'].isin(test_days)]

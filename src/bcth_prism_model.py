@@ -162,7 +162,7 @@ if __name__ == '__main__':
     ur = probabilistic_rewards.uncertain_rewards([])
     task_prob, prob, clusters = ur.get_probabilistic_reward_model()
     charge_model, discharge_model = get_battery_model()
-    mm = PrismModel('bcth_model_taskevent.prism', 48, 70, 1, 1, task_prob, clusters, prob, charge_model, discharge_model)
+    mm = PrismModel('bcth_model_taskevent.prism', 12, 100, 1, 1, task_prob, clusters, prob, charge_model, discharge_model)
 
     # mm = PrismModel('bcth12_model.prism', 12, 70, 1, 1, task_prob, clusters, prob, charge_model, discharge_model)
 

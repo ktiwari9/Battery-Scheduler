@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import subprocess
 import roslib
+import copy
 import yaml
 import os
 
@@ -21,8 +22,8 @@ def timing_wrapper(func):
 
 def get_simbattery_model(time_passed, charging, action):  # time_int in minutes
     path = roslib.packages.get_pkg_dir('battery_scheduler')
-    # time_passed = 3*time_passed
     if bool(charging):
+        time_passed = int(2.5*time_passed)
         if os.path.isfile(path+'/models/'+str(time_passed)+'battery_charge_model.yaml'):
             with open (path+'/models/'+str(time_passed)+'battery_charge_model.yaml', 'r') as f_charge:
                 model = yaml.load(f_charge)
@@ -31,6 +32,7 @@ def get_simbattery_model(time_passed, charging, action):  # time_int in minutes
             with open (path+'/models/'+str(time_passed)+'battery_charge_model.yaml', 'r') as f_charge:
                 model = yaml.load(f_charge)
     else:
+        time_passed = int(3*time_passed)
         if os.path.isfile(path+'/models/'+str(time_passed)+'battery_discharge_model.yaml'):
             with open (path+'/models/'+str(time_passed)+'battery_discharge_model.yaml', 'r') as f_discharge:
                 model = yaml.load(f_discharge)
@@ -223,68 +225,44 @@ class TaskBasedRBC3:  # Rule - charge only when available rewards exceed a thres
 
 if __name__ == '__main__':
 
-    stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)])
-    stbrc3.get_plan('stbrc3_30831819_1')
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,16), datetime(2019,11,17)])
+    tbrbc.get_plan('tb3rbc3_16111711_1')
+    del tbrbc
 
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)])
-    # stbrc3.get_plan('stbrc3_30831819_2')
+    np.random.seed(1)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,16), datetime(2019,11,17), datetime(2017,8,25)])
+    tbrbc.get_plan('tb3rbc3_16111711_2')
+    del tbrbc
 
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,8,30), datetime(2017,8,31), datetime(2017,9,1)])
-    # stbrc3.get_plan('stbrc3_30831819_3')
+    np.random.seed(2)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,16), datetime(2019,11,17), datetime(2017,8,25)])
+    tbrbc.get_plan('tb3rbc3_16111711_3')
+    del tbrbc
 
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)])
-    # stbrc3.get_plan('stbrc3_394959_1')
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,21), datetime(2019,11,22), datetime(2019,11,23)])
+    tbrbc.get_plan('tb3rbc3_211122112311_1')
+    del tbrbc
 
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)])
-    # stbrc3.get_plan('stbrc3_394959_2')
+    np.random.seed(1)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,21), datetime(2019,11,22), datetime(2019,11,23)])
+    tbrbc.get_plan('tb3rbc3_211122112311_2')
+    del tbrbc
 
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,3), datetime(2017,9,4), datetime(2017,9,5)])
-    # stbrc3.get_plan('stbrc3_394959_3')
+    np.random.seed(2)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,21), datetime(2019,11,22), datetime(2019,11,23)])
+    tbrbc.get_plan('tb3rbc3_211122112311_3')
+    del tbrbc
 
-    stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)])
-    stbrc3.get_plan('stbrc3_169179189_1')
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,27), datetime(2019,12,1)])
+    tbrbc.get_plan('tb3rbc3_2711112_1')
+    del tbrbc
 
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)])
-    # stbrc3.get_plan('stbrc3_169179189_2')
+    np.random.seed(1)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,27), datetime(2019,12,1)])
+    tbrbc.get_plan('tb3rbc3_2711112_2')
+    del tbrbc
 
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,16), datetime(2017,9,17), datetime(2017,9,18)])
-    # stbrc3.get_plan('stbrc3_169179189_3')
-
-    stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)])
-    stbrc3.get_plan('stbrc3_209219229_1')
-
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)])
-    # stbrc3.get_plan('stbrc3_209219229_2')
-
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,20), datetime(2017,9,21), datetime(2017,9,22)])
-    # stbrc3.get_plan('stbrc3_209219229_3')
-
-    stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)])
-    stbrc3.get_plan('stbrc3_249259269_1')
-
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)])
-    # stbrc3.get_plan('stbrc3_249259269_2')
-
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,9,24), datetime(2017,9,25), datetime(2017,9,26)])
-    # stbrc3.get_plan('stbrc3_249259269_3')
-
-    stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)])
-    stbrc3.get_plan('stbrc3_110210310_1')
-
-    # np.random.seed(1)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)])
-    # stbrc3.get_plan('stbrc3_110210310_2')
-
-    # np.random.seed(2)
-    # stbrc3 = TaskBasedRBC3(70, 1, [datetime(2017,10,1), datetime(2017,10,2), datetime(2017,10,3)])
-    # stbrc3.get_plan('stbrc3_110210310_3')
+    np.random.seed(2)
+    tbrbc = TaskBasedRBC3(70, 1, [datetime(2019,11,27), datetime(2019,12,1)])
+    tbrbc.get_plan('tb3rbc3_2711112_3')
+    del tbrbc

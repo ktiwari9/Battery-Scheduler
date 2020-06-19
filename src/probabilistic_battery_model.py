@@ -54,8 +54,6 @@ class BatteryModel:
             data_battery = []
             data_timestamp = []
             data_ischarging = []
-            data_day = []
-            data_time = []
             for d_file in file_set:
                 if file_set == files[-1]:
                     f = open(d_file, 'r')
@@ -68,6 +66,7 @@ class BatteryModel:
                             data_battery.append(bd.life)
                             data_timestamp.append(bd.date_time)
                             data_ischarging.append(bd.is_charging)
+                f.close()
 
             battery_data = pd.DataFrame(data=list(zip(data_battery, data_ischarging, data_timestamp)), index=data_timestamp, columns= ['life', 'is_charging', 'time'])
             battery_data.sort_index(inplace=True)
@@ -135,5 +134,5 @@ if __name__ == '__main__':
     ################ SPECIFY PATHS OF DATA #######################
     paths = ['/media/milan/DATA1/data_project/battery_data/betty', '/media/milan/DATA1/battery_logs/real_battery']
     bm = BatteryModel(paths)
-    print (bm.charge_model)
-    print (bm.discharge_model)
+    # print (bm.charge_model)
+    # print (bm.discharge_model)
